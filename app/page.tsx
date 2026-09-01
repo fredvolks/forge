@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import {
-  AlertTriangle, Bell, Box, CalendarDays, Check, ChevronRight, Clock3, Factory, FileText, HardHat, LayoutDashboard,
+  AlertTriangle, Bell, Box, CalendarDays, Check, ChevronRight, ClipboardCheck, Clock3, Factory, FileText, HardHat, LayoutDashboard,
   Camera, CreditCard, Mail, MapPin, Menu, MessageSquare, PackageCheck, Paperclip, Play, Plus, ReceiptText, Search, Send, Settings, ShieldCheck,
-  Square, Users, X, Zap,
+  ShoppingCart, Square, Trash2, Users, X, Zap,
 } from 'lucide-react';
 
 type Role = 'Boss' | 'Adjointe' | 'Chef' | 'Employé';
@@ -46,6 +46,13 @@ export default function Home() {
   const [toastText, setToastText] = useState('Demande envoyée');
   const [selectedJob, setSelectedJob] = useState('JOB-214');
   const [accidentOpen, setAccidentOpen] = useState(false);
+  const [basketItems, setBasketItems] = useState([
+    { id: 1, chef: 'Fred G.', job: 'JOB-214', name: 'Lames Olfa 1″', qty: '2 boîtes', loaded: false },
+    { id: 2, chef: 'Fred G.', job: 'JOB-214', name: 'Tape rouge', qty: '6 rouleaux', loaded: false },
+    { id: 3, chef: 'Fred G.', job: 'JOB-214', name: 'Clous gun 3¼', qty: '3 boîtes', loaded: true },
+    { id: 4, chef: 'Marco T.', job: 'JOB-315', name: 'Broche soffite', qty: '2 boîtes', loaded: false },
+    { id: 5, chef: 'Marco T.', job: 'JOB-315', name: 'Papier joint fibro', qty: '4 rouleaux', loaded: false },
+  ]);
   const [filter, setFilter] = useState('Tous'); const [query, setQuery] = useState('');
   const [modal, setModal] = useState(false); const [toast, setToast] = useState(false); const [mobileNav, setMobileNav] = useState(false);
   const visibleOrders = useMemo(() => orders.filter((o) => o.access.includes(role) && (filter === 'Tous' || o.stage === filter) && `${o.id} ${o.job} ${o.client} ${o.title}`.toLowerCase().includes(query.toLowerCase())), [filter, query, role]);
@@ -79,6 +86,7 @@ export default function Home() {
           <article><div className="metric-icon green"><ShieldCheck/></div><div><span>PRODUCTION DU JOUR</span><b>84%</b><small><i>+6%</i> vs objectif</small></div><div className="donut"><span>84</span></div></article>
           <article><div className="metric-icon blue"><Users/></div><div><span>ÉQUIPES ACTIVES</span><b>4/5</b><small>18 employés présents</small></div><div className="mini-faces"><i>MT</i><i>SB</i><i>AP</i><i>+15</i></div></article>
         </section>}
+        {(role === 'Adjointe' || role === 'Boss') && <section className="order-control"><article className="panel incoming-order"><div className="panel-head"><div><h2>Nouvelle commande reçue</h2><p>Fred G. · JOB-214 Breton · il y a 8 min</p></div><span className="new-order-pill">NOUVELLE</span></div><div className="incoming-body"><div className="incoming-summary"><div className="request-icon"><Box/></div><div><span>3 ARTICLES · MATÉRIAUX</span><b>Lames Olfa, tape rouge et clous 3¼</b><small>Photos du chantier jointes · Priorité normale</small></div></div><div className="decision-actions">{role === 'Adjointe' && <button className="ask-approval" onClick={() => { setToastText('Approbation demandée au Boss'); setToast(true); window.setTimeout(() => setToast(false),3200); }}><ClipboardCheck/> Faire approuver par le Boss</button>}<button className="add-basket" onClick={() => { setToastText('Commande ajoutée au panier de Fred'); setToast(true); window.setTimeout(() => setToast(false),3200); }}><ShoppingCart/> Mettre dans le panier</button><button className="order-now" onClick={() => { setToastText('Commande passée immédiatement'); setToast(true); window.setTimeout(() => setToast(false),3200); }}><Zap/> Commander maintenant</button></div></div></article>{role === 'Boss' && <article className="panel chef-baskets"><div className="panel-head"><div><h2>Paniers des chefs d’équipe</h2><p>Prépare ta tournée et confirme ce qui embarque dans le camion</p></div><span className="basket-count">{basketItems.filter(i => !i.loaded).length} À CHARGER</span></div>{['Fred G.','Marco T.'].map((chef) => { const items = basketItems.filter(i => i.chef === chef); if (!items.length) return null; return <div className="chef-basket" key={chef}><div className="basket-head"><div><span>{chef.split(' ').map(v => v[0]).join('')}</span><div><b>Panier · {chef}</b><small>{items[0].job} · {items.length} articles</small></div></div><button onClick={() => setBasketItems(current => current.filter(i => i.chef !== chef))}><Trash2/> Supprimer le panier</button></div><div className="basket-lines">{items.map((item) => <label key={item.id} className={item.loaded ? 'loaded' : ''}><input type="checkbox" checked={item.loaded} onChange={() => setBasketItems(current => current.map(i => i.id === item.id ? {...i,loaded:!i.loaded} : i))}/><span><b>{item.name}</b><small>{item.qty}</small></span><em>{item.loaded ? 'EMBARQUÉ · STOCK RETIRÉ' : 'À EMBARQUER'}</em></label>)}</div><button className="confirm-load" onClick={() => { setToastText(`Chargement de ${chef} confirmé`); setToast(true); window.setTimeout(() => setToast(false),3200); }}><Check/> Confirmer les articles embarqués</button></div>})}</article>}</section>}
         <div className={`main-grid ${role === 'Employé' ? 'employee-grid' : ''}`}>{role === 'Employé' ? <section className="panel employee-order-create" id="orders"><div className="order-create-icon"><PackageCheck/></div><span>COMMANDE POUR JOB-214</span><h2>Besoin de matériel?</h2><p>Crée une commande avec plusieurs articles, quantités, notes et photos du chantier.</p><button onClick={() => setModal(true)}><Plus/> Créer une commande</button><small>Tu verras le statut de ta demande dans les notifications.</small></section> : <section className="panel orders-panel" id="orders">
           <div className="panel-head"><div><h2>Commandes en cours</h2><p>Suivi en temps réel de la production</p></div><button>Voir l’historique <ChevronRight/></button></div>
           <div className="filters">{['Tous','À préparer','En production','Prêt','Livraison'].map((f) => <button key={f} className={filter === f ? 'active' : ''} onClick={() => setFilter(f)}>{f}{f === 'Tous' && <span>12</span>}</button>)}</div>
