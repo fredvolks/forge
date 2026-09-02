@@ -3,6 +3,6 @@
   <rect width="320" height="260" rx="20" fill="#0f1412"/>
   <path d="M76 218V54H228V112" fill="none" stroke="#b8ff3d" stroke-width="10" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10"/>
   <path d="M76 218V54H228V112" fill="none" stroke="#eff7ef" stroke-width="3" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" opacity=".8"/>
-  <g fill="#b8ff3d" font-family="Arial,sans-serif" font-size="13" font-weight="700"><text x="143" y="38">A</text><text x="247" y="87">B</text><text x="50" y="150">C</text></g>
+  <g fill="#b8ff3d" font-family="Arial,sans-serif" font-size="13" font-weight="700"><text x="143" y="38">B</text><text x="247" y="87">C</text><text x="50" y="150">A</text></g>
   <g stroke="#65736b" stroke-width="1.5" stroke-dasharray="4 4"><path d="M151 42v12"/><path d="M242 90h-14"/><path d="M62 146h14"/></g>
 </svg>
