@@ -11,6 +11,7 @@ import { CommandCenter } from './command-center';
 import { loadDynamicCatalog, ProfilePreview, type DynamicProduct } from './catalog-builder';
 import { AdjointeDesk } from './adjointe-desk';
 import { SimulationPanel } from './simulation-panel';
+import { AdminPortal } from './admin-portal';
 
 type Role = 'Boss' | 'Adjointe' | 'Chef' | 'Employé';
 type Order = { id: string; job: string; client: string; title: string; stage: 'À préparer' | 'En production' | 'Prêt' | 'Livraison'; due: string; lead: string; progress: number; color: string; access: Role[] };
@@ -125,6 +126,7 @@ export default function Home() {
   if (session.companyId !== 'mir-demo') return <EmptyCompany session={session} onLogout={()=>{localStorage.removeItem('forge:session');setSession(null)}}/>;
 
   const isFieldRole = role === 'Employé' || role === 'Chef';
+  if (!isFieldRole) return <AdminPortal role={role as 'Boss'|'Adjointe'} session={session} onLogout={()=>{localStorage.removeItem('forge:session');setSession(null)}}/>;
   const quickItems = presetSets[orderCategory];
   const activeDynamicProduct=dynamicCatalog.find(product=>product.active&&product.category===orderCategory&&product.name===selectedPreset);
   const switchingJob = punched && selectedJob !== activeJob;
