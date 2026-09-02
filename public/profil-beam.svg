@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img" aria-labelledby="t d">
+  <title id="t">Profil de pliage Beam</title><desc id="d">Profil en forme de U avec cinq segments mesurables.</desc>
+  <rect width="420" height="270" rx="20" fill="#0f1412"/>
+  <path d="M58 54h54v162h196V54h54" fill="none" stroke="#b8ff3d" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M58 54h54v162h196V54h54" fill="none" stroke="#eff7ef" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>
+  <g fill="#b8ff3d" font-family="Arial,sans-serif" font-size="13" font-weight="700"><text x="78" y="38">A</text><text x="88" y="137">B</text><text x="207" y="244">C</text><text x="322" y="137">D</text><text x="336" y="38">E</text></g>
+  <g stroke="#65736b" stroke-width="1.5" stroke-dasharray="4 4"><path d="M83 42v12"/><path d="M100 133h12"/><path d="M210 230v-14"/><path d="M320 133h-12"/><path d="M340 42v12"/></g>
+</svg>
