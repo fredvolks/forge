@@ -1,210 +1,1640 @@
 'use client';
-
 import { useEffect, useMemo, useState } from 'react';
-import {
-  AlertTriangle, ArrowLeft, Bell, Box, CalendarDays, Check, ChevronRight, ClipboardCheck, Clock3, Download, Factory, FileText, HardHat, LayoutDashboard,
-  Camera, CreditCard, Mail, MapPin, Menu, MessageSquare, PackageCheck, Paperclip, Play, Plus, ReceiptText, Search, Send, Settings, ShieldCheck,
-  Navigation, ShoppingCart, Square, Trash2, Users, X, Zap,
-} from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Bell, Box, CalendarDays, Check, ChevronRight, ClipboardCheck, Clock3, Download, Factory, FileText, HardHat, LayoutDashboard, Camera, CreditCard, Mail, MapPin, Menu, MessageSquare, PackageCheck, Paperclip, Play, Plus, ReceiptText, Search, Send, Settings, ShieldCheck, Navigation, ShoppingCart, Square, Trash2, Users, X, Zap, } from 'lucide-react';
 import { EmptyCompany, ForgeAccess, type ForgeSession } from './forge-access';
 import { CommandCenter } from './command-center';
 import { loadDynamicCatalog, ProfilePreview, type DynamicProduct } from './catalog-builder';
 import { AdjointeDesk } from './adjointe-desk';
 import { SimulationPanel } from './simulation-panel';
 import { AdminPortal } from './admin-portal';
-
 type Role = 'Boss' | 'Adjointe' | 'Chef' | 'Employé';
-type Order = { id: string; job: string; client: string; title: string; stage: 'À préparer' | 'En production' | 'Prêt' | 'Livraison'; due: string; lead: string; progress: number; color: string; access: Role[] };
+type Order = {
+    id: string;
+    job: string;
+    client: string;
+    title: string;
+    stage: 'À préparer' | 'En production' | 'Prêt' | 'Livraison';
+    due: string;
+    lead: string;
+    progress: number;
+    color: string;
+    access: Role[];
+};
 const orders: Order[] = [
-  { id: 'CMD-2481', job: 'JOB-214', client: 'Breton', title: 'Solins & moulures — Phase 2', stage: 'En production', due: 'Aujourd’hui · 15:30', lead: 'Équipe Fred', progress: 68, color: '#ff9f1c', access: ['Boss','Adjointe','Chef','Employé'] },
-  { id: 'CMD-2479', job: 'JOB-315', client: 'Construction Leduc', title: 'Panneaux toiture 24 ga', stage: 'Prêt', due: 'Ramassage · 13:00', lead: 'Équipe Samir', progress: 100, color: '#32d583', access: ['Boss','Adjointe','Chef'] },
-  { id: 'CMD-2486', job: 'JOB-418', client: 'Toitures Bélanger', title: 'Pliage spécial — 42 pièces', stage: 'À préparer', due: 'Livraison chantier · 2 jours', lead: 'Non assigné', progress: 12, color: '#6c7cff', access: ['Boss','Adjointe'] },
-  { id: 'CMD-2473', job: 'JOB-193', client: 'Métal Laurentien', title: 'Revêtement commercial', stage: 'Livraison', due: 'En route · 11:45', lead: 'Patrick D.', progress: 92, color: '#22b8cf', access: ['Boss','Adjointe'] },
+    { id: 'CMD-2481', job: 'JOB-214', client: 'Breton', title: 'Solins & moulures — Phase 2', stage: 'En production', due: 'Aujourd’hui · 15:30', lead: 'Équipe Fred', progress: 68, color: '#ff9f1c', access: ['Boss', 'Adjointe', 'Chef', 'Employé'] },
+    { id: 'CMD-2479', job: 'JOB-315', client: 'Construction Leduc', title: 'Panneaux toiture 24 ga', stage: 'Prêt', due: 'Ramassage · 13:00', lead: 'Équipe Samir', progress: 100, color: '#32d583', access: ['Boss', 'Adjointe', 'Chef'] },
+    { id: 'CMD-2486', job: 'JOB-418', client: 'Toitures Bélanger', title: 'Pliage spécial — 42 pièces', stage: 'À préparer', due: 'Livraison chantier · 2 jours', lead: 'Non assigné', progress: 12, color: '#6c7cff', access: ['Boss', 'Adjointe'] },
+    { id: 'CMD-2473', job: 'JOB-193', client: 'Métal Laurentien', title: 'Revêtement commercial', stage: 'Livraison', due: 'En route · 11:45', lead: 'Patrick D.', progress: 92, color: '#22b8cf', access: ['Boss', 'Adjointe'] },
 ];
 const requests = [
-  { urgent: true, type: 'MATÉRIAUX', title: 'Rouleau acier noir 24 ga', meta: 'Chantier Leduc · demandé par Marco', age: 'il y a 8 min' },
-  { urgent: false, type: 'PLIAGE', title: '6 solins en L — 4 po × 6 po', meta: 'Atelier · demandé par Alexandre', age: 'il y a 21 min' },
-  { urgent: false, type: 'MATÉRIAUX', title: '2 boîtes vis #12 couleur QC283', meta: 'Chantier Nordik · demandé par Samir', age: 'il y a 34 min' },
+    { urgent: true, type: 'MATÉRIAUX', title: 'Rouleau acier noir 24 ga', meta: 'Chantier Leduc · demandé par Marco', age: 'il y a 8 min' },
+    { urgent: false, type: 'PLIAGE', title: '6 solins en L — 4 po × 6 po', meta: 'Atelier · demandé par Alexandre', age: 'il y a 21 min' },
+    { urgent: false, type: 'MATÉRIAUX', title: '2 boîtes vis #12 couleur QC283', meta: 'Chantier Nordik · demandé par Samir', age: 'il y a 34 min' },
 ];
 const team = [
-  { name: 'Marco T.', role: 'Chef · Nordik', status: 'Sur chantier', initials: 'MT', tone: 'orange' },
-  { name: 'Samir B.', role: 'Chef · Leduc', status: 'À l’atelier', initials: 'SB', tone: 'blue' },
-  { name: 'Alexandre P.', role: 'Opérateur pliage', status: 'En production', initials: 'AP', tone: 'violet' },
-  { name: 'Karine L.', role: 'Adjointe admin.', status: 'Disponible', initials: 'KL', tone: 'green' },
+    { name: 'Marco T.', role: 'Chef · Nordik', status: 'Sur chantier', initials: 'MT', tone: 'orange' },
+    { name: 'Samir B.', role: 'Chef · Leduc', status: 'À l’atelier', initials: 'SB', tone: 'blue' },
+    { name: 'Alexandre P.', role: 'Opérateur pliage', status: 'En production', initials: 'AP', tone: 'violet' },
+    { name: 'Karine L.', role: 'Adjointe admin.', status: 'Disponible', initials: 'KL', tone: 'green' },
 ];
 const weekHours = [
-  { day: 'Lun', date: '31', hours: 9.25, job: 'JOB-214', status: 'Confirmé' },
-  { day: 'Mar', date: '01', hours: 8.5, job: 'JOB-214', status: 'Confirmé' },
-  { day: 'Mer', date: '02', hours: 10, job: 'JOB-214', status: 'À confirmer' },
-  { day: 'Jeu', date: '03', hours: 7.75, job: 'JOB-315', status: 'À venir' },
-  { day: 'Ven', date: '04', hours: 0, job: '—', status: 'À venir' },
+    { day: 'Lun', date: '31', hours: 9.25, job: 'JOB-214', status: 'Confirmé' },
+    { day: 'Mar', date: '01', hours: 8.5, job: 'JOB-214', status: 'Confirmé' },
+    { day: 'Mer', date: '02', hours: 10, job: 'JOB-214', status: 'À confirmer' },
+    { day: 'Jeu', date: '03', hours: 7.75, job: 'JOB-315', status: 'À venir' },
+    { day: 'Ven', date: '04', hours: 0, job: '—', status: 'À venir' },
 ];
 const payrollRows = [
-  { name: 'Fred G.', role: 'Chef', gross: '42 h 15', lunch: '- 1 h 15', payable: '41 h 00', state: 'Correction' },
-  { name: 'Alex P.', role: 'Employé', gross: '39 h 30', lunch: '- 1 h 15', payable: '38 h 15', state: 'Confirmé' },
-  { name: 'Marco T.', role: 'Chef', gross: '44 h 00', lunch: '- 1 h 15', payable: '42 h 45', state: 'À confirmer' },
-  { name: 'Samir B.', role: 'Employé', gross: '37 h 45', lunch: '- 1 h 00', payable: '36 h 45', state: 'Confirmé' },
+    { name: 'Fred G.', role: 'Chef', gross: '42 h 15', lunch: '- 1 h 15', payable: '41 h 00', state: 'Correction' },
+    { name: 'Alex P.', role: 'Employé', gross: '39 h 30', lunch: '- 1 h 15', payable: '38 h 15', state: 'Confirmé' },
+    { name: 'Marco T.', role: 'Chef', gross: '44 h 00', lunch: '- 1 h 15', payable: '42 h 45', state: 'À confirmer' },
+    { name: 'Samir B.', role: 'Employé', gross: '37 h 45', lunch: '- 1 h 00', payable: '36 h 45', state: 'Confirmé' },
 ];
-
 export default function Home() {
-  const [role, setRole] = useState<Role>('Boss');
-  const [session, setSession] = useState<ForgeSession | null>(null);
-  const [accessReady, setAccessReady] = useState(false);
-  const [punched, setPunched] = useState(false);
-  const [toastText, setToastText] = useState('Demande envoyée');
-  const [selectedJob, setSelectedJob] = useState('JOB-214');
-  const [activeJob, setActiveJob] = useState('JOB-214');
-  const [jobSwitchPending, setJobSwitchPending] = useState(false);
-  const [temporaryJobs, setTemporaryJobs] = useState(['TEMP-009']);
-  const [temporaryJobNames, setTemporaryJobNames] = useState<Record<string,string>>({ 'TEMP-009': 'Réparation urgence' });
-  const [pendingOrders, setPendingOrders] = useState(1);
-  const [clearedJobs, setClearedJobs] = useState<string[]>([]);
-  const [bidPrice, setBidPrice] = useState(45251.01);
-  const [materialsCost, setMaterialsCost] = useState(21480);
-  const [fixedCost, setFixedCost] = useState(3450);
-  const [rentalCost, setRentalCost] = useState(1895);
-  const [laborCost, setLaborCost] = useState(9870);
-  const [extrasCost, setExtrasCost] = useState(1450);
-  const [accidentOpen, setAccidentOpen] = useState(false);
-  const [mapChoiceOpen, setMapChoiceOpen] = useState(false);
-  const [accidentSubmitted, setAccidentSubmitted] = useState(false);
-  const [accidentApproved, setAccidentApproved] = useState(false);
-  const [planName, setPlanName] = useState('Plan architecture.pdf');
-  const [logoSrc, setLogoSrc] = useState('/mir-company-logo-transparent.png');
-  const [jobDossierOpen, setJobDossierOpen] = useState(false);
-  const [extraFormOpen, setExtraFormOpen] = useState(false);
-  const [orderCategory, setOrderCategory] = useState<'Matériaux' | 'Outils' | 'Pliage'>('Matériaux');
-  const [selectedPreset, setSelectedPreset] = useState('Lame de Skill');
-  const [orderCart, setOrderCart] = useState<Array<{ id: number; category: string; item: string; detail: string; photos: string[] }>>([]);
-  const [orderPhotos, setOrderPhotos] = useState<string[]>([]);
-  const [draggedPreset, setDraggedPreset] = useState<string | null>(null);
-  const [presetSets, setPresetSets] = useState<Record<'Matériaux' | 'Outils' | 'Pliage', string[]>>({
-    Outils: ['Gun à revêtement','Gun à charpente','Gun à finition','Scie circulaire','Scie sauteuse','OLSA — grosseur manuelle','Scie à onglet','Patte d’échafaud','Vérin','Batterie FlexVolt','Batterie non FlexVolt','Hose à air'],
-    Pliage: ['Fascia','Chaise','Colonne','T transition soffite/revêtement','L 1½″ fenêtre','Moulure anti-rongeur','Moulure de départ','Capage porte de garage','Beam','Autre pliage custom'],
-    Matériaux: ['Lame de Skill','Lame Olfa 1″','Broche à soffite','Clou à revêtement','Clou 3¼','Clou finition','Tape 3M','Joint fibro 5′','Joint fibro 7′','J soffite','Boîte de soffite'],
-  });
-  const [length1, setLength1] = useState('120'); const [length2, setLength2] = useState('');
-  const [lengthQty1, setLengthQty1] = useState(1); const [lengthQty2, setLengthQty2] = useState(1);
-  const [beamDoubleFold, setBeamDoubleFold] = useState(false);
-  const [columnQty, setColumnQty] = useState(1);
-  const [itemColor,setItemColor]=useState('Noir'); const [customColor,setCustomColor]=useState(''); const [itemUnit,setItemUnit]=useState('morceau');
-  const [dynamicCatalog,setDynamicCatalog]=useState<DynamicProduct[]>([]); const [dynamicValues,setDynamicValues]=useState<Record<string,string|boolean>>({});
-  const [basketItems, setBasketItems] = useState([
-    { id: 1, chef: 'Fred G.', job: 'JOB-214', name: 'Lames Olfa 1″', qty: '2 boîtes', loaded: false },
-    { id: 2, chef: 'Fred G.', job: 'JOB-214', name: 'Tape rouge', qty: '6 rouleaux', loaded: false },
-    { id: 3, chef: 'Fred G.', job: 'JOB-214', name: 'Clous gun 3¼', qty: '3 boîtes', loaded: true },
-    { id: 4, chef: 'Marco T.', job: 'JOB-315', name: 'Broche soffite', qty: '2 boîtes', loaded: false },
-    { id: 5, chef: 'Marco T.', job: 'JOB-315', name: 'Papier joint fibro', qty: '4 rouleaux', loaded: false },
-  ]);
-  const [filter, setFilter] = useState('Tous'); const [query, setQuery] = useState('');
-  const [modal, setModal] = useState(false); const [toast, setToast] = useState(false); const [mobileNav, setMobileNav] = useState(false);
-  const visibleOrders = useMemo(() => orders.filter((o) => !clearedJobs.includes(o.job) && o.access.includes(role) && (filter === 'Tous' || o.stage === filter) && `${o.id} ${o.job} ${o.client} ${o.title}`.toLowerCase().includes(query.toLowerCase())), [clearedJobs, filter, query, role]);
-  const totalCost = materialsCost + fixedCost + rentalCost + laborCost + extrasCost;
-  const profit = bidPrice - totalCost;
-  const performance = bidPrice ? (profit / bidPrice) * 100 : 0;
-  function submitRequest(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault(); if (!orderCart.length || !session) return;
-    const key=`forge:${session.companyId}:orders`; const existing=JSON.parse(localStorage.getItem(key)||'[]');
-    const catalog=JSON.parse(localStorage.getItem(`forge:${session.companyId}:catalog`)||'[]') as Array<{name:string;source:string}>;
-    const dynamic=loadDynamicCatalog(session.companyId); const jobNames:Record<string,string>={'JOB-214':'Breton','JOB-315':'Leduc','JOB-418':'Bélanger'};
-    const next={id:`BC-2026-${String(Date.now()).slice(-4)}`,companyId:session.companyId,date:new Date().toISOString().slice(0,10),job:`${selectedJob} · ${jobNames[selectedJob]||temporaryJobNames[selectedJob]||'Chantier temporaire'}`,requester:session.userName,items:orderCart.map(item=>{
-      const product=catalog.find(p=>p.name===item.item); const dynamicProduct=dynamic.find(p=>p.name===item.item); const source=dynamicProduct?.source||product?.source||'Inventaire MIR';
-      const unit=item.detail.match(/Unité:\s*([^·]+)/)?.[1]?.trim()||(item.detail.includes('boîte')?'boîtes':item.detail.includes('morceau')?'morceaux':dynamicProduct?.units[0]||'morceaux');
-      const qty=Number(item.detail.match(/Quantité:\s*(\d+)/)?.[1]||item.detail.match(/Quantité\s+(\d+)/)?.[1]||item.detail.match(/×\s*(\d+)/)?.[1]||2);
-      return{name:item.item,qty,unit,detail:item.detail,source:source==='Fournisseur'?'Fournisseur':'Inventaire MIR',supplier:source==='Fournisseur'?(dynamicProduct?.supplier||'Acier Breton'):undefined};
-    }),status:'Reçue',history:[`Créée par ${session.userName} · ${new Date().toLocaleString('fr-CA')}`]};
-    localStorage.setItem(key,JSON.stringify([next,...existing])); window.dispatchEvent(new Event('forge-orders-updated')); setModal(false); setOrderCart([]); setPendingOrders((n) => n + 1); setToastText('Commande envoyée dans le centre administratif'); setToast(true); window.setTimeout(() => setToast(false), 3200);
-  }
-  function submitPurchase(e: React.FormEvent<HTMLFormElement>) { e.preventDefault(); setToastText('Achat confirmé'); setToast(true); window.setTimeout(() => setToast(false), 3200); }
-  useEffect(() => { if (!punched) { setActiveJob(selectedJob); setJobSwitchPending(false); } }, [punched, selectedJob]);
-  useEffect(() => { ['JOB-214','JOB-315'].forEach((job) => { if (!basketItems.some((item) => item.job === job)) setClearedJobs((jobs) => jobs.includes(job) ? jobs : [...jobs,job]); }); }, [basketItems]);
-  useEffect(() => { const raw=localStorage.getItem('forge:session'); if(raw){try{const current=JSON.parse(raw) as ForgeSession;setSession(current);setRole(current.role)}catch{localStorage.removeItem('forge:session')}} setAccessReady(true); },[]);
-  useEffect(() => { if (!session) return; const sync=()=>{const simpleRaw=localStorage.getItem(`forge:${session.companyId}:catalog`);const products=(simpleRaw?JSON.parse(simpleRaw):[]) as Array<{name:string;category:string;active:boolean}>;const dynamic=loadDynamicCatalog(session.companyId);setDynamicCatalog(dynamic);setPresetSets(current=>{const next={...current};(['Matériaux','Outils','Pliage'] as const).forEach(category=>{const names=[...products.filter(p=>p.active&&p.category===category).map(p=>p.name),...dynamic.filter(p=>p.active&&p.category===category).map(p=>p.name)];if(names.length)next[category]=[...new Set(names)]});return next})};sync();window.addEventListener('forge-catalog-updated',sync);return()=>window.removeEventListener('forge-catalog-updated',sync)},[session]);
-
-  if (!accessReady) return <div className="forge-loading">FORGE</div>;
-  if (!session) return <ForgeAccess onEnter={(current)=>{setSession(current);setRole(current.role)}}/>;
-  if (session.companyId !== 'mir-demo') return <EmptyCompany session={session} onLogout={()=>{localStorage.removeItem('forge:session');setSession(null)}}/>;
-
-  const isFieldRole = role === 'Employé' || role === 'Chef';
-  if (!isFieldRole) return <AdminPortal role={role as 'Boss'|'Adjointe'} session={session} onLogout={()=>{localStorage.removeItem('forge:session');setSession(null)}}/>;
-  const quickItems = presetSets[orderCategory];
-  const activeDynamicProduct=dynamicCatalog.find(product=>product.active&&product.category===orderCategory&&product.name===selectedPreset);
-  const switchingJob = punched && selectedJob !== activeJob;
-  return <main className={`app-shell ${isFieldRole ? 'field-mobile' : ''} role-${role.toLowerCase().replace('é','e')}`}>
+    const [role, setRole] = useState<Role>('Boss');
+    const [session, setSession] = useState<ForgeSession | null>(null);
+    const [accessReady, setAccessReady] = useState(false);
+    const [punched, setPunched] = useState(false);
+    const [toastText, setToastText] = useState('Demande envoyée');
+    const [selectedJob, setSelectedJob] = useState('JOB-214');
+    const [activeJob, setActiveJob] = useState('JOB-214');
+    const [jobSwitchPending, setJobSwitchPending] = useState(false);
+    const [temporaryJobs, setTemporaryJobs] = useState(['TEMP-009']);
+    const [temporaryJobNames, setTemporaryJobNames] = useState<Record<string, string>>({ 'TEMP-009': 'Réparation urgence' });
+    const [pendingOrders, setPendingOrders] = useState(1);
+    const [clearedJobs, setClearedJobs] = useState<string[]>([]);
+    const [bidPrice, setBidPrice] = useState(45251.01);
+    const [materialsCost, setMaterialsCost] = useState(21480);
+    const [fixedCost, setFixedCost] = useState(3450);
+    const [rentalCost, setRentalCost] = useState(1895);
+    const [laborCost, setLaborCost] = useState(9870);
+    const [extrasCost, setExtrasCost] = useState(1450);
+    const [accidentOpen, setAccidentOpen] = useState(false);
+    const [documentationOpen, setDocumentationOpen] = useState(false);
+    const [mapChoiceOpen, setMapChoiceOpen] = useState(false);
+    const [accidentSubmitted, setAccidentSubmitted] = useState(false);
+    const [accidentApproved, setAccidentApproved] = useState(false);
+    const [planName, setPlanName] = useState('Plan architecture.pdf');
+    const [logoSrc, setLogoSrc] = useState('/mir-company-logo-transparent.png');
+    const [jobDossierOpen, setJobDossierOpen] = useState(false);
+    const [extraFormOpen, setExtraFormOpen] = useState(false);
+    const [orderCategory, setOrderCategory] = useState<'Matériaux' | 'Outils' | 'Pliage'>('Matériaux');
+    const [selectedPreset, setSelectedPreset] = useState('Lame de Skill');
+    const [orderCart, setOrderCart] = useState<Array<{
+        id: number;
+        category: string;
+        item: string;
+        detail: string;
+        photos: string[];
+    }>>([]);
+    const [orderPhotos, setOrderPhotos] = useState<string[]>([]);
+    const [draggedPreset, setDraggedPreset] = useState<string | null>(null);
+    const [presetSets, setPresetSets] = useState<Record<'Matériaux' | 'Outils' | 'Pliage', string[]>>({
+        Outils: ['Gun à revêtement', 'Gun à charpente', 'Gun à finition', 'Scie circulaire', 'Scie sauteuse', 'OLSA — grosseur manuelle', 'Scie à onglet', 'Patte d’échafaud', 'Vérin', 'Batterie FlexVolt', 'Batterie non FlexVolt', 'Hose à air'],
+        Pliage: ['Fascia', 'Chaise', 'Colonne', 'T transition soffite/revêtement', 'L 1½″ fenêtre', 'Moulure anti-rongeur', 'Moulure de départ', 'Capage porte de garage', 'Beam', 'Autre pliage custom'],
+        Matériaux: ['Lame de Skill', 'Lame Olfa 1″', 'Broche à soffite', 'Clou à revêtement', 'Clou 3¼', 'Clou finition', 'Tape 3M', 'Joint fibro 5′', 'Joint fibro 7′', 'J soffite', 'Boîte de soffite'],
+    });
+    const [length1, setLength1] = useState('120');
+    const [length2, setLength2] = useState('');
+    const [lengthQty1, setLengthQty1] = useState(1);
+    const [lengthQty2, setLengthQty2] = useState(1);
+    const [beamDoubleFold, setBeamDoubleFold] = useState(false);
+    const [columnQty, setColumnQty] = useState(1);
+    const [itemColor, setItemColor] = useState('Noir');
+    const [customColor, setCustomColor] = useState('');
+    const [itemUnit, setItemUnit] = useState('morceau');
+    const [dynamicCatalog, setDynamicCatalog] = useState<DynamicProduct[]>([]);
+    const [dynamicValues, setDynamicValues] = useState<Record<string, string | boolean>>({});
+    const [basketItems, setBasketItems] = useState([
+        { id: 1, chef: 'Fred G.', job: 'JOB-214', name: 'Lames Olfa 1″', qty: '2 boîtes', loaded: false },
+        { id: 2, chef: 'Fred G.', job: 'JOB-214', name: 'Tape rouge', qty: '6 rouleaux', loaded: false },
+        { id: 3, chef: 'Fred G.', job: 'JOB-214', name: 'Clous gun 3¼', qty: '3 boîtes', loaded: true },
+        { id: 4, chef: 'Marco T.', job: 'JOB-315', name: 'Broche soffite', qty: '2 boîtes', loaded: false },
+        { id: 5, chef: 'Marco T.', job: 'JOB-315', name: 'Papier joint fibro', qty: '4 rouleaux', loaded: false },
+    ]);
+    const [filter, setFilter] = useState('Tous');
+    const [query, setQuery] = useState('');
+    const [modal, setModal] = useState(false);
+    const [toast, setToast] = useState(false);
+    const [mobileNav, setMobileNav] = useState(false);
+    const visibleOrders = useMemo(() => orders.filter((o) => !clearedJobs.includes(o.job) && o.access.includes(role) && (filter === 'Tous' || o.stage === filter) && `${o.id} ${o.job} ${o.client} ${o.title}`.toLowerCase().includes(query.toLowerCase())), [clearedJobs, filter, query, role]);
+    const totalCost = materialsCost + fixedCost + rentalCost + laborCost + extrasCost;
+    const profit = bidPrice - totalCost;
+    const performance = bidPrice ? (profit / bidPrice) * 100 : 0;
+    function submitRequest(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        if (!orderCart.length || !session)
+            return;
+        const key = `forge:${session.companyId}:orders`;
+        const existing = JSON.parse(localStorage.getItem(key) || '[]');
+        const catalog = JSON.parse(localStorage.getItem(`forge:${session.companyId}:catalog`) || '[]') as Array<{
+            name: string;
+            source: string;
+        }>;
+        const dynamic = loadDynamicCatalog(session.companyId);
+        const jobNames: Record<string, string> = { 'JOB-214': 'Breton', 'JOB-315': 'Leduc', 'JOB-418': 'Bélanger' };
+        const next = { id: `BC-2026-${String(Date.now()).slice(-4)}`, companyId: session.companyId, date: new Date().toISOString().slice(0, 10), job: `${selectedJob} · ${jobNames[selectedJob] || temporaryJobNames[selectedJob] || 'Chantier temporaire'}`, requester: session.userName, items: orderCart.map(item => {
+                const product = catalog.find(p => p.name === item.item);
+                const dynamicProduct = dynamic.find(p => p.name === item.item);
+                const source = dynamicProduct?.source || product?.source || 'Inventaire MIR';
+                const unit = item.detail.match(/Unité:\s*([^·]+)/)?.[1]?.trim() || (item.detail.includes('boîte') ? 'boîtes' : item.detail.includes('morceau') ? 'morceaux' : dynamicProduct?.units[0] || 'morceaux');
+                const qty = Number(item.detail.match(/Quantité:\s*(\d+)/)?.[1] || item.detail.match(/Quantité\s+(\d+)/)?.[1] || item.detail.match(/×\s*(\d+)/)?.[1] || 2);
+                return { name: item.item, qty, unit, detail: item.detail, source: source === 'Fournisseur' ? 'Fournisseur' : 'Inventaire MIR', supplier: source === 'Fournisseur' ? (dynamicProduct?.supplier || 'Acier Breton') : undefined };
+            }), status: 'Reçue', history: [`Créée par ${session.userName} · ${new Date().toLocaleString('fr-CA')}`] };
+        localStorage.setItem(key, JSON.stringify([next, ...existing]));
+        window.dispatchEvent(new Event('forge-orders-updated'));
+        setModal(false);
+        setOrderCart([]);
+        setPendingOrders((n) => n + 1);
+        setToastText('Commande envoyée dans le centre administratif');
+        setToast(true);
+        window.setTimeout(() => setToast(false), 3200);
+    }
+    function submitPurchase(e: React.FormEvent<HTMLFormElement>) { e.preventDefault(); setToastText('Achat confirmé'); setToast(true); window.setTimeout(() => setToast(false), 3200); }
+    useEffect(() => { if (!punched) {
+        setActiveJob(selectedJob);
+        setJobSwitchPending(false);
+    } }, [punched, selectedJob]);
+    useEffect(() => { ['JOB-214', 'JOB-315'].forEach((job) => { if (!basketItems.some((item) => item.job === job))
+        setClearedJobs((jobs) => jobs.includes(job) ? jobs : [...jobs, job]); }); }, [basketItems]);
+    useEffect(() => { const raw = localStorage.getItem('forge:session'); if (raw) {
+        try {
+            const current = JSON.parse(raw) as ForgeSession;
+            setSession(current);
+            setRole(current.role);
+        }
+        catch {
+            localStorage.removeItem('forge:session');
+        }
+    } setAccessReady(true); }, []);
+    useEffect(() => { if (!session)
+        return; const sync = () => { const simpleRaw = localStorage.getItem(`forge:${session.companyId}:catalog`); const products = (simpleRaw ? JSON.parse(simpleRaw) : []) as Array<{
+        name: string;
+        category: string;
+        active: boolean;
+    }>; const dynamic = loadDynamicCatalog(session.companyId); setDynamicCatalog(dynamic); setPresetSets(current => { const next = { ...current }; (['Matériaux', 'Outils', 'Pliage'] as const).forEach(category => { const names = [...products.filter(p => p.active && p.category === category).map(p => p.name), ...dynamic.filter(p => p.active && p.category === category).map(p => p.name)]; if (names.length)
+        next[category] = [...new Set(names)]; }); return next; }); }; sync(); window.addEventListener('forge-catalog-updated', sync); return () => window.removeEventListener('forge-catalog-updated', sync); }, [session]);
+    if (!accessReady)
+        return <div className="forge-loading">FORGE</div>;
+    if (!session)
+        return <ForgeAccess onEnter={(current) => { setSession(current); setRole(current.role); }}/>;
+    if (session.companyId !== 'mir-demo')
+        return <EmptyCompany session={session} onLogout={() => { localStorage.removeItem('forge:session'); setSession(null); }}/>;
+    const isFieldRole = role === 'Employé' || role === 'Chef';
+    if (!isFieldRole)
+        return <AdminPortal role={role as 'Boss' | 'Adjointe'} session={session} onLogout={() => { localStorage.removeItem('forge:session'); setSession(null); }}/>;
+    const quickItems = presetSets[orderCategory];
+    const activeDynamicProduct = dynamicCatalog.find(product => product.active && product.category === orderCategory && product.name === selectedPreset);
+    const switchingJob = punched && selectedJob !== activeJob;
+    return <main className={`app-shell ${isFieldRole ? 'field-mobile' : ''} role-${role.toLowerCase().replace('é', 'e')}`}>
     <aside className={`sidebar ${mobileNav ? 'open' : ''}`}>
-      <div className="brand"><div className="brand-mark"><HardHat size={23}/></div><div><b>FORGE</b><span>CHANTIER</span></div></div>
-      <button className="close-nav" onClick={() => setMobileNav(false)} aria-label="Fermer le menu"><X/></button>
-      <nav aria-label="Navigation principale"><p>ESPACE DE TRAVAIL</p>{role === 'Employé' ? <><a className="active" href="#punch"><Clock3/>Punch</a><a href="#job"><HardHat/>Mon job</a><a href="#orders"><PackageCheck/>Commandes <em>{visibleOrders.length}</em></a><a href="#messages"><MessageSquare/>Discussion privée <i/></a></> : <><a className="active" href="#dashboard"><LayoutDashboard/>Vue d’ensemble</a><a href="#punch"><Clock3/>{role === 'Chef' ? 'Punch & mon équipe' : 'Punch & heures'}</a><a href="#orders"><PackageCheck/>Commandes <em>{visibleOrders.length}</em></a><a href="#requests"><Zap/>Demandes <em className="hot">3</em></a><a href="#messages"><MessageSquare/>Communications <i/></a><p>GESTION</p><a href="#team"><Users/>Équipes</a>{(role === 'Boss' || role === 'Adjointe') && <><a href="#inventory"><Box/>Inventaire</a><a href="#suppliers"><Factory/>Fournisseurs</a><a href="#settings"><Settings/>Paramètres</a></>}</>}</nav>
-      <div className="shift-card"><div><Clock3/><span>Quart en cours</span></div><b>06:30 — 15:30</b><small>18 membres actifs</small></div>
-      <div className="profile forge-profile"><div className="avatar">{session.userName.slice(0,2).toUpperCase()}</div><div><b>{session.userName}</b><span>{session.companyName} · {role}</span></div><button onClick={()=>{localStorage.removeItem('forge:session');setSession(null)}}>Quitter</button></div>
+      <div className="brand">
+<div className="brand-mark">
+<HardHat size={23}/>
+</div>
+<div>
+<b>FORGE</b>
+<span>CHANTIER</span>
+</div>
+</div>
+      <button className="close-nav" onClick={() => setMobileNav(false)} aria-label="Fermer le menu">
+<X />
+</button>
+      <nav aria-label="Navigation principale">
+<p>ESPACE DE TRAVAIL</p>{role === 'Employé' ? <>
+<a className="active" href="#punch">
+<Clock3 />Punch</a>
+<a href="#job">
+<HardHat />Mon job</a>
+<a href="#orders">
+<PackageCheck />Commandes <em>{visibleOrders.length}</em>
+</a>
+<a href="#messages">
+<MessageSquare />Discussion privée <i />
+</a>
+</> : <>
+<a className="active" href="#dashboard">
+<LayoutDashboard />Vue d’ensemble</a>
+<a href="#punch">
+<Clock3 />{role === 'Chef' ? 'Punch & mon équipe' : 'Punch & heures'}</a>
+<a href="#orders">
+<PackageCheck />Commandes <em>{visibleOrders.length}</em>
+</a>
+<a href="#requests">
+<Zap />Demandes <em className="hot">3</em>
+</a>
+<a href="#messages">
+<MessageSquare />Communications <i />
+</a>
+<p>GESTION</p>
+<a href="#team">
+<Users />Équipes</a>{(role === 'Boss' || role === 'Adjointe') && <>
+<a href="#inventory">
+<Box />Inventaire</a>
+<a href="#suppliers">
+<Factory />Fournisseurs</a>
+<a href="#settings">
+<Settings />Paramètres</a>
+</>}</>}</nav>
+      <div className="shift-card">
+<div>
+<Clock3 />
+<span>Quart en cours</span>
+</div>
+<b>06:30 — 15:30</b>
+<small>18 membres actifs</small>
+</div>
+      <div className="profile forge-profile">
+<div className="avatar">{session.userName.slice(0, 2).toUpperCase()}</div>
+<div>
+<b>{session.userName}</b>
+<span>{session.companyName} · {role}</span>
+</div>
+<button onClick={() => { localStorage.removeItem('forge:session'); setSession(null); }}>Quitter</button>
+</div>
     </aside>
     {mobileNav && <button className="nav-scrim" aria-label="Fermer" onClick={() => setMobileNav(false)}/>}
     <section className="workspace" id="dashboard">
-      <header className="topbar"><button className="menu-btn" onClick={() => setMobileNav(true)} aria-label="Ouvrir le menu"><Menu/></button><div className="search"><Search/><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher no de job, commande, client…"/><kbd>⌘ K</kbd></div><div className="top-actions"><label className="role-switch"><span>Vue</span><select value={role} onChange={(e) => setRole(e.target.value as Role)}><option>Boss</option><option>Adjointe</option><option>Chef</option><option>Employé</option></select></label><span className="live"><i/> Atelier en activité</span><button aria-label="Notifications" className="icon-btn"><Bell/><b>4</b></button>{role !== 'Employé' && <button className="new-request" onClick={() => setModal(true)}><Plus/> Nouvelle demande</button>}<label className={`company-logo ${role === 'Adjointe' ? 'editable' : ''}`} aria-label={role === 'Adjointe' ? 'Modifier le logo de la compagnie' : 'Les Revêtements MIR'}><img src={logoSrc} alt="Les Revêtements MIR"/>{role === 'Adjointe' && <><input type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) { setLogoSrc(URL.createObjectURL(file)); setToastText('Nouveau logo importé'); setToast(true); window.setTimeout(() => setToast(false),3200); } }}/><span className="logo-edit-hint"><Camera/> Modifier</span></>}</label></div></header>
+      <header className="topbar">
+<button className="menu-btn" onClick={() => setMobileNav(true)} aria-label="Ouvrir le menu">
+<Menu />
+</button>
+<div className="search">
+<Search />
+<input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher no de job, commande, client…"/>
+<kbd>⌘ K</kbd>
+</div>
+<div className="top-actions">
+<label className="role-switch">
+<span>Vue</span>
+<select value={role} onChange={(e) => setRole(e.target.value as Role)}>
+<option>Boss</option>
+<option>Adjointe</option>
+<option>Chef</option>
+<option>Employé</option>
+</select>
+</label>
+<span className="live">
+<i /> Atelier en activité</span>
+<button aria-label="Notifications" className="icon-btn">
+<Bell />
+<b>4</b>
+</button>{role !== 'Employé' && <button className="new-request" onClick={() => setModal(true)}>
+<Plus /> Nouvelle demande</button>}<label className={`company-logo ${role === 'Adjointe' ? 'editable' : ''}`} aria-label={role === 'Adjointe' ? 'Modifier le logo de la compagnie' : 'Les Revêtements MIR'}>
+<img src={logoSrc} alt="Les Revêtements MIR"/>{role === 'Adjointe' && <>
+<input type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) {
+        setLogoSrc(URL.createObjectURL(file));
+        setToastText('Nouveau logo importé');
+        setToast(true);
+        window.setTimeout(() => setToast(false), 3200);
+    } }}/>
+<span className="logo-edit-hint">
+<Camera /> Modifier</span>
+</>}</label>
+</div>
+</header>
       <div className="content">
-        <div className="welcome"><div><p>FORGE · LES REVÊTEMENTS MIR · VUE {role.toUpperCase()}</p><h1>{role === 'Adjointe' ? 'Bon matin, Ester.' : role === 'Chef' ? 'Bon matin, Fred.' : role === 'Employé' ? 'Bon matin, Alex.' : 'Bon matin, Simon.'}</h1><span>{role === 'Boss' || role === 'Adjointe' ? 'Vue complète de la compagnie.' : 'Seulement les projets auxquels tu es assigné.'}</span></div><div className="weather"><span>☀</span><div><b>22°C</b><small>Grand-Turk · Dégagé</small></div></div></div>
+        <div className="welcome">
+<div>
+<p>FORGE · LES REVÊTEMENTS MIR · VUE {role.toUpperCase()}</p>
+<h1>{role === 'Adjointe' ? 'Bon matin, Ester.' : role === 'Chef' ? 'Bon matin, Fred.' : role === 'Employé' ? 'Bon matin, Alex.' : 'Bon matin, Simon.'}</h1>
+<span>{role === 'Boss' || role === 'Adjointe' ? 'Vue complète de la compagnie.' : 'Seulement les projets auxquels tu es assigné.'}</span>
+</div>
+<div className="weather">
+<span>☀</span>
+<div>
+<b>22°C</b>
+<small>Grand-Turk · Dégagé</small>
+</div>
+</div>
+</div>
         {(role === 'Employé' || role === 'Chef') && <section className="punch-module" id="punch">
-          {switchingJob && <div className="job-switch-card"><button className="switch-back" onClick={() => { setSelectedJob(activeJob); setJobSwitchPending(false); }} aria-label="Annuler le changement de job"><ArrowLeft/></button><div><span>CHANGEMENT DE CHANTIER</span><b>{activeJob} → {selectedJob}</b><small>Le temps de {activeJob} sera fermé seulement quand tu commenceras la prochaine job.</small></div><button className="switch-start" onClick={() => { setActiveJob(selectedJob); setJobSwitchPending(false); setToastText(`Punch démarré sur ${selectedJob}`); setToast(true); window.setTimeout(() => setToast(false),3200); }}><Play/> PUNCH IN</button></div>}
-          <div className={`punch-panel ${punched ? 'active' : ''}`}><div className="punch-status"><span><i/> {punched ? 'PUNCH ACTIF' : 'PRÊT À COMMENCER'}</span><label className="job-picker"><small>{punched ? 'CHANGER DE CHANTIER' : 'CHOISIR LE JOB'}</small><div className="job-select-row"><select value={selectedJob} onChange={(e) => { const value = e.target.value; if (value === 'CREATE_TEMP') { const id = `TEMP-${String(temporaryJobs.length + 10).padStart(3,'0')}`; setTemporaryJobs((jobs) => [...jobs,id]); setTemporaryJobNames((names) => ({...names,[id]:'Nouveau chantier'})); setSelectedJob(id); setToastText(`${id} créé et partagé immédiatement avec l’équipe`); setToast(true); window.setTimeout(() => setToast(false),3200); } else { setSelectedJob(value); } }}><option value="JOB-214">★ SUGGÉRÉ · JOB-214 — Breton · 86 m</option><option value="JOB-315">JOB-315 — Leduc</option><option value="JOB-418">JOB-418 — Bélanger</option>{temporaryJobs.map((job) => <option key={job} value={job}>{job} — {temporaryJobNames[job] || 'Chantier temporaire'}{job !== 'TEMP-009' ? ' · Non approuvé' : ''}</option>)}{role === 'Chef' && <option value="CREATE_TEMP">＋ Créer un chantier temporaire</option>}</select>{role === 'Chef' && selectedJob.startsWith('TEMP-') && <button type="button" className="rename-temp-job" onClick={(e) => { e.preventDefault(); const name = window.prompt('Nouveau nom du chantier temporaire', temporaryJobNames[selectedJob] || 'Chantier temporaire'); if (name?.trim()) { setTemporaryJobNames((names) => ({...names,[selectedJob]:name.trim()})); setToastText(`${selectedJob} renommé ${name.trim()}`); setToast(true); window.setTimeout(() => setToast(false),3200); } }}>Renommer</button>}</div></label><div className="punch-job-heading"><div><h2>{punched ? '02:18:42' : selectedJob}</h2><p>{punched ? `Temps actif sur ${selectedJob} · tu peux changer de chantier` : selectedJob.startsWith('TEMP-') ? `${temporaryJobNames[selectedJob] || 'Chantier temporaire'} · créé par le chef · visible immédiatement` : 'Chantier assigné par l’administration'}</p></div><div><button onClick={() => { setToastText('Photo jointe ouverte'); setToast(true); window.setTimeout(() => setToast(false),3200); }}><Camera/> Photo jointe</button><button className="job-folder-button" onClick={() => setJobDossierOpen(true)}><HardHat/> Dossier de job</button></div></div><button className="address-link" onClick={() => setMapChoiceOpen(true)}><MapPin/><span>{selectedJob === 'JOB-315' ? '480, boulevard Leduc, Québec' : selectedJob === 'JOB-418' ? '72, rue Bélanger, Lévis' : selectedJob.startsWith('TEMP-') ? 'Adresse temporaire à confirmer' : '1280, rue Industrielle, Québec'}</span><Navigation/></button><div className="today-jobs"><small>AUJOURD’HUI</small><span>JOB-214 · 5 h 12</span><span>JOB-315 · 2 h 18</span></div></div><button onClick={() => setPunched(!punched)}>{punched ? <Square/> : <Play/>}<span>{punched ? 'PUNCH OUT' : 'PUNCH IN'}</span><small>{punched ? `Arrêter sur ${selectedJob}` : `Commencer sur ${selectedJob}`}</small></button><div className="daily-time"><span>TOTAL AUJOURD’HUI</span><b>{punched ? '7 h 30' : '7 h 30'}</b><small>Temps cumulé sur 2 chantiers aujourd’hui</small></div></div>
-          <div className="punch-detail-grid"><article className="panel hour-summary"><div className="panel-head"><div><h2>Mes heures</h2><p>Semaine du 31 août au 6 septembre</p></div><button>Voir l’historique <ChevronRight/></button></div><div className="hour-totals field-hours"><div><span>AUJOURD’HUI</span><b>9 h 15</b></div><div className="payable"><span>TOTAL SEMAINE</span><b>35 h 30</b></div></div><div className="week-strip">{weekHours.map((d) => <div key={d.day} className={d.status === 'Confirmé' ? 'done' : ''}><span>{d.day} {d.date}</span><b>{d.hours ? `${d.hours.toFixed(2)} h` : '—'}</b><small>{d.job}</small><i>{d.status}</i></div>)}</div><button className="confirm-hours"><Check/> Confirmer mes heures</button></article>
-          {role === 'Chef' && <article className="panel crew-punch"><div className="panel-head"><div><h2>Mon équipe sur JOB-214</h2><p>Présence en direct</p></div><button><Plus/> Chantier temporaire</button></div>{[{n:'Fred G.',s:'Punch actif',t:'2 h 18',ok:true},{n:'Alex P.',s:'Punch actif',t:'2 h 07',ok:true},{n:'Kevin R.',s:'Non punché',t:'—',ok:false},{n:'Louis M.',s:'À 2,4 km · accepté',t:'1 h 52',ok:false}].map((m) => <div className="crew-row" key={m.n}><div className={`crew-dot ${m.ok ? 'on' : 'warn'}`}/><div><b>{m.n}</b><span>{m.s}</span></div><strong>{m.t}</strong><button><ChevronRight/></button></div>)}</article>}
+          {switchingJob && <div className="job-switch-card">
+<button className="switch-back" onClick={() => { setSelectedJob(activeJob); setJobSwitchPending(false); }} aria-label="Annuler le changement de job">
+<ArrowLeft />
+</button>
+<div>
+<span>CHANGEMENT DE CHANTIER</span>
+<b>{activeJob} → {selectedJob}</b>
+<small>Le temps de {activeJob} sera fermé seulement quand tu commenceras la prochaine job.</small>
+</div>
+<button className="switch-start" onClick={() => { setActiveJob(selectedJob); setJobSwitchPending(false); setToastText(`Punch démarré sur ${selectedJob}`); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<Play /> PUNCH IN</button>
+</div>}
+          <div className={`punch-panel ${punched ? 'active' : ''}`}>
+<div className="punch-status">
+<span>
+<i /> {punched ? 'PUNCH ACTIF' : 'PRÊT À COMMENCER'}</span>
+<label className="job-picker">
+<small>{punched ? 'CHANGER DE CHANTIER' : 'CHOISIR LE JOB'}</small>
+<div className="job-select-row">
+<select value={selectedJob} onChange={(e) => { const value = e.target.value; if (value === 'CREATE_TEMP') {
+            const id = `TEMP-${String(temporaryJobs.length + 10).padStart(3, '0')}`;
+            setTemporaryJobs((jobs) => [...jobs, id]);
+            setTemporaryJobNames((names) => ({ ...names, [id]: 'Nouveau chantier' }));
+            setSelectedJob(id);
+            setToastText(`${id} créé et partagé immédiatement avec l’équipe`);
+            setToast(true);
+            window.setTimeout(() => setToast(false), 3200);
+        }
+        else {
+            setSelectedJob(value);
+        } }}>
+<option value="JOB-214">★ SUGGÉRÉ · JOB-214 — Breton · 86 m</option>
+<option value="JOB-315">JOB-315 — Leduc</option>
+<option value="JOB-418">JOB-418 — Bélanger</option>{temporaryJobs.map((job) => <option key={job} value={job}>{job} — {temporaryJobNames[job] || 'Chantier temporaire'}{job !== 'TEMP-009' ? ' · Non approuvé' : ''}</option>)}{role === 'Chef' && <option value="CREATE_TEMP">＋ Créer un chantier temporaire</option>}</select>{role === 'Chef' && selectedJob.startsWith('TEMP-') && <button type="button" className="rename-temp-job" onClick={(e) => { e.preventDefault(); const name = window.prompt('Nouveau nom du chantier temporaire', temporaryJobNames[selectedJob] || 'Chantier temporaire'); if (name?.trim()) {
+            setTemporaryJobNames((names) => ({ ...names, [selectedJob]: name.trim() }));
+            setToastText(`${selectedJob} renommé ${name.trim()}`);
+            setToast(true);
+            window.setTimeout(() => setToast(false), 3200);
+        } }}>Renommer</button>}</div>
+</label>
+<div className="punch-job-heading">
+<div>
+<h2>{punched ? '02:18:42' : selectedJob}</h2>
+<p>{punched ? `Temps actif sur ${selectedJob} · tu peux changer de chantier` : selectedJob.startsWith('TEMP-') ? `${temporaryJobNames[selectedJob] || 'Chantier temporaire'} · créé par le chef · visible immédiatement` : 'Chantier assigné par l’administration'}</p>
+</div>
+<div>
+<button onClick={() => { setToastText('Photo jointe ouverte'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<Camera /> Photo jointe</button>
+<button className="job-folder-button" onClick={() => setJobDossierOpen(true)}>
+<HardHat /> Dossier de job</button>
+</div>
+</div>
+<button className="address-link" onClick={() => setMapChoiceOpen(true)}>
+<MapPin />
+<span>{selectedJob === 'JOB-315' ? '480, boulevard Leduc, Québec' : selectedJob === 'JOB-418' ? '72, rue Bélanger, Lévis' : selectedJob.startsWith('TEMP-') ? 'Adresse temporaire à confirmer' : '1280, rue Industrielle, Québec'}</span>
+<Navigation />
+</button>
+<div className="today-jobs">
+<small>AUJOURD’HUI</small>
+<span>JOB-214 · 5 h 12</span>
+<span>JOB-315 · 2 h 18</span>
+</div>
+</div>
+<button onClick={() => setPunched(!punched)}>{punched ? <Square /> : <Play />}<span>{punched ? 'PUNCH OUT' : 'PUNCH IN'}</span>
+<small>{punched ? `Arrêter sur ${selectedJob}` : `Commencer sur ${selectedJob}`}</small>
+</button>
+<div className="daily-time">
+<span>TOTAL AUJOURD’HUI</span>
+<b>{punched ? '7 h 30' : '7 h 30'}</b>
+<small>Temps cumulé sur 2 chantiers aujourd’hui</small>
+</div>
+</div>
+          <div className="punch-detail-grid">
+<article className="panel hour-summary">
+<div className="panel-head">
+<div>
+<h2>Mes heures</h2>
+<p>Semaine du 31 août au 6 septembre</p>
+</div>
+<button>Voir l’historique <ChevronRight />
+</button>
+</div>
+<div className="hour-totals field-hours">
+<div>
+<span>AUJOURD’HUI</span>
+<b>9 h 15</b>
+</div>
+<div className="payable">
+<span>TOTAL SEMAINE</span>
+<b>35 h 30</b>
+</div>
+</div>
+<div className="week-strip">{weekHours.map((d) => <div key={d.day} className={d.status === 'Confirmé' ? 'done' : ''}>
+<span>{d.day} {d.date}</span>
+<b>{d.hours ? `${d.hours.toFixed(2)} h` : '—'}</b>
+<small>{d.job}</small>
+<i>{d.status}</i>
+</div>)}</div>
+<button className="confirm-hours">
+<Check /> Confirmer mes heures</button>
+</article>
+          {role === 'Chef' && <article className="panel crew-punch">
+<div className="panel-head">
+<div>
+<h2>Mon équipe sur JOB-214</h2>
+<p>Présence en direct</p>
+</div>
+<button>
+<Plus /> Chantier temporaire</button>
+</div>{[{ n: 'Fred G.', s: 'Punch actif', t: '2 h 18', ok: true }, { n: 'Alex P.', s: 'Punch actif', t: '2 h 07', ok: true }, { n: 'Kevin R.', s: 'Non punché', t: '—', ok: false }, { n: 'Louis M.', s: 'À 2,4 km · accepté', t: '1 h 52', ok: false }].map((m) => <div className="crew-row" key={m.n}>
+<div className={`crew-dot ${m.ok ? 'on' : 'warn'}`}/>
+<div>
+<b>{m.n}</b>
+<span>{m.s}</span>
+</div>
+<strong>{m.t}</strong>
+<button>
+<ChevronRight />
+</button>
+</div>)}</article>}
           </div>
         </section>}
-        {role === 'Chef' && <section className="chef-field-flow"><article className="panel employee-order-create" id="orders"><div className="order-create-icon"><ShoppingCart/></div><span>COMMANDE POUR LE CHANTIER</span><h2>Créer une commande</h2><p>Ajoute plusieurs articles, quantités et photos. La demande sera ajoutée aux commandes en attente du chef.</p><button onClick={() => setModal(true)}><Plus/> Nouvelle commande</button></article><article className="panel pending-chef-orders"><div className="panel-head"><div><h2>Commandes en attente</h2><p>Demandes envoyées par les employés de ton équipe</p></div><span>{pendingOrders}</span></div><div className="pending-order-line"><div className="request-icon"><Box/></div><div><b>Alex P. · JOB-214</b><span>Lames Olfa, tape rouge, clous 3¼ · photo jointe</span><small>Reçue il y a 4 min</small></div><button onClick={() => { setPendingOrders((n) => Math.max(0,n-1)); setToastText('Commande approuvée et envoyée à l’administration'); setToast(true); window.setTimeout(() => setToast(false),3200); }}><Check/> Approuver</button></div></article><article className="panel field-notifications"><div className="panel-head"><div><h2>Notifications de l’équipe</h2><p>Activité récente des employés</p></div><Bell/></div>{[{t:'Commande reçue',d:'Alex · JOB-214 · 3 articles',i:'CMD'},{t:'Achat confirmé',d:'Kevin · 184,32 $ · reçu joint',i:'ACH'},{t:'Accident déclaré',d:'Alex · JOB-214 · à confirmer',i:'SST'}].map((n) => <div className="field-notification" key={n.i}><span>{n.i}</span><div><b>{n.t}</b><small>{n.d}</small></div><ChevronRight/></div>)}</article></section>}
-        {(role === 'Boss' || role === 'Adjointe') && <section className="admin-hours" id="punch"><div className="hours-head"><div><span>VALIDATION HEBDOMADAIRE</span><h2>Punch et heures de l’équipe</h2><p>Semaine du 24 au 30 août · fermeture dimanche</p></div><button><CalendarDays/> Changer de semaine</button></div><div className="approval-metrics"><article><span>HEURES PAYABLES</span><b>684 h 30</b><small>18 employés</small></article><article><span>CONFIRMÉS</span><b>12 / 18</b><small className="good">67% complété</small></article><article><span>CORRECTIONS</span><b>2</b><small className="bad">À traiter</small></article><article><span>ANOMALIES GPS</span><b>3</b><small>Plus de 2 km</small></article></div><div className="panel payroll"><div className="panel-head"><div><h2>Validation des employés</h2><p>Brut, dîner automatique et total payable</p></div><div className="approval-actions"><button>Exporter</button><button className="approve-all"><Check/> {role === 'Boss' ? 'Approbation finale' : 'Soumettre au Boss'}</button></div></div><div className="payroll-table"><div className="payroll-header"><span>EMPLOYÉ</span><span>HEURES BRUTES</span><span>DÎNER</span><span>PAYABLES</span><span>STATUT</span><span/></div>{payrollRows.map((r) => <div className="payroll-row" key={r.name}><div><b>{r.name}</b><small>{r.role}</small></div><span>{r.gross}</span><span>{r.lunch}</span><strong>{r.payable}</strong><em className={r.state === 'Confirmé' ? 'confirmed' : r.state === 'Correction' ? 'correction' : ''}>{r.state}</em><button><ChevronRight/></button></div>)}</div></div><div className="hours-alert"><AlertTriangle/><div><b>3 punchs demandent ton attention</b><span>Deux positions GPS éloignées et un punch sans sortie. Les punchs ont été acceptés et conservés.</span></div><button>Examiner</button></div></section>}
-        {(role === 'Boss' || role === 'Adjointe') && <section className="panel admin-plan-sync"><div><span>JOB ET PLANS PARTAGÉS</span><h2>JOB-214 · Breton</h2><p>Assigné à Fred, Alex et Kevin. Le plan déposé apparaît automatiquement dans leur Punch ou leur dossier de job.</p></div><div className="admin-plan-file"><FileText/><span><b>{planName}</b><small>Visible par toute l’équipe assignée</small></span><label><Paperclip/> Remplacer le plan<input type="file" accept=".pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) { setPlanName(file.name); setToastText('Plan partagé avec toute l’équipe assignée'); setToast(true); window.setTimeout(() => setToast(false),3200); } }}/></label></div></section>}
-        {role === 'Adjointe' && <><AdjointeDesk companyId={session.companyId}/><SimulationPanel/></>} 
+        {role === 'Chef' && <section className="chef-field-flow">
+<article className="panel employee-order-create" id="orders">
+<div className="order-create-icon">
+<ShoppingCart />
+</div>
+<span>COMMANDE POUR LE CHANTIER</span>
+<h2>Créer une commande</h2>
+<p>Ajoute plusieurs articles, quantités et photos. La demande sera ajoutée aux commandes en attente du chef.</p>
+<button onClick={() => setModal(true)}>
+<Plus /> Nouvelle commande</button>
+</article>
+<article className="panel pending-chef-orders">
+<div className="panel-head">
+<div>
+<h2>Commandes en attente</h2>
+<p>Demandes envoyées par les employés de ton équipe</p>
+</div>
+<span>{pendingOrders}</span>
+</div>
+<div className="pending-order-line">
+<div className="request-icon">
+<Box />
+</div>
+<div>
+<b>Alex P. · JOB-214</b>
+<span>Lames Olfa, tape rouge, clous 3¼ · photo jointe</span>
+<small>Reçue il y a 4 min</small>
+</div>
+<button onClick={() => { setPendingOrders((n) => Math.max(0, n - 1)); setToastText('Commande approuvée et envoyée à l’administration'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<Check /> Approuver</button>
+</div>
+</article>
+<article className="panel field-notifications">
+<div className="panel-head">
+<div>
+<h2>Notifications de l’équipe</h2>
+<p>Activité récente des employés</p>
+</div>
+<Bell />
+</div>{[{ t: 'Commande reçue', d: 'Alex · JOB-214 · 3 articles', i: 'CMD' }, { t: 'Achat confirmé', d: 'Kevin · 184,32 $ · reçu joint', i: 'ACH' }, { t: 'Accident déclaré', d: 'Alex · JOB-214 · à confirmer', i: 'SST' }].map((n) => <div className="field-notification" key={n.i}>
+<span>{n.i}</span>
+<div>
+<b>{n.t}</b>
+<small>{n.d}</small>
+</div>
+<ChevronRight />
+</div>)}</article>
+</section>}
+        {(role === 'Boss' || role === 'Adjointe') && <section className="admin-hours" id="punch">
+<div className="hours-head">
+<div>
+<span>VALIDATION HEBDOMADAIRE</span>
+<h2>Punch et heures de l’équipe</h2>
+<p>Semaine du 24 au 30 août · fermeture dimanche</p>
+</div>
+<button>
+<CalendarDays /> Changer de semaine</button>
+</div>
+<div className="approval-metrics">
+<article>
+<span>HEURES PAYABLES</span>
+<b>684 h 30</b>
+<small>18 employés</small>
+</article>
+<article>
+<span>CONFIRMÉS</span>
+<b>12 / 18</b>
+<small className="good">67% complété</small>
+</article>
+<article>
+<span>CORRECTIONS</span>
+<b>2</b>
+<small className="bad">À traiter</small>
+</article>
+<article>
+<span>ANOMALIES GPS</span>
+<b>3</b>
+<small>Plus de 2 km</small>
+</article>
+</div>
+<div className="panel payroll">
+<div className="panel-head">
+<div>
+<h2>Validation des employés</h2>
+<p>Brut, dîner automatique et total payable</p>
+</div>
+<div className="approval-actions">
+<button>Exporter</button>
+<button className="approve-all">
+<Check /> {role === 'Boss' ? 'Approbation finale' : 'Soumettre au Boss'}</button>
+</div>
+</div>
+<div className="payroll-table">
+<div className="payroll-header">
+<span>EMPLOYÉ</span>
+<span>HEURES BRUTES</span>
+<span>DÎNER</span>
+<span>PAYABLES</span>
+<span>STATUT</span>
+<span />
+</div>{payrollRows.map((r) => <div className="payroll-row" key={r.name}>
+<div>
+<b>{r.name}</b>
+<small>{r.role}</small>
+</div>
+<span>{r.gross}</span>
+<span>{r.lunch}</span>
+<strong>{r.payable}</strong>
+<em className={r.state === 'Confirmé' ? 'confirmed' : r.state === 'Correction' ? 'correction' : ''}>{r.state}</em>
+<button>
+<ChevronRight />
+</button>
+</div>)}</div>
+</div>
+<div className="hours-alert">
+<AlertTriangle />
+<div>
+<b>3 punchs demandent ton attention</b>
+<span>Deux positions GPS éloignées et un punch sans sortie. Les punchs ont été acceptés et conservés.</span>
+</div>
+<button>Examiner</button>
+</div>
+</section>}
+        {(role === 'Boss' || role === 'Adjointe') && <section className="panel admin-plan-sync">
+<div>
+<span>JOB ET PLANS PARTAGÉS</span>
+<h2>JOB-214 · Breton</h2>
+<p>Assigné à Fred, Alex et Kevin. Le plan déposé apparaît automatiquement dans leur Punch ou leur dossier de job.</p>
+</div>
+<div className="admin-plan-file">
+<FileText />
+<span>
+<b>{planName}</b>
+<small>Visible par toute l’équipe assignée</small>
+</span>
+<label>
+<Paperclip /> Remplacer le plan<input type="file" accept=".pdf,image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) {
+        setPlanName(file.name);
+        setToastText('Plan partagé avec toute l’équipe assignée');
+        setToast(true);
+        window.setTimeout(() => setToast(false), 3200);
+    } }}/>
+</label>
+</div>
+</section>}
+        {role === 'Adjointe' && <>
+<AdjointeDesk companyId={session.companyId}/>
+<SimulationPanel />
+</>} 
         {(role === 'Boss' || role === 'Adjointe') && <CommandCenter role={role} companyId={session.companyId}/>}
-        {role === 'Adjointe' && <section className="panel punch-correction"><div><span>CORRECTION DE PUNCH EN TOUT TEMPS</span><h2>Changer un employé de job</h2><p>Corrige la job d’un punch actif, fermé, d’hier ou d’une période antérieure. Chaque modification reste inscrite au journal.</p></div><div className="correction-fields"><label>Employé<select><option>Alex P.</option><option>Kevin R.</option><option>Louis M.</option></select></label><label>Date<input type="date" defaultValue="2026-09-01"/></label><label>Job corrigée<select><option>JOB-315 — Leduc</option><option>JOB-214 — Breton</option><option>TEMP-009</option></select></label><button onClick={() => { setToastText('Punch corrigé et inscrit au journal'); setToast(true); window.setTimeout(() => setToast(false),3200); }}><Check/> Enregistrer</button></div></section>}
-        {role === 'Boss' && <section className="boss-reporting"><div className="reporting-head"><div><span>REGISTRE PERMANENT · CCQ</span><h2>Heures, coûts et rendement par chantier</h2><p>Journal mensuel et annuel conservé pour chaque employé et chaque job.</p></div><button onClick={() => { setToastText('Dossier CCQ préparé pour téléchargement'); setToast(true); window.setTimeout(() => setToast(false),3200); }}><Download/> Exporter le dossier CCQ</button></div><div className="report-filters"><select><option>Tous les entrepreneurs</option><option>Construction Breton</option><option>Construction Leduc</option></select><select><option>Tous les chefs</option><option>Fred G.</option><option>Marco T.</option></select><select><option>Septembre</option><option>Août</option><option>Juillet</option></select><select><option>2026</option><option>2025</option></select><select><option>Jobs actives et terminées</option><option>Actives</option><option>Terminées</option></select></div><div className="ccq-log"><div><span>JOB-214 · BRETON</span><b>684 h 30</b><small>18 employés · Active · Chef Fred</small></div><div><span>JOB-315 · LEDUC</span><b>412 h 15</b><small>9 employés · Active · Chef Marco</small></div><div><span>JOB-193 · LAURENTIEN</span><b>1 104 h 45</b><small>Terminée · Dossier archivé</small></div></div><div className="profit-panel"><div className="profit-inputs"><label>Prix de soumission<input type="number" value={bidPrice} onChange={(e) => setBidPrice(Number(e.target.value))}/></label><label>Matériaux<input type="number" value={materialsCost} onChange={(e) => setMaterialsCost(Number(e.target.value))}/></label><label>Dépenses fixes<input type="number" value={fixedCost} onChange={(e) => setFixedCost(Number(e.target.value))}/></label><label>Location d’outils<input type="number" value={rentalCost} onChange={(e) => setRentalCost(Number(e.target.value))}/></label><label>Main-d’œuvre<input type="number" value={laborCost} onChange={(e) => setLaborCost(Number(e.target.value))}/></label><label>Extras<input type="number" value={extrasCost} onChange={(e) => setExtrasCost(Number(e.target.value))}/></label></div><div className="profit-result"><span>COÛT TOTAL</span><b>{totalCost.toLocaleString('fr-CA',{minimumFractionDigits:2})} $</b><span>PROFIT</span><strong>{profit.toLocaleString('fr-CA',{minimumFractionDigits:2})} $</strong><div><small>RENDEMENT</small><em>{performance.toFixed(2)} %</em></div></div></div></section>}
-        {role === 'Chef' && <section className="chef-order-board" id="chef-orders"><div className="chef-order-tabs"><button className="active">En attente <span>{pendingOrders}</span></button><button>Chez fournisseurs <span>2</span></button><button>Pliage <span>2</span></button></div><article className="panel readonly-bag"><div className="panel-head"><div><h2>Bag de Fred · Lecture seulement</h2><p>Articles préparés pour ta prochaine livraison</p></div><span className="readonly-pill">CONSULTATION</span></div><div className="bag-items">{basketItems.filter((item) => item.chef === 'Fred G.').map((item) => <div key={item.id}><span className={item.loaded ? 'bag-loaded' : ''}>{item.loaded ? <Check/> : <Box/>}</span><div><b>{item.name}</b><small>{item.job} · {item.qty}</small></div><em>{item.loaded ? 'Embarqué' : 'Dans le bag'}</em></div>)}</div><small className="bag-note">Seuls le Boss et l’Adjointe peuvent ajouter ou retirer des articles.</small></article><div className="order-tracking-grid"><article className="panel supplier-tracking"><div className="panel-head"><div><h2>Commandes chez les fournisseurs</h2><p>Délais et livraison au chantier</p></div></div>{[{n:'Breton',d:'Livraison demain · avant 14 h',s:'Commandée',j:'JOB-214'},{n:'Métal Laurentien',d:'Délai 2 jours · chantier',s:'En préparation',j:'JOB-315'}].map((o) => <div className="tracking-row" key={o.n}><Factory/><div><b>{o.n}</b><small>{o.j} · {o.d}</small></div><em>{o.s}</em></div>)}</article><article className="panel folding-tracking"><div className="panel-head"><div><h2>Commandes de pliage</h2><p>Atelier et approbation</p></div></div>{[{n:'6 solins en L · 4 × 6 po',d:'Approuvé · prêt demain',s:'En pliage'},{n:'12 moulures de départ',d:'À approuver par le Boss',s:'En attente'}].map((o) => <div className="tracking-row" key={o.n}><Zap/><div><b>{o.n}</b><small>{o.d}</small></div><em>{o.s}</em></div>)}</article></div></section>}
-        {role === 'Adjointe' && <section className="supplier-sorter"><div className="sorter-head"><div><span>TRI D’UNE COMMANDE MULTI-MATÉRIAUX</span><h2>Distribuer les bons articles aux bonnes personnes</h2><p>Commande Alex · JOB-214 · 8 articles reçus avec 2 photos</p></div><button onClick={() => { setToastText('Tous les courriels de commande ont été préparés'); setToast(true); window.setTimeout(() => setToast(false),3200); }}><Mail/> Préparer tous les courriels</button></div><div className="sort-groups">{[{c:'FOURNISSEUR · BRETON',m:'commandes@breton.ca',i:['Clous revêtement · 4 boîtes','Broche Maibec · 2 boîtes','Tape 3M · 6 rouleaux']},{c:'MATÉRIEL SHOP · ATELIER MIR',m:'Préparation interne',i:['Pliage solin en L · 6 unités','Papier joint fibro · 3 rouleaux']},{c:'OUTILS · QUINCAILLERIE',m:'commande@quincaillerie.ca',i:['Lames Skill 7¼ · 2','Lames Olfa 1″ · 3 paquets']},{c:'PLIAGE · ATELIER',m:'atelier@mir.ca',i:['Moulure départ noire · 12 unités']}].map((g) => <article className="sort-group" key={g.c}><div className="sort-group-head"><div><b>{g.c}</b><small>{g.m}</small></div><button onClick={() => { setToastText(`Courriel préparé · ${g.c}`); setToast(true); window.setTimeout(() => setToast(false),3200); }}><Mail/> Envoyer</button></div><div className="sort-items">{g.i.map((item) => <label key={item}><input type="checkbox" defaultChecked/><span>{item}</span><em>Déplacer</em></label>)}</div></article>)}</div><div className="sorter-footer"><Paperclip/><span><b>2 photos reçues de l’employé</b><small>Elles seront jointes seulement aux courriels concernés.</small></span><button onClick={() => { setToastText('Commande divisée et courriels envoyés'); setToast(true); window.setTimeout(() => setToast(false),3200); }}><Send/> Envoyer les commandes séparées</button></div></section>}
+        {role === 'Adjointe' && <section className="panel punch-correction">
+<div>
+<span>CORRECTION DE PUNCH EN TOUT TEMPS</span>
+<h2>Changer un employé de job</h2>
+<p>Corrige la job d’un punch actif, fermé, d’hier ou d’une période antérieure. Chaque modification reste inscrite au journal.</p>
+</div>
+<div className="correction-fields">
+<label>Employé<select>
+<option>Alex P.</option>
+<option>Kevin R.</option>
+<option>Louis M.</option>
+</select>
+</label>
+<label>Date<input type="date" defaultValue="2026-09-01"/>
+</label>
+<label>Job corrigée<select>
+<option>JOB-315 — Leduc</option>
+<option>JOB-214 — Breton</option>
+<option>TEMP-009</option>
+</select>
+</label>
+<button onClick={() => { setToastText('Punch corrigé et inscrit au journal'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<Check /> Enregistrer</button>
+</div>
+</section>}
+        {role === 'Boss' && <section className="boss-reporting">
+<div className="reporting-head">
+<div>
+<span>REGISTRE PERMANENT · CCQ</span>
+<h2>Heures, coûts et rendement par chantier</h2>
+<p>Journal mensuel et annuel conservé pour chaque employé et chaque job.</p>
+</div>
+<button onClick={() => { setToastText('Dossier CCQ préparé pour téléchargement'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<Download /> Exporter le dossier CCQ</button>
+</div>
+<div className="report-filters">
+<select>
+<option>Tous les entrepreneurs</option>
+<option>Construction Breton</option>
+<option>Construction Leduc</option>
+</select>
+<select>
+<option>Tous les chefs</option>
+<option>Fred G.</option>
+<option>Marco T.</option>
+</select>
+<select>
+<option>Septembre</option>
+<option>Août</option>
+<option>Juillet</option>
+</select>
+<select>
+<option>2026</option>
+<option>2025</option>
+</select>
+<select>
+<option>Jobs actives et terminées</option>
+<option>Actives</option>
+<option>Terminées</option>
+</select>
+</div>
+<div className="ccq-log">
+<div>
+<span>JOB-214 · BRETON</span>
+<b>684 h 30</b>
+<small>18 employés · Active · Chef Fred</small>
+</div>
+<div>
+<span>JOB-315 · LEDUC</span>
+<b>412 h 15</b>
+<small>9 employés · Active · Chef Marco</small>
+</div>
+<div>
+<span>JOB-193 · LAURENTIEN</span>
+<b>1 104 h 45</b>
+<small>Terminée · Dossier archivé</small>
+</div>
+</div>
+<div className="profit-panel">
+<div className="profit-inputs">
+<label>Prix de soumission<input type="number" value={bidPrice} onChange={(e) => setBidPrice(Number(e.target.value))}/>
+</label>
+<label>Matériaux<input type="number" value={materialsCost} onChange={(e) => setMaterialsCost(Number(e.target.value))}/>
+</label>
+<label>Dépenses fixes<input type="number" value={fixedCost} onChange={(e) => setFixedCost(Number(e.target.value))}/>
+</label>
+<label>Location d’outils<input type="number" value={rentalCost} onChange={(e) => setRentalCost(Number(e.target.value))}/>
+</label>
+<label>Main-d’œuvre<input type="number" value={laborCost} onChange={(e) => setLaborCost(Number(e.target.value))}/>
+</label>
+<label>Extras<input type="number" value={extrasCost} onChange={(e) => setExtrasCost(Number(e.target.value))}/>
+</label>
+</div>
+<div className="profit-result">
+<span>COÛT TOTAL</span>
+<b>{totalCost.toLocaleString('fr-CA', { minimumFractionDigits: 2 })} $</b>
+<span>PROFIT</span>
+<strong>{profit.toLocaleString('fr-CA', { minimumFractionDigits: 2 })} $</strong>
+<div>
+<small>RENDEMENT</small>
+<em>{performance.toFixed(2)} %</em>
+</div>
+</div>
+</div>
+</section>}
+        {role === 'Chef' && <section className="chef-order-board" id="chef-orders">
+<div className="chef-order-tabs">
+<button className="active">En attente <span>{pendingOrders}</span>
+</button>
+<button>Chez fournisseurs <span>2</span>
+</button>
+<button>Pliage <span>2</span>
+</button>
+</div>
+<article className="panel readonly-bag">
+<div className="panel-head">
+<div>
+<h2>Bag de Fred · Lecture seulement</h2>
+<p>Articles préparés pour ta prochaine livraison</p>
+</div>
+<span className="readonly-pill">CONSULTATION</span>
+</div>
+<div className="bag-items">{basketItems.filter((item) => item.chef === 'Fred G.').map((item) => <div key={item.id}>
+<span className={item.loaded ? 'bag-loaded' : ''}>{item.loaded ? <Check /> : <Box />}</span>
+<div>
+<b>{item.name}</b>
+<small>{item.job} · {item.qty}</small>
+</div>
+<em>{item.loaded ? 'Embarqué' : 'Dans le bag'}</em>
+</div>)}</div>
+<small className="bag-note">Seuls le Boss et l’Adjointe peuvent ajouter ou retirer des articles.</small>
+</article>
+<div className="order-tracking-grid">
+<article className="panel supplier-tracking">
+<div className="panel-head">
+<div>
+<h2>Commandes chez les fournisseurs</h2>
+<p>Délais et livraison au chantier</p>
+</div>
+</div>{[{ n: 'Breton', d: 'Livraison demain · avant 14 h', s: 'Commandée', j: 'JOB-214' }, { n: 'Métal Laurentien', d: 'Délai 2 jours · chantier', s: 'En préparation', j: 'JOB-315' }].map((o) => <div className="tracking-row" key={o.n}>
+<Factory />
+<div>
+<b>{o.n}</b>
+<small>{o.j} · {o.d}</small>
+</div>
+<em>{o.s}</em>
+</div>)}</article>
+<article className="panel folding-tracking">
+<div className="panel-head">
+<div>
+<h2>Commandes de pliage</h2>
+<p>Atelier et approbation</p>
+</div>
+</div>{[{ n: '6 solins en L · 4 × 6 po', d: 'Approuvé · prêt demain', s: 'En pliage' }, { n: '12 moulures de départ', d: 'À approuver par le Boss', s: 'En attente' }].map((o) => <div className="tracking-row" key={o.n}>
+<Zap />
+<div>
+<b>{o.n}</b>
+<small>{o.d}</small>
+</div>
+<em>{o.s}</em>
+</div>)}</article>
+</div>
+</section>}
+        {role === 'Adjointe' && <section className="supplier-sorter">
+<div className="sorter-head">
+<div>
+<span>TRI D’UNE COMMANDE MULTI-MATÉRIAUX</span>
+<h2>Distribuer les bons articles aux bonnes personnes</h2>
+<p>Commande Alex · JOB-214 · 8 articles reçus avec 2 photos</p>
+</div>
+<button onClick={() => { setToastText('Tous les courriels de commande ont été préparés'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<Mail /> Préparer tous les courriels</button>
+</div>
+<div className="sort-groups">{[{ c: 'FOURNISSEUR · BRETON', m: 'commandes@breton.ca', i: ['Clous revêtement · 4 boîtes', 'Broche Maibec · 2 boîtes', 'Tape 3M · 6 rouleaux'] }, { c: 'MATÉRIEL SHOP · ATELIER MIR', m: 'Préparation interne', i: ['Pliage solin en L · 6 unités', 'Papier joint fibro · 3 rouleaux'] }, { c: 'OUTILS · QUINCAILLERIE', m: 'commande@quincaillerie.ca', i: ['Lames Skill 7¼ · 2', 'Lames Olfa 1″ · 3 paquets'] }, { c: 'PLIAGE · ATELIER', m: 'atelier@mir.ca', i: ['Moulure départ noire · 12 unités'] }].map((g) => <article className="sort-group" key={g.c}>
+<div className="sort-group-head">
+<div>
+<b>{g.c}</b>
+<small>{g.m}</small>
+</div>
+<button onClick={() => { setToastText(`Courriel préparé · ${g.c}`); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<Mail /> Envoyer</button>
+</div>
+<div className="sort-items">{g.i.map((item) => <label key={item}>
+<input type="checkbox" defaultChecked/>
+<span>{item}</span>
+<em>Déplacer</em>
+</label>)}</div>
+</article>)}</div>
+<div className="sorter-footer">
+<Paperclip />
+<span>
+<b>2 photos reçues de l’employé</b>
+<small>Elles seront jointes seulement aux courriels concernés.</small>
+</span>
+<button onClick={() => { setToastText('Commande divisée et courriels envoyés'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<Send /> Envoyer les commandes séparées</button>
+</div>
+</section>}
         {(role === 'Boss' || role === 'Adjointe') && <section className="metrics" aria-label="Indicateurs du jour">
-          <article><div className="metric-icon amber"><PackageCheck/></div><div><span>COMMANDES ACTIVES</span><b>12</b><small><i>+3</i> depuis hier</small></div><svg viewBox="0 0 130 48"><path d="M2 40 C20 38,22 27,38 30 S58 18,72 23 S91 8,108 14 S120 6,128 3"/></svg></article>
-          <article><div className="metric-icon red"><Zap/></div><div><span>DEMANDES À TRAITER</span><b>3</b><small><strong>1 urgente</strong></small></div><div className="pulse-rings"><i/><i/><i/></div></article>
-          <article><div className="metric-icon green"><ShieldCheck/></div><div><span>PRODUCTION DU JOUR</span><b>84%</b><small><i>+6%</i> vs objectif</small></div><div className="donut"><span>84</span></div></article>
-          <article><div className="metric-icon blue"><Users/></div><div><span>ÉQUIPES ACTIVES</span><b>4/5</b><small>18 employés présents</small></div><div className="mini-faces"><i>MT</i><i>SB</i><i>AP</i><i>+15</i></div></article>
+          <article>
+<div className="metric-icon amber">
+<PackageCheck />
+</div>
+<div>
+<span>COMMANDES ACTIVES</span>
+<b>12</b>
+<small>
+<i>+3</i> depuis hier</small>
+</div>
+<svg viewBox="0 0 130 48">
+<path d="M2 40 C20 38,22 27,38 30 S58 18,72 23 S91 8,108 14 S120 6,128 3"/>
+</svg>
+</article>
+          <article>
+<div className="metric-icon red">
+<Zap />
+</div>
+<div>
+<span>DEMANDES À TRAITER</span>
+<b>3</b>
+<small>
+<strong>1 urgente</strong>
+</small>
+</div>
+<div className="pulse-rings">
+<i />
+<i />
+<i />
+</div>
+</article>
+          <article>
+<div className="metric-icon green">
+<ShieldCheck />
+</div>
+<div>
+<span>PRODUCTION DU JOUR</span>
+<b>84%</b>
+<small>
+<i>+6%</i> vs objectif</small>
+</div>
+<div className="donut">
+<span>84</span>
+</div>
+</article>
+          <article>
+<div className="metric-icon blue">
+<Users />
+</div>
+<div>
+<span>ÉQUIPES ACTIVES</span>
+<b>4/5</b>
+<small>18 employés présents</small>
+</div>
+<div className="mini-faces">
+<i>MT</i>
+<i>SB</i>
+<i>AP</i>
+<i>+15</i>
+</div>
+</article>
         </section>}
-        {(role === 'Adjointe' || role === 'Boss') && <section className="order-control"><article className="panel incoming-order"><div className="panel-head"><div><h2>Nouvelle commande reçue</h2><p>Fred G. · JOB-214 Breton · il y a 8 min</p></div><span className="new-order-pill">NOUVELLE</span></div><div className="incoming-body"><div className="incoming-summary"><div className="request-icon"><Box/></div><div><span>3 ARTICLES · MATÉRIAUX</span><b>Lames Olfa, tape rouge et clous 3¼</b><small>Photos du chantier jointes · Priorité normale</small></div></div><div className="decision-actions">{role === 'Adjointe' && <button className="ask-approval" onClick={() => { setToastText('Approbation demandée au Boss'); setToast(true); window.setTimeout(() => setToast(false),3200); }}><ClipboardCheck/> Faire approuver par le Boss</button>}<button className="add-basket" onClick={() => { setToastText('Commande ajoutée au panier de Fred'); setToast(true); window.setTimeout(() => setToast(false),3200); }}><ShoppingCart/> Mettre dans le panier</button><button className="order-now" onClick={() => { setToastText('Commande passée immédiatement'); setToast(true); window.setTimeout(() => setToast(false),3200); }}><Zap/> Commander maintenant</button></div></div></article>{role === 'Boss' && <article className="panel chef-baskets"><div className="panel-head"><div><h2>Paniers des chefs d’équipe</h2><p>Prépare ta tournée et confirme ce qui embarque dans le camion</p></div><span className="basket-count">{basketItems.filter(i => !i.loaded).length} À CHARGER</span></div>{['Fred G.','Marco T.'].map((chef) => { const items = basketItems.filter(i => i.chef === chef); if (!items.length) return null; return <div className="chef-basket" key={chef}><div className="basket-head"><div><span>{chef.split(' ').map(v => v[0]).join('')}</span><div><b>Panier · {chef}</b><small>{items[0].job} · {items.length} articles</small></div></div><button onClick={() => setBasketItems(current => current.filter(i => i.chef !== chef))}><Trash2/> Supprimer le panier</button></div><div className="basket-lines">{items.map((item) => <label key={item.id} className={item.loaded ? 'loaded' : ''}><input type="checkbox" checked={item.loaded} onChange={() => setBasketItems(current => current.map(i => i.id === item.id ? {...i,loaded:!i.loaded} : i))}/><span><b>{item.name}</b><small>{item.qty}</small></span><em>{item.loaded ? 'EMBARQUÉ · STOCK RETIRÉ' : 'À EMBARQUER'}</em></label>)}</div><button className="confirm-load" onClick={() => { setToastText(`Chargement de ${chef} confirmé`); setToast(true); window.setTimeout(() => setToast(false),3200); }}><Check/> Confirmer les articles embarqués</button></div>})}</article>}</section>}
-        <div className={`main-grid ${role === 'Employé' ? 'employee-grid' : ''}`}>{role === 'Employé' ? <section className="panel employee-order-create" id="orders"><div className="order-create-icon"><PackageCheck/></div><span>COMMANDE POUR JOB-214</span><h2>Besoin de matériel?</h2><p>Crée une commande avec plusieurs articles, quantités, notes et photos du chantier.</p><button onClick={() => setModal(true)}><Plus/> Créer une commande</button><small>Tu verras le statut de ta demande dans les notifications.</small></section> : <section className="panel orders-panel" id="orders">
-          <div className="panel-head"><div><h2>Commandes en cours</h2><p>Suivi en temps réel de la production</p></div><button>Voir l’historique <ChevronRight/></button></div>
-          <div className="filters">{['Tous','À préparer','En production','Prêt','Livraison'].map((f) => <button key={f} className={filter === f ? 'active' : ''} onClick={() => setFilter(f)}>{f}{f === 'Tous' && <span>12</span>}</button>)}</div>
-          <div className="order-list">{visibleOrders.map((o) => <article className="order-row" key={o.id}><div className="order-accent" style={{background:o.color}}/><div className="order-main"><div><span>{o.job} · {o.id}</span><b>{o.title}</b><small>{o.client} · Plan PDF disponible</small></div></div><div className="order-stage"><span><i style={{background:o.color}}/>{o.stage}</span><small>{o.lead}</small></div><div className="progress-wrap"><div><span>Progression</span><b>{o.progress}%</b></div><div className="bar"><i style={{width:`${o.progress}%`,background:o.color}}/></div></div><div className="due"><Clock3/><div><small>Échéance</small><b>{o.due}</b></div></div><button className="row-action" aria-label={`Ouvrir ${o.id}`}><ChevronRight/></button></article>)}{visibleOrders.length === 0 && <div className="empty">Aucune commande assignée dans cette vue.</div>}</div>
+        {(role === 'Adjointe' || role === 'Boss') && <section className="order-control">
+<article className="panel incoming-order">
+<div className="panel-head">
+<div>
+<h2>Nouvelle commande reçue</h2>
+<p>Fred G. · JOB-214 Breton · il y a 8 min</p>
+</div>
+<span className="new-order-pill">NOUVELLE</span>
+</div>
+<div className="incoming-body">
+<div className="incoming-summary">
+<div className="request-icon">
+<Box />
+</div>
+<div>
+<span>3 ARTICLES · MATÉRIAUX</span>
+<b>Lames Olfa, tape rouge et clous 3¼</b>
+<small>Photos du chantier jointes · Priorité normale</small>
+</div>
+</div>
+<div className="decision-actions">{role === 'Adjointe' && <button className="ask-approval" onClick={() => { setToastText('Approbation demandée au Boss'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<ClipboardCheck /> Faire approuver par le Boss</button>}<button className="add-basket" onClick={() => { setToastText('Commande ajoutée au panier de Fred'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<ShoppingCart /> Mettre dans le panier</button>
+<button className="order-now" onClick={() => { setToastText('Commande passée immédiatement'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<Zap /> Commander maintenant</button>
+</div>
+</div>
+</article>{role === 'Boss' && <article className="panel chef-baskets">
+<div className="panel-head">
+<div>
+<h2>Paniers des chefs d’équipe</h2>
+<p>Prépare ta tournée et confirme ce qui embarque dans le camion</p>
+</div>
+<span className="basket-count">{basketItems.filter(i => !i.loaded).length} À CHARGER</span>
+</div>{['Fred G.', 'Marco T.'].map((chef) => { const items = basketItems.filter(i => i.chef === chef); if (!items.length)
+        return null; return <div className="chef-basket" key={chef}>
+<div className="basket-head">
+<div>
+<span>{chef.split(' ').map(v => v[0]).join('')}</span>
+<div>
+<b>Panier · {chef}</b>
+<small>{items[0].job} · {items.length} articles</small>
+</div>
+</div>
+<button onClick={() => setBasketItems(current => current.filter(i => i.chef !== chef))}>
+<Trash2 /> Supprimer le panier</button>
+</div>
+<div className="basket-lines">{items.map((item) => <label key={item.id} className={item.loaded ? 'loaded' : ''}>
+<input type="checkbox" checked={item.loaded} onChange={() => setBasketItems(current => current.map(i => i.id === item.id ? { ...i, loaded: !i.loaded } : i))}/>
+<span>
+<b>{item.name}</b>
+<small>{item.qty}</small>
+</span>
+<em>{item.loaded ? 'EMBARQUÉ · STOCK RETIRÉ' : 'À EMBARQUER'}</em>
+</label>)}</div>
+<button className="confirm-load" onClick={() => { setToastText(`Chargement de ${chef} confirmé`); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<Check /> Confirmer les articles embarqués</button>
+</div>; })}</article>}</section>}
+        <div className={`main-grid ${role === 'Employé' ? 'employee-grid' : ''}`}>{role === 'Employé' ? <section className="panel employee-order-create" id="orders">
+<div className="order-create-icon">
+<PackageCheck />
+</div>
+<span>COMMANDE POUR JOB-214</span>
+<h2>Besoin de matériel?</h2>
+<p>Crée une commande avec plusieurs articles, quantités, notes et photos du chantier.</p>
+<button onClick={() => setModal(true)}>
+<Plus /> Créer une commande</button>
+<small>Tu verras le statut de ta demande dans les notifications.</small>
+</section> : <section className="panel orders-panel" id="orders">
+          <div className="panel-head">
+<div>
+<h2>Commandes en cours</h2>
+<p>Suivi en temps réel de la production</p>
+</div>
+<button>Voir l’historique <ChevronRight />
+</button>
+</div>
+          <div className="filters">{['Tous', 'À préparer', 'En production', 'Prêt', 'Livraison'].map((f) => <button key={f} className={filter === f ? 'active' : ''} onClick={() => setFilter(f)}>{f}{f === 'Tous' && <span>12</span>}</button>)}</div>
+          <div className="order-list">{visibleOrders.map((o) => <article className="order-row" key={o.id}>
+<div className="order-accent" style={{ background: o.color }}/>
+<div className="order-main">
+<div>
+<span>{o.job} · {o.id}</span>
+<b>{o.title}</b>
+<small>{o.client} · Plan PDF disponible</small>
+</div>
+</div>
+<div className="order-stage">
+<span>
+<i style={{ background: o.color }}/>{o.stage}</span>
+<small>{o.lead}</small>
+</div>
+<div className="progress-wrap">
+<div>
+<span>Progression</span>
+<b>{o.progress}%</b>
+</div>
+<div className="bar">
+<i style={{ width: `${o.progress}%`, background: o.color }}/>
+</div>
+</div>
+<div className="due">
+<Clock3 />
+<div>
+<small>Échéance</small>
+<b>{o.due}</b>
+</div>
+</div>
+<button className="row-action" aria-label={`Ouvrir ${o.id}`}>
+<ChevronRight />
+</button>
+</article>)}{visibleOrders.length === 0 && <div className="empty">Aucune commande assignée dans cette vue.</div>}</div>
         </section>}{role !== 'Employé' && <aside className="right-stack">
-          <section className="panel requests" id="requests"><div className="panel-head"><div><h2>Demandes terrain</h2><p>À approuver ou assigner</p></div><button className="count">3</button></div><div className="request-list">{requests.map((r) => <article key={r.title} className={r.urgent ? 'urgent' : ''}><div className="request-icon">{r.type === 'PLIAGE' ? <Factory/> : <Box/>}</div><div className="request-copy"><div><span>{r.type}</span>{r.urgent && <strong>URGENT</strong>}</div><b>{r.title}</b><small>{r.meta}</small><time>{r.age}</time></div><button aria-label="Traiter"><ChevronRight/></button></article>)}</div><button className="full-button" onClick={() => setModal(true)}><Plus/> Faire une demande</button></section>
-          <section className="panel team" id="team"><div className="panel-head"><div><h2>Qui est où</h2><p>Présence en direct</p></div><button>Voir tous</button></div>{team.map((p) => <div className="person" key={p.name}><div className={`avatar ${p.tone}`}>{p.initials}<i/></div><div><b>{p.name}</b><span>{p.role}</span></div><small>{p.status}</small></div>)}</section>
+          <section className="panel requests" id="requests">
+<div className="panel-head">
+<div>
+<h2>Demandes terrain</h2>
+<p>À approuver ou assigner</p>
+</div>
+<button className="count">3</button>
+</div>
+<div className="request-list">{requests.map((r) => <article key={r.title} className={r.urgent ? 'urgent' : ''}>
+<div className="request-icon">{r.type === 'PLIAGE' ? <Factory /> : <Box />}</div>
+<div className="request-copy">
+<div>
+<span>{r.type}</span>{r.urgent && <strong>URGENT</strong>}</div>
+<b>{r.title}</b>
+<small>{r.meta}</small>
+<time>{r.age}</time>
+</div>
+<button aria-label="Traiter">
+<ChevronRight />
+</button>
+</article>)}</div>
+<button className="full-button" onClick={() => setModal(true)}>
+<Plus /> Faire une demande</button>
+</section>
+          <section className="panel team" id="team">
+<div className="panel-head">
+<div>
+<h2>Qui est où</h2>
+<p>Présence en direct</p>
+</div>
+<button>Voir tous</button>
+</div>{team.map((p) => <div className="person" key={p.name}>
+<div className={`avatar ${p.tone}`}>{p.initials}<i />
+</div>
+<div>
+<b>{p.name}</b>
+<span>{p.role}</span>
+</div>
+<small>{p.status}</small>
+</div>)}</section>
         </aside>}</div>
-        {isFieldRole && <section className="panel purchase-confirm" id="purchases"><div className="panel-head"><div><h2>Confirmation d’achat</h2><p>Envoie le reçu directement à l’administration</p></div><div className="purchase-head-icon"><ReceiptText/></div></div><form onSubmit={submitPurchase}><div className="purchase-fields"><label>No de job<select required defaultValue="JOB-214"><option>JOB-214 — Breton</option><option>JOB-315 — Leduc</option><option>Aucun job / compagnie</option></select></label><label>Montant total<input required type="number" min="0" step="0.01" placeholder="0,00 $"/></label></div><label>Description de l’achat<input required placeholder="Ex. Essence, quincaillerie, vis, location…"/></label><fieldset><legend>Comment l’achat a-t-il été payé?</legend><label><input type="radio" name="payment" value="refund" required/><span><b>À rembourser</b><small>Payé avec mon argent personnel</small></span></label><label><input type="radio" name="payment" value="company-card"/><span><b>Carte de compagnie</b><small>Achat déjà payé par l’entreprise</small></span></label><label><input type="radio" name="payment" value="account"/><span><b>Porter au compte</b><small>Facturé au compte fournisseur</small></span></label></fieldset><div className="mobile-photo-actions"><label><input type="file" accept="image/*" capture="environment"/><Camera/><span><b>Prendre une photo</b><small>Ouvrir la caméra</small></span></label><label><input type="file" accept="image/*"/><Paperclip/><span><b>Choisir du téléphone</b><small>Galerie de photos</small></span></label></div><label>Note pour Ester / l’administration<textarea placeholder="Fournisseur, raison de l’achat ou détail important…"/></label><button type="submit"><Check/> Confirmer l’achat</button></form></section>}
-        {role === 'Chef' && <section className="panel job-extra"><div className="panel-head"><div><h2>Extra au dossier de job</h2><p>Documente les travaux supplémentaires à côté des plans</p></div><button onClick={() => { setToastText('Extra ajouté au dossier JOB-214'); setToast(true); window.setTimeout(() => setToast(false),3200); }}><Plus/> Ajouter un extra</button></div><div className="extra-fields"><label>Date<input type="date" defaultValue="2026-09-01"/></label><label>Temps requis<input placeholder="Ex. 3 h 30"/></label><label>Approuvé par<input placeholder="Nom du client ou responsable"/></label><label className="extra-photo"><Camera/> Ajouter des photos<input type="file" accept="image/*" capture="environment" multiple/></label></div><textarea placeholder="Description des travaux extra, matériel utilisé et raison…"/><div className="extra-history"><Check/><span><b>Extra #EX-014 · Solin imprévu</b><small>1 sept. · 2 h 45 · Approuvé par J. Breton · 3 photos</small></span></div></section>}
+        {isFieldRole && <section className="panel purchase-confirm" id="purchases">
+<div className="panel-head">
+<div>
+<h2>Confirmation d’achat</h2>
+<p>Envoie le reçu directement à l’administration</p>
+</div>
+<div className="purchase-head-icon">
+<ReceiptText />
+</div>
+</div>
+<form onSubmit={submitPurchase}>
+<div className="purchase-fields">
+<label>No de job<select required defaultValue="JOB-214">
+<option>JOB-214 — Breton</option>
+<option>JOB-315 — Leduc</option>
+<option>Aucun job / compagnie</option>
+</select>
+</label>
+<label>Montant total<input required type="number" min="0" step="0.01" placeholder="0,00 $"/>
+</label>
+</div>
+<label>Description de l’achat<input required placeholder="Ex. Essence, quincaillerie, vis, location…"/>
+</label>
+<fieldset>
+<legend>Comment l’achat a-t-il été payé?</legend>
+<label>
+<input type="radio" name="payment" value="refund" required/>
+<span>
+<b>À rembourser</b>
+<small>Payé avec mon argent personnel</small>
+</span>
+</label>
+<label>
+<input type="radio" name="payment" value="company-card"/>
+<span>
+<b>Carte de compagnie</b>
+<small>Achat déjà payé par l’entreprise</small>
+</span>
+</label>
+<label>
+<input type="radio" name="payment" value="account"/>
+<span>
+<b>Porter au compte</b>
+<small>Facturé au compte fournisseur</small>
+</span>
+</label>
+</fieldset>
+<div className="mobile-photo-actions">
+<label>
+<input type="file" accept="image/*" capture="environment"/>
+<Camera />
+<span>
+<b>Prendre une photo</b>
+<small>Ouvrir la caméra</small>
+</span>
+</label>
+<label>
+<input type="file" accept="image/*"/>
+<Paperclip />
+<span>
+<b>Choisir du téléphone</b>
+<small>Galerie de photos</small>
+</span>
+</label>
+</div>
+<label>Note pour Ester / l’administration<textarea placeholder="Fournisseur, raison de l’achat ou détail important…"/>
+</label>
+<button type="submit">
+<Check /> Confirmer l’achat</button>
+</form>
+</section>}
+        {role === 'Chef' && <section className="panel job-extra">
+<div className="panel-head">
+<div>
+<h2>Extra au dossier de job</h2>
+<p>Documente les travaux supplémentaires à côté des plans</p>
+</div>
+<button onClick={() => { setToastText('Extra ajouté au dossier JOB-214'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<Plus /> Ajouter un extra</button>
+</div>
+<div className="extra-fields">
+<label>Date<input type="date" defaultValue="2026-09-01"/>
+</label>
+<label>Temps requis<input placeholder="Ex. 3 h 30"/>
+</label>
+<label>Approuvé par<input placeholder="Nom du client ou responsable"/>
+</label>
+<label className="extra-photo">
+<Camera /> Ajouter des photos<input type="file" accept="image/*" capture="environment" multiple/>
+</label>
+</div>
+<textarea placeholder="Description des travaux extra, matériel utilisé et raison…"/>
+<div className="extra-history">
+<Check />
+<span>
+<b>Extra #EX-014 · Solin imprévu</b>
+<small>1 sept. · 2 h 45 · Approuvé par J. Breton · 3 photos</small>
+</span>
+</div>
+</section>}
         <section className="feature-grid">
-          <article className="panel job-hub" id="job"><div className="panel-head"><div><h2>{role === 'Employé' ? 'Mon job assigné' : 'Dossier de job'}</h2><p>{role === 'Employé' ? 'Les informations utiles pour ton chantier' : 'Tout ce qui suit le chantier'}</p></div>{role !== 'Employé' && <button><Plus/> Nouveau job</button>}</div><div className="job-body"><div className="job-badge">214</div><div><span>JOB-214 · BRETON</span><h3>Réfection enveloppe extérieure</h3><p>Plans, commandes, photos et historique réunis au même endroit.</p><div className="job-actions"><button><FileText/> Plan architecture.pdf</button>{role !== 'Employé' && <button><Paperclip/> Déposer un plan</button>}</div></div>{role !== 'Employé' && <div className="hours"><span>HEURES PROJET</span><b>213 / 410 h</b><div><i/></div><small>197 h restantes · 52%</small></div>}</div></article>
-          {(role === 'Boss' || role === 'Adjointe') && <article className="panel supplier-card" id="suppliers"><div className="panel-head"><div><h2>Commande fournisseur</h2><p>Brouillon regroupé automatiquement</p></div><span className="draft">BROUILLON</span></div><div className="supplier-body"><div><span>FOURNISSEUR</span><b>Acier Breton Ltée</b><small>commandes@acierbreton.ca</small></div><div className="supplier-lines"><span>Acier noir 24 ga × 2</span><span>Clous gun 3¼ × 5</span><span>Photos employé × 2 jointes</span></div><button onClick={() => { setToastText('Courriel fournisseur envoyé'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}><Mail/> Ester — Envoyer par email</button><small>Délai demandé : 2 jours · Livraison au chantier</small></div></article>}
-          <article className="panel chat-card" id="messages"><div className="panel-head"><div><h2>Discussion · JOB-214</h2><p>{role === 'Chef' ? 'Fred, Simon et Ester' : 'Simon, Ester et Fred'}</p></div><span className="private-pill">PRIVÉE</span></div><div className="chat-body"><div><b>ESTER</b><p>J’ai reçu tes photos. Je les joins à la commande Breton.</p><span>09:42</span></div><div className="mine"><b>{role === 'Chef' ? 'FRED' : role.toUpperCase()}</b><p>Parfait. Il faut livrer directement au chantier dans 2 jours.</p><span>09:44 · Lu</span></div><form onSubmit={(e) => e.preventDefault()}><input placeholder="Écrire dans cette discussion…"/><button aria-label="Envoyer"><Send/></button></form></div></article>
+          <article className="panel job-hub" id="job">
+<div className="panel-head">
+<div>
+<h2>{role === 'Employé' ? 'Mon job assigné' : 'Dossier de job'}</h2>
+<p>{role === 'Employé' ? 'Les informations utiles pour ton chantier' : 'Tout ce qui suit le chantier'}</p>
+</div>{role !== 'Employé' && <button>
+<Plus /> Nouveau job</button>}</div>
+<div className="job-body">
+<div className="job-badge">214</div>
+<div>
+<span>JOB-214 · BRETON</span>
+<h3>Réfection enveloppe extérieure</h3>
+<p>Plans, commandes, photos et historique réunis au même endroit.</p>
+<div className="job-actions">
+<button>
+<FileText /> Plan architecture.pdf</button>{role !== 'Employé' && <button>
+<Paperclip /> Déposer un plan</button>}</div>
+</div>{role !== 'Employé' && <div className="hours">
+<span>HEURES PROJET</span>
+<b>213 / 410 h</b>
+<div>
+<i />
+</div>
+<small>197 h restantes · 52%</small>
+</div>}</div>
+</article>
+          {(role === 'Boss' || role === 'Adjointe') && <article className="panel supplier-card" id="suppliers">
+<div className="panel-head">
+<div>
+<h2>Commande fournisseur</h2>
+<p>Brouillon regroupé automatiquement</p>
+</div>
+<span className="draft">BROUILLON</span>
+</div>
+<div className="supplier-body">
+<div>
+<span>FOURNISSEUR</span>
+<b>Acier Breton Ltée</b>
+<small>commandes@acierbreton.ca</small>
+</div>
+<div className="supplier-lines">
+<span>Acier noir 24 ga × 2</span>
+<span>Clous gun 3¼ × 5</span>
+<span>Photos employé × 2 jointes</span>
+</div>
+<button onClick={() => { setToastText('Courriel fournisseur envoyé'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<Mail /> Ester — Envoyer par email</button>
+<small>Délai demandé : 2 jours · Livraison au chantier</small>
+</div>
+</article>}
+          <article className="panel chat-card" id="messages">
+<div className="panel-head">
+<div>
+<h2>Discussion · JOB-214</h2>
+<p>{role === 'Chef' ? 'Fred, Simon et Ester' : 'Simon, Ester et Fred'}</p>
+</div>
+<span className="private-pill">PRIVÉE</span>
+</div>
+<div className="chat-body">
+<div>
+<b>ESTER</b>
+<p>J’ai reçu tes photos. Je les joins à la commande Breton.</p>
+<span>09:42</span>
+</div>
+<div className="mine">
+<b>{role === 'Chef' ? 'FRED' : role.toUpperCase()}</b>
+<p>Parfait. Il faut livrer directement au chantier dans 2 jours.</p>
+<span>09:44 · Lu</span>
+</div>
+<form onSubmit={(e) => e.preventDefault()}>
+<input placeholder="Écrire dans cette discussion…"/>
+<button aria-label="Envoyer">
+<Send />
+</button>
+</form>
+</div>
+</article>
         </section>
-        {isFieldRole && <section className="field-resources"><div className="resources-title"><span>OUTILS DE CHANTIER</span><h2>Guides d’installation & sécurité</h2><p>Accès rapide aux documents officiels. Toujours vérifier la version indiquée par le fabricant et les exigences du projet.</p></div><div className="guide-list"><a href="https://www.jameshardie.ca/product-support/resource-center/installation?lang=fr-CA" target="_blank" rel="noreferrer"><div className="guide-logo">JH</div><div><b>James Hardie</b><span>Guides d’installation officiels</span></div><ChevronRight/></a><a href="https://maibec.com/fr/ressources/documentations/" target="_blank" rel="noreferrer"><div className="guide-logo">CX</div><div><b>Maibec CanExel</b><span>Guides par profil et par région</span></div><ChevronRight/></a><a href="https://maibec.com/fr/ressources/documentations/" target="_blank" rel="noreferrer"><div className="guide-logo">MB</div><div><b>Maibec</b><span>Bois véritable, bardeaux et aluminium</span></div><ChevronRight/></a><a href="https://allurausa.com/products/lap-siding/" target="_blank" rel="noreferrer"><div className="guide-logo">AL</div><div><b>Allura</b><span>Manuel fibrociment et accessoires</span></div><ChevronRight/></a><a href="https://lighttrim.com/wp-content/uploads/2023/06/CatalogueTechnique_20230605Web.pdf" target="_blank" rel="noreferrer"><div className="guide-logo">LT</div><div><b>Light Trim</b><span>Catalogue technique et guide d’installation</span></div><ChevronRight/></a><a href="https://www.garantiegcr.com/fr/entrepreneurs/fiches-techniques/" target="_blank" rel="noreferrer"><div className="guide-logo">GCR</div><div><b>GCR — Revêtement</b><span>Fiches techniques et bonnes pratiques</span></div><ChevronRight/></a><a href="https://cnrc.canada.ca/fr/certifications-evaluations-normes/codes-canada/publications-codes-canada" target="_blank" rel="noreferrer"><div className="guide-logo">QC</div><div><b>Code du bâtiment</b><span>Publications officielles Canada et Québec</span></div><ChevronRight/></a></div><div className="accident-card"><div className="accident-intro"><div><AlertTriangle/></div><span><b>Déclarer un accident de travail</b><small>Avise immédiatement le Chef, Ester et Simon.</small></span><button onClick={() => setAccidentOpen(!accidentOpen)}>{accidentOpen ? 'Fermer' : 'Ouvrir le formulaire'}</button></div>{accidentOpen && <form onSubmit={(e) => { e.preventDefault(); setAccidentOpen(false); setAccidentSubmitted(true); setToastText('Accident déclaré au chef et à l’administration'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}><div className="accident-grid"><label>Job<select defaultValue={selectedJob}><option>JOB-214</option><option>JOB-315</option><option>JOB-418</option><option>TEMP-009</option></select></label><label>Date et heure<input type="datetime-local" required/></label></div><label>Personne blessée<input required placeholder="Nom complet"/></label><label>Description de l’accident<textarea required placeholder="Décris ce qui est arrivé, la blessure et l’endroit précis…"/></label><div className="mobile-photo-actions accident-photos"><label><input type="file" accept="image/*" capture="environment"/><Camera/><span><b>Prendre une photo</b><small>Ouvrir la caméra</small></span></label><label><input type="file" accept="image/*" multiple/><Paperclip/><span><b>Choisir du téléphone</b><small>Une ou plusieurs photos</small></span></label></div><label>Mesures prises<input placeholder="Premiers soins, arrêt des travaux, transport…"/></label><div className="emergency-note"><b>Urgence?</b><span>Appelle d’abord les services d’urgence. Ce formulaire ne remplace pas un appel au 911.</span></div><button type="submit"><Send/> Envoyer la déclaration</button></form>}{role === 'Chef' && accidentSubmitted && <div className={`accident-approval ${accidentApproved ? 'approved' : ''}`}><ShieldCheck/><div><b>{accidentApproved ? 'Accident confirmé par le chef' : 'Déclaration à confirmer'}</b><small>Alex P. · {selectedJob} · Photos et mesures reçues</small></div>{!accidentApproved && <button onClick={() => { setAccidentApproved(true); setToastText('Accident approuvé et confirmé'); setToast(true); window.setTimeout(() => setToast(false),3200); }}><Check/> Approuver et confirmer</button>}</div>}</div></section>}
+        {isFieldRole && <section className="field-resources compact-resources">
+<button className="documentation-toggle" onClick={() => setDocumentationOpen(open => !open)}><FileText /><span><b>Documentation importante</b><small>Guides d’installation, GCR et Code du bâtiment</small></span><ChevronRight className={documentationOpen ? 'open' : ''} /></button>
+{documentationOpen && <><div className="resources-title">
+<span>OUTILS DE CHANTIER</span>
+<h2>Guides d’installation & sécurité</h2>
+<p>Accès rapide aux documents officiels. Toujours vérifier la version indiquée par le fabricant et les exigences du projet.</p>
+</div>
+<div className="guide-list">
+<a href="https://www.jameshardie.ca/product-support/resource-center/installation?lang=fr-CA" target="_blank" rel="noreferrer">
+<div className="guide-logo">JH</div>
+<div>
+<b>James Hardie</b>
+<span>Guides d’installation officiels</span>
+</div>
+<ChevronRight />
+</a>
+<a href="https://maibec.com/fr/ressources/documentations/" target="_blank" rel="noreferrer">
+<div className="guide-logo">CX</div>
+<div>
+<b>Maibec CanExel</b>
+<span>Guides par profil et par région</span>
+</div>
+<ChevronRight />
+</a>
+<a href="https://maibec.com/fr/ressources/documentations/" target="_blank" rel="noreferrer">
+<div className="guide-logo">MB</div>
+<div>
+<b>Maibec</b>
+<span>Bois véritable, bardeaux et aluminium</span>
+</div>
+<ChevronRight />
+</a>
+<a href="https://allurausa.com/products/lap-siding/" target="_blank" rel="noreferrer">
+<div className="guide-logo">AL</div>
+<div>
+<b>Allura</b>
+<span>Manuel fibrociment et accessoires</span>
+</div>
+<ChevronRight />
+</a>
+<a href="https://lighttrim.com/wp-content/uploads/2023/06/CatalogueTechnique_20230605Web.pdf" target="_blank" rel="noreferrer">
+<div className="guide-logo">LT</div>
+<div>
+<b>Light Trim</b>
+<span>Catalogue technique et guide d’installation</span>
+</div>
+<ChevronRight />
+</a>
+<a href="https://www.garantiegcr.com/fr/entrepreneurs/fiches-techniques/" target="_blank" rel="noreferrer">
+<div className="guide-logo">GCR</div>
+<div>
+<b>GCR — Revêtement</b>
+<span>Fiches techniques et bonnes pratiques</span>
+</div>
+<ChevronRight />
+</a>
+<a href="https://cnrc.canada.ca/fr/certifications-evaluations-normes/codes-canada/publications-codes-canada" target="_blank" rel="noreferrer">
+<div className="guide-logo">QC</div>
+<div>
+<b>Code du bâtiment</b>
+<span>Publications officielles Canada et Québec</span>
+</div>
+<ChevronRight />
+</a>
+</div></>}
+<div className="accident-card">
+<div className="accident-intro">
+<div>
+<AlertTriangle />
+</div>
+<span>
+<b>Déclarer un accident de travail</b>
+<small>Avise immédiatement le Chef, Ester et Simon.</small>
+</span>
+<button onClick={() => setAccidentOpen(!accidentOpen)}>{accidentOpen ? 'Fermer' : 'Ouvrir le formulaire'}</button>
+</div>{accidentOpen && <form onSubmit={(e) => { e.preventDefault(); setAccidentOpen(false); setAccidentSubmitted(true); setToastText('Accident déclaré au chef et à l’administration'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<div className="accident-grid">
+<label>Job<select defaultValue={selectedJob}>
+<option>JOB-214</option>
+<option>JOB-315</option>
+<option>JOB-418</option>
+<option>TEMP-009</option>
+</select>
+</label>
+<label>Date et heure<input type="datetime-local" required/>
+</label>
+</div>
+<label>Personne blessée<input required placeholder="Nom complet"/>
+</label>
+<label>Description de l’accident<textarea required placeholder="Décris ce qui est arrivé, la blessure et l’endroit précis…"/>
+</label>
+<div className="mobile-photo-actions accident-photos">
+<label>
+<input type="file" accept="image/*" capture="environment"/>
+<Camera />
+<span>
+<b>Prendre une photo</b>
+<small>Ouvrir la caméra</small>
+</span>
+</label>
+<label>
+<input type="file" accept="image/*" multiple/>
+<Paperclip />
+<span>
+<b>Choisir du téléphone</b>
+<small>Une ou plusieurs photos</small>
+</span>
+</label>
+</div>
+<label>Mesures prises<input placeholder="Premiers soins, arrêt des travaux, transport…"/>
+</label>
+<div className="emergency-note">
+<b>Urgence?</b>
+<span>Appelle d’abord les services d’urgence. Ce formulaire ne remplace pas un appel au 911.</span>
+</div>
+<button type="submit">
+<Send /> Envoyer la déclaration</button>
+</form>}{role === 'Chef' && accidentSubmitted && <div className={`accident-approval ${accidentApproved ? 'approved' : ''}`}>
+<ShieldCheck />
+<div>
+<b>{accidentApproved ? 'Accident confirmé par le chef' : 'Déclaration à confirmer'}</b>
+<small>Alex P. · {selectedJob} · Photos et mesures reçues</small>
+</div>{!accidentApproved && <button onClick={() => { setAccidentApproved(true); setToastText('Accident approuvé et confirmé'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<Check /> Approuver et confirmer</button>}</div>}</div>
+</section>}
       </div>
     </section>
-    {mapChoiceOpen && <div className="modal-wrap" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setMapChoiceOpen(false); }}><div className="modal map-choice"><div className="modal-head"><div><span>ITINÉRAIRE CHANTIER</span><h2>Ouvrir l’adresse avec…</h2><p>{selectedJob} · L’application choisie va démarrer la navigation.</p></div><button onClick={() => setMapChoiceOpen(false)} aria-label="Fermer"><X/></button></div><div className="map-apps"><a href="https://waze.com/ul?q=1280%20rue%20Industrielle%20Quebec&navigate=yes" target="_blank" rel="noreferrer" onClick={() => setMapChoiceOpen(false)}><Navigation/><span><b>Waze</b><small>Ouvrir dans l’application Waze</small></span><ChevronRight/></a><a href="https://www.google.com/maps/search/?api=1&query=1280%20rue%20Industrielle%20Quebec" target="_blank" rel="noreferrer" onClick={() => setMapChoiceOpen(false)}><MapPin/><span><b>Google Maps</b><small>Ouvrir l’itinéraire Google Maps</small></span><ChevronRight/></a></div></div></div>}
-    {modal && <div className="modal-wrap" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setModal(false); }}><form className="modal order-modal" onSubmit={submitRequest}>
-      <div className="modal-head"><div><span>COMMANDE MULTI-ARTICLES</span><h2>Nouvelle commande</h2><p>Les articles rapides s’adaptent à la catégorie choisie.</p></div><button type="button" onClick={() => setModal(false)} aria-label="Fermer"><X/></button></div>
-      <div className="form-row"><label>No de job<select required defaultValue="JOB-214"><option>JOB-214 — Breton</option><option>JOB-315 — Leduc</option><option>JOB-418 — Bélanger</option></select></label><label>Catégorie<select value={orderCategory} onChange={(e) => { const category = e.target.value as 'Matériaux' | 'Outils' | 'Pliage'; setOrderCategory(category); setSelectedPreset(category === 'Outils' ? 'Gun à revêtement' : category === 'Pliage' ? 'Fascia' : 'Lame de Skill'); }}><option>Matériaux</option><option>Outils</option><option>Pliage</option></select></label></div>
-      <div className="preset-title"><span>ARTICLES RAPIDES · {orderCategory.toUpperCase()}</span>{role === 'Adjointe' && <button type="button" onClick={() => { const name = window.prompt('Nom du nouveau choix'); if (name?.trim()) { setPresetSets((sets) => ({...sets,[orderCategory]:[...sets[orderCategory],name.trim()]})); setSelectedPreset(name.trim()); } }}><Plus/> Créer un choix</button>}</div>
-      <div className="presets category-presets">{quickItems.map((item) => <div className="preset-chip" draggable={isFieldRole} key={item} onDragStart={() => setDraggedPreset(item)} onDragOver={(e) => e.preventDefault()} onDrop={() => { if (!draggedPreset || draggedPreset === item) return; setPresetSets((sets) => { const list = [...sets[orderCategory]]; const from = list.indexOf(draggedPreset); const to = list.indexOf(item); if (from < 0 || to < 0) return sets; list.splice(to,0,list.splice(from,1)[0]); return {...sets,[orderCategory]:list}; }); setDraggedPreset(null); }}><button className={selectedPreset === item ? 'selected' : ''} type="button" onClick={() => setSelectedPreset(item)}><span className="drag-handle">↕</span>{item}</button>{role === 'Adjointe' && <span className="preset-admin"><button type="button" aria-label={`Modifier ${item}`} onClick={() => { const name = window.prompt('Modifier ce choix',item); if (!name?.trim()) return; setPresetSets((sets) => ({...sets,[orderCategory]:sets[orderCategory].map((choice) => choice === item ? name.trim() : choice)})); if (selectedPreset === item) setSelectedPreset(name.trim()); }}>✎</button><button type="button" aria-label={`Retirer ${item}`} onClick={() => { setPresetSets((sets) => ({...sets,[orderCategory]:sets[orderCategory].filter((choice) => choice !== item)})); if (selectedPreset === item) setSelectedPreset(quickItems.find((choice) => choice !== item) || ''); }}>×</button></span>}</div>)}</div>
-      {orderCategory === 'Outils' && selectedPreset.includes('OLSA') && <div className="manual-size"><label>Grosseur OLSA<input required placeholder="Inscrire la grosseur"/></label></div>}
-      {orderCategory === 'Pliage' && <div className="folding-options"><label>Couleur<select defaultValue="Noir"><option>Noir</option><option>Blanc</option></select></label><label className="simon-confirm"><input type="checkbox" required/><span><b>Confirmer avec Simon</b><small>Dimensions et couleur vérifiées avant l’envoi</small></span></label></div>}
-      {orderCategory === 'Pliage' && selectedPreset === 'Colonne' && <div className="garage-folding technical-profile column-profile"><div className="garage-diagram"><img src="/profil-colonne.svg" alt="Profil technique Colonne avec mesure A sur le dessus et B sur le côté droit"/></div><div className="garage-fields"><span>PRESET PLIAGE · COLONNE</span><h3>Mesures et quantité</h3><div className="profile-measures column-measures">{['A','B'].map((measure) => <label key={measure}><b>{measure}</b><input required placeholder="Mesure"/></label>)}</div><label className="column-qty">Quantité<input required type="number" min="1" value={columnQty} onChange={(e) => setColumnQty(Number(e.target.value))}/></label><div className="column-confirmed"><Check/><span>Noir ou blanc · À confirmer avec Simon ci-dessus</span></div></div></div>}
-      {orderCategory === 'Pliage' && !activeDynamicProduct && (selectedPreset === 'Capage porte de garage' || selectedPreset === 'Beam') && <div className="garage-folding technical-profile"><div className="garage-diagram"><img src={selectedPreset === 'Beam' ? '/profil-beam.svg' : '/profil-porte-garage.svg'} alt={selectedPreset === 'Beam' ? 'Profil technique Beam avec cinq segments identifiés' : 'Profil technique de capage de porte de garage avec trois segments identifiés'}/></div><div className="garage-fields"><span>PRESET CUSTOM · {selectedPreset.toUpperCase()}</span><h3>Mesures du profil</h3><div className="profile-measures">{(selectedPreset === 'Beam' ? ['A','B','C','D','E'] : ['A','B','C']).map((measure) => <label key={measure}><b>{measure}</b><input required placeholder="Mesure"/></label>)}</div>{selectedPreset === 'Beam' && <div className="beam-double-folds"><label className={beamDoubleFold ? 'checked' : ''}><input type="checkbox" checked={beamDoubleFold} onChange={(e) => setBeamDoubleFold(e.target.checked)}/><b>A–E</b><small>Plié double</small></label></div>}<div className={selectedPreset === 'Beam' ? 'beam-length-row' : 'profile-lengths paired-lengths'}><label>Longueur<input required value={length1} onChange={(e) => setLength1(e.target.value)} placeholder="Inscrire la longueur"/></label><label>Quantité<input required type="number" min="1" value={lengthQty1} onChange={(e) => setLengthQty1(Number(e.target.value))}/></label>{selectedPreset !== 'Beam' && <><label>Longueur 2 <small>optionnelle</small><input value={length2} onChange={(e) => setLength2(e.target.value)} placeholder="Inscrire la longueur"/></label><label>Quantité longueur 2<input type="number" min="1" value={lengthQty2} onChange={(e) => setLengthQty2(Number(e.target.value))}/></label></>}</div></div></div>}
-      {activeDynamicProduct&&<div className="dynamic-order-form"><div className="dynamic-profile-view"><ProfilePreview product={activeDynamicProduct}/></div><div className="dynamic-order-fields"><span>ARTICLE DU CATALOGUE · {activeDynamicProduct.name.toUpperCase()}</span><h3>Mesures et données</h3><div>{activeDynamicProduct.fields.filter(field=>field.filledBy==='terrain').map(field=><label key={field.id}>{field.name}{field.type==='Oui/Non'?<input type="checkbox" checked={Boolean(dynamicValues[field.id])} onChange={e=>setDynamicValues(v=>({...v,[field.id]:e.target.checked}))}/>:<input required={field.required} value={String(dynamicValues[field.id]??field.defaultValue)} onChange={e=>setDynamicValues(v=>({...v,[field.id]:e.target.value}))} placeholder={field.type}/>}<small>{field.unit}</small></label>)}</div>{activeDynamicProduct.colors.length>0&&<label>Couleur<select value={itemColor} onChange={e=>setItemColor(e.target.value)}>{activeDynamicProduct.colors.map(color=><option key={color}>{color}</option>)}</select></label>}{itemColor==='Autre'&&<label>Couleur personnalisée<input value={customColor} onChange={e=>setCustomColor(e.target.value)} required/></label>}{activeDynamicProduct.units.length>1&&<label>Unité<select value={itemUnit} onChange={e=>setItemUnit(e.target.value)}>{activeDynamicProduct.units.map(unit=><option key={unit}>{unit}</option>)}</select></label>}</div></div>}
-      {!activeDynamicProduct&&!(orderCategory === 'Pliage' && (selectedPreset === 'Capage porte de garage' || selectedPreset === 'Beam' || selectedPreset === 'Colonne')) && <div className="item-line"><label>Article<input required value={selectedPreset} onChange={(e) => setSelectedPreset(e.target.value)}/></label><label>Qté<input required type="number" min="1" defaultValue="2"/></label><button type="button" aria-label="Retirer"><X/></button></div>}
-      {orderCategory==='Matériaux'&&['J soffite','Boîte de soffite'].includes(selectedPreset)&&<div className="soffit-options"><label>Couleur<select value={itemColor} onChange={e=>setItemColor(e.target.value)}><option>Noir</option><option>Blanc</option><option>Autre</option></select></label>{itemColor==='Autre'&&<label>Couleur personnalisée<input value={customColor} onChange={e=>setCustomColor(e.target.value)} placeholder="Inscrire la couleur" required/></label>}<label>Unité<select value={itemUnit} onChange={e=>setItemUnit(e.target.value)}><option value="morceau">Morceau</option><option value="boîte">Boîte</option></select></label></div>}
-      <button type="button" className="add-line"><Plus/> Ajouter un autre article ou changer de catégorie</button><div className="mobile-photo-actions"><label><input type="file" accept="image/*" capture="environment" onChange={(e) => setOrderPhotos(Array.from(e.target.files || []).map((file) => file.name))}/><Camera/><span><b>Prendre une photo</b><small>{orderPhotos.length ? `${orderPhotos.length} photo jointe` : 'Chantier ou matériel'}</small></span></label><label><input type="file" accept="image/*" multiple onChange={(e) => setOrderPhotos(Array.from(e.target.files || []).map((file) => file.name))}/><Paperclip/><span><b>Choisir du téléphone</b><small>{orderPhotos.length ? `${orderPhotos.length} photo${orderPhotos.length > 1 ? 's' : ''} sélectionnée${orderPhotos.length > 1 ? 's' : ''}` : 'Galerie de photos'}</small></span></label></div>
-      <div className="form-row"><label>Priorité<select><option>Normale</option><option>Urgente</option></select></label><label>Livraison souhaitée<input defaultValue="Dans 2 jours — au chantier"/></label></div><label>Note<textarea placeholder="Couleur, dimensions, angle, détails importants…"/></label>
-      <button type="button" className="add-to-order" onClick={() => { const isProfile = orderCategory === 'Pliage' && (selectedPreset === 'Capage porte de garage' || selectedPreset === 'Beam'); const soffit=orderCategory==='Matériaux'&&['J soffite','Boîte de soffite'].includes(selectedPreset); const dynamicDetail=activeDynamicProduct?activeDynamicProduct.fields.filter(field=>field.filledBy==='terrain').map(field=>`${field.name}: ${field.type==='Oui/Non'?(dynamicValues[field.id]?'Oui':'Non'):(dynamicValues[field.id]??field.defaultValue)}`).join(' · '):''; const detail = dynamicDetail?`${dynamicDetail} · Couleur: ${itemColor==='Autre'?customColor:itemColor}${activeDynamicProduct&&activeDynamicProduct.units.length>1?` · Unité: ${itemUnit}`:''}`:selectedPreset === 'Colonne' ? `Quantité ${columnQty} · Noir/blanc à confirmer` : selectedPreset === 'Beam' ? `${length1} × ${lengthQty1}${beamDoubleFold ? ' · A–E plié double' : ''}` : isProfile ? `${length1} × ${lengthQty1}${length2 ? ` + ${length2} × ${lengthQty2}` : ''}` : soffit?`Quantité 2 · ${itemColor==='Autre'?customColor:itemColor} · ${itemUnit}`:'Quantité 2'; setOrderCart((items) => [...items,{id:Date.now(),category:orderCategory,item:selectedPreset,detail,photos:[...orderPhotos]}]); setOrderPhotos([]); setDynamicValues({}); setToastText(`${selectedPreset} ajouté à la commande`); setToast(true); window.setTimeout(() => setToast(false),1800); }}><ShoppingCart/> Ajouter à la commande</button>
-      {orderCart.length > 0 && <div className="order-cart-preview"><div className="cart-preview-head"><div><span>MA COMMANDE</span><h3>{orderCart.length} article{orderCart.length > 1 ? 's' : ''} · plusieurs catégories permises</h3></div><b>{orderCart.length}</b></div>{orderCart.map((item) => <div className="cart-preview-item" key={item.id}><span>{item.category.slice(0,3).toUpperCase()}</span><div><b>{item.item}</b><small>{item.detail}{item.photos.length ? ` · ${item.photos.length} photo${item.photos.length > 1 ? 's' : ''} jointe${item.photos.length > 1 ? 's' : ''}` : ''}</small></div><button type="button" onClick={() => setOrderCart((items) => items.filter((i) => i.id !== item.id))} aria-label={`Retirer ${item.item}`}><Trash2/></button></div>)}<small className="cart-help">Change de catégorie ci-dessus pour ajouter d’autres types d’articles à la même commande.</small></div>}
-      <button className="submit" type="submit" disabled={!orderCart.length}><Send/> {orderCart.length ? `Envoyer la commande · ${orderCart.length} item${orderCart.length > 1 ? 's' : ''}` : 'Ajoute un item avant d’envoyer'}</button>
-    </form></div>}
-    {jobDossierOpen && <div className="modal-wrap" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) {setJobDossierOpen(false);setExtraFormOpen(false)} }}><div className="modal job-dossier-modal"><div className="modal-head"><div><span>DOSSIER DE JOB · {selectedJob}</span><h2>Plans, photos et extras</h2><p>Tout le dossier du chantier sélectionné au même endroit.</p></div><button onClick={() => {setJobDossierOpen(false);setExtraFormOpen(false)}} aria-label="Fermer"><X/></button></div><div className="dossier-files"><button><FileText/><span><b>{planName}</b><small>Plan partagé par l’administration</small></span><ChevronRight/></button><button><Camera/><span><b>Photos du chantier</b><small>8 photos jointes à cette job</small></span><ChevronRight/></button>{isFieldRole&&<button className="open-extra-button" onClick={()=>setExtraFormOpen(true)}><Plus/><span><b>Ajouter un extra</b><small>Travaux supplémentaires, temps et photos</small></span><ChevronRight/></button>}</div>{(!isFieldRole||extraFormOpen)&&<div className="dossier-extra"><div className="dossier-extra-title"><div><span>EXTRA AU DOSSIER</span><h3>Ajouter des travaux supplémentaires</h3></div>{isFieldRole&&<button className="collapse-extra" onClick={()=>setExtraFormOpen(false)}><X/></button>}</div><div className="extra-fields"><label>Date<input type="date" defaultValue="2026-09-01"/></label><label>Temps requis<input placeholder="Ex. 3 h 30"/></label><label>Approuvé par<input placeholder="Nom du responsable"/></label><label className="extra-photo"><Camera/> Ajouter des photos<input type="file" accept="image/*" capture="environment" multiple/></label></div><textarea placeholder="Description des travaux extra, matériel utilisé et raison…"/><button className="save-extra" onClick={() => { setToastText(`Extra ajouté au dossier ${selectedJob}`); setToast(true); setJobDossierOpen(false); setExtraFormOpen(false); window.setTimeout(() => setToast(false),3200); }}><Check/> Enregistrer l’extra</button><div className="extra-history"><Check/><span><b>Extra #EX-014 · Solin imprévu</b><small>1 sept. · 2 h 45 · Approuvé par J. Breton · 3 photos</small></span></div></div>}</div></div>}
-    {toast && <div className="toast"><span><Check/></span><div><b>{toastText}</b><small>L’administration vient d’être avisée.</small></div></div>}
-    {isFieldRole && <nav className="mobile-bottom-nav" aria-label="Navigation mobile"><a className="active" href="#punch"><Clock3/><span>Punch</span></a><a href="#job"><FileText/><span>Plan</span></a><a href="#orders"><PackageCheck/><span>Commande</span></a><a href="#messages"><MessageSquare/><span>Chat</span><i/></a><a href="#purchases"><ReceiptText/><span>Achat</span></a></nav>}
+    {mapChoiceOpen && <div className="modal-wrap" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget)
+        setMapChoiceOpen(false); }}>
+<div className="modal map-choice">
+<div className="modal-head">
+<div>
+<span>ITINÉRAIRE CHANTIER</span>
+<h2>Ouvrir l’adresse avec…</h2>
+<p>{selectedJob} · L’application choisie va démarrer la navigation.</p>
+</div>
+<button onClick={() => setMapChoiceOpen(false)} aria-label="Fermer">
+<X />
+</button>
+</div>
+<div className="map-apps">
+<a href="https://waze.com/ul?q=1280%20rue%20Industrielle%20Quebec&navigate=yes" target="_blank" rel="noreferrer" onClick={() => setMapChoiceOpen(false)}>
+<Navigation />
+<span>
+<b>Waze</b>
+<small>Ouvrir dans l’application Waze</small>
+</span>
+<ChevronRight />
+</a>
+<a href="https://www.google.com/maps/search/?api=1&query=1280%20rue%20Industrielle%20Quebec" target="_blank" rel="noreferrer" onClick={() => setMapChoiceOpen(false)}>
+<MapPin />
+<span>
+<b>Google Maps</b>
+<small>Ouvrir l’itinéraire Google Maps</small>
+</span>
+<ChevronRight />
+</a>
+</div>
+</div>
+</div>}
+    {modal && <div className="modal-wrap" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget)
+            setModal(false); }}>
+<form className="modal order-modal" onSubmit={submitRequest}>
+      <div className="modal-head">
+<div>
+<span>COMMANDE MULTI-ARTICLES</span>
+<h2>Nouvelle commande</h2>
+<p>Les articles rapides s’adaptent à la catégorie choisie.</p>
+</div>
+<button type="button" onClick={() => setModal(false)} aria-label="Fermer">
+<X />
+</button>
+</div>
+      <div className="form-row">
+<label>No de job<select required defaultValue="JOB-214">
+<option>JOB-214 — Breton</option>
+<option>JOB-315 — Leduc</option>
+<option>JOB-418 — Bélanger</option>
+</select>
+</label>
+<label>Catégorie<select value={orderCategory} onChange={(e) => { const category = e.target.value as 'Matériaux' | 'Outils' | 'Pliage'; setOrderCategory(category); setSelectedPreset(category === 'Outils' ? 'Gun à revêtement' : category === 'Pliage' ? 'Fascia' : 'Lame de Skill'); }}>
+<option>Matériaux</option>
+<option>Outils</option>
+<option>Pliage</option>
+</select>
+</label>
+</div>
+      <div className="preset-title">
+<span>ARTICLES RAPIDES · {orderCategory.toUpperCase()}</span>{role === 'Adjointe' && <button type="button" onClick={() => { const name = window.prompt('Nom du nouveau choix'); if (name?.trim()) {
+            setPresetSets((sets) => ({ ...sets, [orderCategory]: [...sets[orderCategory], name.trim()] }));
+            setSelectedPreset(name.trim());
+        } }}>
+<Plus /> Créer un choix</button>}</div>
+      <div className="presets category-presets">{quickItems.map((item) => <div className="preset-chip" draggable={isFieldRole} key={item} onDragStart={() => setDraggedPreset(item)} onDragOver={(e) => e.preventDefault()} onDrop={() => { if (!draggedPreset || draggedPreset === item)
+            return; setPresetSets((sets) => { const list = [...sets[orderCategory]]; const from = list.indexOf(draggedPreset); const to = list.indexOf(item); if (from < 0 || to < 0)
+            return sets; list.splice(to, 0, list.splice(from, 1)[0]); return { ...sets, [orderCategory]: list }; }); setDraggedPreset(null); }}>
+<button className={selectedPreset === item ? 'selected' : ''} type="button" onClick={() => setSelectedPreset(item)}>
+<span className="drag-handle">↕</span>{item}</button>{role === 'Adjointe' && <span className="preset-admin">
+<button type="button" aria-label={`Modifier ${item}`} onClick={() => { const name = window.prompt('Modifier ce choix', item); if (!name?.trim())
+            return; setPresetSets((sets) => ({ ...sets, [orderCategory]: sets[orderCategory].map((choice) => choice === item ? name.trim() : choice) })); if (selectedPreset === item)
+            setSelectedPreset(name.trim()); }}>✎</button>
+<button type="button" aria-label={`Retirer ${item}`} onClick={() => { setPresetSets((sets) => ({ ...sets, [orderCategory]: sets[orderCategory].filter((choice) => choice !== item) })); if (selectedPreset === item)
+            setSelectedPreset(quickItems.find((choice) => choice !== item) || ''); }}>×</button>
+</span>}</div>)}</div>
+      {orderCategory === 'Outils' && selectedPreset.includes('OLSA') && <div className="manual-size">
+<label>Grosseur OLSA<input required placeholder="Inscrire la grosseur"/>
+</label>
+</div>}
+      {orderCategory === 'Pliage' && <div className="folding-options">
+<label>Couleur<select defaultValue="Noir">
+<option>Noir</option>
+<option>Blanc</option>
+</select>
+</label>
+<label className="simon-confirm">
+<input type="checkbox" required/>
+<span>
+<b>Confirmer avec Simon</b>
+<small>Dimensions et couleur vérifiées avant l’envoi</small>
+</span>
+</label>
+</div>}
+      {orderCategory === 'Pliage' && selectedPreset === 'Colonne' && <div className="garage-folding technical-profile column-profile">
+<div className="garage-diagram">
+<img src="/profil-colonne.svg" alt="Profil technique Colonne avec mesure A sur le dessus et B sur le côté droit"/>
+</div>
+<div className="garage-fields">
+<span>PRESET PLIAGE · COLONNE</span>
+<h3>Mesures et quantité</h3>
+<div className="profile-measures column-measures">{['A', 'B'].map((measure) => <label key={measure}>
+<b>{measure}</b>
+<input required placeholder="Mesure"/>
+</label>)}</div>
+<label className="column-qty">Quantité<input required type="number" min="1" value={columnQty} onChange={(e) => setColumnQty(Number(e.target.value))}/>
+</label>
+<div className="column-confirmed">
+<Check />
+<span>Noir ou blanc · À confirmer avec Simon ci-dessus</span>
+</div>
+</div>
+</div>}
+      {orderCategory === 'Pliage' && !activeDynamicProduct && (selectedPreset === 'Capage porte de garage' || selectedPreset === 'Beam') && <div className="garage-folding technical-profile">
+<div className="garage-diagram">
+<img src={selectedPreset === 'Beam' ? '/profil-beam.svg' : '/profil-porte-garage.svg'} alt={selectedPreset === 'Beam' ? 'Profil technique Beam avec cinq segments identifiés' : 'Profil technique de capage de porte de garage avec trois segments identifiés'}/>
+</div>
+<div className="garage-fields">
+<span>PRESET CUSTOM · {selectedPreset.toUpperCase()}</span>
+<h3>Mesures du profil</h3>
+<div className="profile-measures">{(selectedPreset === 'Beam' ? ['A', 'B', 'C', 'D', 'E'] : ['A', 'B', 'C']).map((measure) => <label key={measure}>
+<b>{measure}</b>
+<input required placeholder="Mesure"/>
+</label>)}</div>{selectedPreset === 'Beam' && <div className="beam-double-folds">
+<label className={beamDoubleFold ? 'checked' : ''}>
+<input type="checkbox" checked={beamDoubleFold} onChange={(e) => setBeamDoubleFold(e.target.checked)}/>
+<b>A–E</b>
+<small>Plié double</small>
+</label>
+</div>}<div className={selectedPreset === 'Beam' ? 'beam-length-row' : 'profile-lengths paired-lengths'}>
+<label>Longueur<input required value={length1} onChange={(e) => setLength1(e.target.value)} placeholder="Inscrire la longueur"/>
+</label>
+<label>Quantité<input required type="number" min="1" value={lengthQty1} onChange={(e) => setLengthQty1(Number(e.target.value))}/>
+</label>{selectedPreset !== 'Beam' && <>
+<label>Longueur 2 <small>optionnelle</small>
+<input value={length2} onChange={(e) => setLength2(e.target.value)} placeholder="Inscrire la longueur"/>
+</label>
+<label>Quantité longueur 2<input type="number" min="1" value={lengthQty2} onChange={(e) => setLengthQty2(Number(e.target.value))}/>
+</label>
+</>}</div>
+</div>
+</div>}
+      {activeDynamicProduct && <div className="dynamic-order-form">
+<div className="dynamic-profile-view">
+<ProfilePreview product={activeDynamicProduct}/>
+</div>
+<div className="dynamic-order-fields">
+<span>ARTICLE DU CATALOGUE · {activeDynamicProduct.name.toUpperCase()}</span>
+<h3>Mesures et données</h3>
+<div>{activeDynamicProduct.fields.filter(field => field.filledBy === 'terrain').map(field => <label key={field.id}>{field.name}{field.type === 'Oui/Non' ? <input type="checkbox" checked={Boolean(dynamicValues[field.id])} onChange={e => setDynamicValues(v => ({ ...v, [field.id]: e.target.checked }))}/> : <input required={field.required} value={String(dynamicValues[field.id] ?? field.defaultValue)} onChange={e => setDynamicValues(v => ({ ...v, [field.id]: e.target.value }))} placeholder={field.type}/>}<small>{field.unit}</small>
+</label>)}</div>{activeDynamicProduct.colors.length > 0 && <label>Couleur<select value={itemColor} onChange={e => setItemColor(e.target.value)}>{activeDynamicProduct.colors.map(color => <option key={color}>{color}</option>)}</select>
+</label>}{itemColor === 'Autre' && <label>Couleur personnalisée<input value={customColor} onChange={e => setCustomColor(e.target.value)} required/>
+</label>}{activeDynamicProduct.units.length > 1 && <label>Unité<select value={itemUnit} onChange={e => setItemUnit(e.target.value)}>{activeDynamicProduct.units.map(unit => <option key={unit}>{unit}</option>)}</select>
+</label>}</div>
+</div>}
+      {!activeDynamicProduct && !(orderCategory === 'Pliage' && (selectedPreset === 'Capage porte de garage' || selectedPreset === 'Beam' || selectedPreset === 'Colonne')) && <div className="item-line">
+<label>Article<input required value={selectedPreset} onChange={(e) => setSelectedPreset(e.target.value)}/>
+</label>
+<label>Qté<input required type="number" min="1" defaultValue="2"/>
+</label>
+<button type="button" aria-label="Retirer">
+<X />
+</button>
+</div>}
+      {orderCategory === 'Matériaux' && ['J soffite', 'Boîte de soffite'].includes(selectedPreset) && <div className="soffit-options">
+<label>Couleur<select value={itemColor} onChange={e => setItemColor(e.target.value)}>
+<option>Noir</option>
+<option>Blanc</option>
+<option>Autre</option>
+</select>
+</label>{itemColor === 'Autre' && <label>Couleur personnalisée<input value={customColor} onChange={e => setCustomColor(e.target.value)} placeholder="Inscrire la couleur" required/>
+</label>}<label>Unité<select value={itemUnit} onChange={e => setItemUnit(e.target.value)}>
+<option value="morceau">Morceau</option>
+<option value="boîte">Boîte</option>
+</select>
+</label>
+</div>}
+      <button type="button" className="add-line">
+<Plus /> Ajouter un autre article ou changer de catégorie</button>
+<div className="mobile-photo-actions">
+<label>
+<input type="file" accept="image/*" capture="environment" onChange={(e) => setOrderPhotos(Array.from(e.target.files || []).map((file) => file.name))}/>
+<Camera />
+<span>
+<b>Prendre une photo</b>
+<small>{orderPhotos.length ? `${orderPhotos.length} photo jointe` : 'Chantier ou matériel'}</small>
+</span>
+</label>
+<label>
+<input type="file" accept="image/*" multiple onChange={(e) => setOrderPhotos(Array.from(e.target.files || []).map((file) => file.name))}/>
+<Paperclip />
+<span>
+<b>Choisir du téléphone</b>
+<small>{orderPhotos.length ? `${orderPhotos.length} photo${orderPhotos.length > 1 ? 's' : ''} sélectionnée${orderPhotos.length > 1 ? 's' : ''}` : 'Galerie de photos'}</small>
+</span>
+</label>
+</div>
+      <div className="form-row">
+<label>Priorité<select>
+<option>Normale</option>
+<option>Urgente</option>
+</select>
+</label>
+<label>Livraison souhaitée<input defaultValue="Dans 2 jours — au chantier"/>
+</label>
+</div>
+<label>Note<textarea placeholder="Couleur, dimensions, angle, détails importants…"/>
+</label>
+      <button type="button" className="add-to-order" onClick={() => { const isProfile = orderCategory === 'Pliage' && (selectedPreset === 'Capage porte de garage' || selectedPreset === 'Beam'); const soffit = orderCategory === 'Matériaux' && ['J soffite', 'Boîte de soffite'].includes(selectedPreset); const dynamicDetail = activeDynamicProduct ? activeDynamicProduct.fields.filter(field => field.filledBy === 'terrain').map(field => `${field.name}: ${field.type === 'Oui/Non' ? (dynamicValues[field.id] ? 'Oui' : 'Non') : (dynamicValues[field.id] ?? field.defaultValue)}`).join(' · ') : ''; const detail = dynamicDetail ? `${dynamicDetail} · Couleur: ${itemColor === 'Autre' ? customColor : itemColor}${activeDynamicProduct && activeDynamicProduct.units.length > 1 ? ` · Unité: ${itemUnit}` : ''}` : selectedPreset === 'Colonne' ? `Quantité ${columnQty} · Noir/blanc à confirmer` : selectedPreset === 'Beam' ? `${length1} × ${lengthQty1}${beamDoubleFold ? ' · A–E plié double' : ''}` : isProfile ? `${length1} × ${lengthQty1}${length2 ? ` + ${length2} × ${lengthQty2}` : ''}` : soffit ? `Quantité 2 · ${itemColor === 'Autre' ? customColor : itemColor} · ${itemUnit}` : 'Quantité 2'; setOrderCart((items) => [...items, { id: Date.now(), category: orderCategory, item: selectedPreset, detail, photos: [...orderPhotos] }]); setOrderPhotos([]); setDynamicValues({}); setToastText(`${selectedPreset} ajouté à la commande`); setToast(true); window.setTimeout(() => setToast(false), 1800); }}>
+<ShoppingCart /> Ajouter à la commande</button>
+      {orderCart.length > 0 && <div className="order-cart-preview">
+<div className="cart-preview-head">
+<div>
+<span>MA COMMANDE</span>
+<h3>{orderCart.length} article{orderCart.length > 1 ? 's' : ''} · plusieurs catégories permises</h3>
+</div>
+<b>{orderCart.length}</b>
+</div>{orderCart.map((item) => <div className="cart-preview-item" key={item.id}>
+<span>{item.category.slice(0, 3).toUpperCase()}</span>
+<div>
+<b>{item.item}</b>
+<small>{item.detail}{item.photos.length ? ` · ${item.photos.length} photo${item.photos.length > 1 ? 's' : ''} jointe${item.photos.length > 1 ? 's' : ''}` : ''}</small>
+</div>
+<button type="button" onClick={() => setOrderCart((items) => items.filter((i) => i.id !== item.id))} aria-label={`Retirer ${item.item}`}>
+<Trash2 />
+</button>
+</div>)}<small className="cart-help">Change de catégorie ci-dessus pour ajouter d’autres types d’articles à la même commande.</small>
+</div>}
+      <button className="submit" type="submit" disabled={!orderCart.length}>
+<Send /> {orderCart.length ? `Envoyer la commande · ${orderCart.length} item${orderCart.length > 1 ? 's' : ''}` : 'Ajoute un item avant d’envoyer'}</button>
+    </form>
+</div>}
+    {jobDossierOpen && <div className="modal-wrap" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) {
+        setJobDossierOpen(false);
+        setExtraFormOpen(false);
+    } }}>
+<div className="modal job-dossier-modal">
+<div className="modal-head">
+<div>
+<span>DOSSIER DE JOB · {selectedJob}</span>
+<h2>Plans, photos et extras</h2>
+<p>Tout le dossier du chantier sélectionné au même endroit.</p>
+</div>
+<button onClick={() => { setJobDossierOpen(false); setExtraFormOpen(false); }} aria-label="Fermer">
+<X />
+</button>
+</div>
+<div className="dossier-files">
+<button>
+<FileText />
+<span>
+<b>{planName}</b>
+<small>Plan partagé par l’administration</small>
+</span>
+<ChevronRight />
+</button>
+<button>
+<Camera />
+<span>
+<b>Photos du chantier</b>
+<small>8 photos jointes à cette job</small>
+</span>
+<ChevronRight />
+</button>{isFieldRole && <button className="open-extra-button" onClick={() => setExtraFormOpen(true)}>
+<Plus />
+<span>
+<b>Ajouter un extra</b>
+<small>Travaux supplémentaires, temps et photos</small>
+</span>
+<ChevronRight />
+</button>}</div>{(!isFieldRole || extraFormOpen) && <div className="dossier-extra">
+<div className="dossier-extra-title">
+<div>
+<span>EXTRA AU DOSSIER</span>
+<h3>Ajouter des travaux supplémentaires</h3>
+</div>{isFieldRole && <button className="collapse-extra" onClick={() => setExtraFormOpen(false)}>
+<X />
+</button>}</div>
+<div className="extra-fields">
+<label>Date<input type="date" defaultValue="2026-09-01"/>
+</label>
+<label>Temps requis<input placeholder="Ex. 3 h 30"/>
+</label>
+<label>Approuvé par<input placeholder="Nom du responsable"/>
+</label>
+<label className="extra-photo">
+<Camera /> Ajouter des photos<input type="file" accept="image/*" capture="environment" multiple/>
+</label>
+</div>
+<textarea placeholder="Description des travaux extra, matériel utilisé et raison…"/>
+<button className="save-extra" onClick={() => { setToastText(`Extra ajouté au dossier ${selectedJob}`); setToast(true); setJobDossierOpen(false); setExtraFormOpen(false); window.setTimeout(() => setToast(false), 3200); }}>
+<Check /> Enregistrer l’extra</button>
+<div className="extra-history">
+<Check />
+<span>
+<b>Extra #EX-014 · Solin imprévu</b>
+<small>1 sept. · 2 h 45 · Approuvé par J. Breton · 3 photos</small>
+</span>
+</div>
+</div>}</div>
+</div>}
+    {toast && <div className="toast">
+<span>
+<Check />
+</span>
+<div>
+<b>{toastText}</b>
+<small>L’administration vient d’être avisée.</small>
+</div>
+</div>}
+    {isFieldRole && <nav className="mobile-bottom-nav" aria-label="Navigation mobile">
+<a className="active" href="#punch">
+<Clock3 />
+<span>Punch</span>
+</a>
+<a href="#job">
+<FileText />
+<span>Plan</span>
+</a>
+<a href="#orders">
+<PackageCheck />
+<span>Commande</span>
+</a>
+<a href="#messages">
+<MessageSquare />
+<span>Chat</span>
+<i />
+</a>
+<a href="#purchases">
+<ReceiptText />
+<span>Achat</span>
+</a>
+</nav>}
   </main>;
 }
