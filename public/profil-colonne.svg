@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 280" role="img" aria-labelledby="t d">
+  <title id="t">Profil de pliage Colonne</title><desc id="d">Profil de colonne avec mesure A sur le dessus et mesure B sur le côté droit.</desc>
+  <rect width="380" height="280" rx="20" fill="#0f1412"/>
+  <path d="M55 84V48H300V228H278V178H260V228" fill="none" stroke="#b8ff3d" stroke-width="10" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10"/>
+  <path d="M55 84V48H300V228H278V178H260V228" fill="none" stroke="#eff7ef" stroke-width="3" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" opacity=".8"/>
+  <g fill="#b8ff3d" font-family="Arial,sans-serif" font-size="14" font-weight="700"><text x="172" y="30">A</text><text x="326" y="140">B</text></g>
+  <g stroke="#65736b" stroke-width="1.5" stroke-dasharray="4 4"><path d="M177 34v14"/><path d="M320 136h-20"/></g>
+</svg>
