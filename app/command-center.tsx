@@ -35,14 +35,223 @@ export function CommandCenter({role,companyId,initialTab='Commandes',showNav=tru
  const filtered=orders.filter(o=>(status==='Tous'||o.status===status)&&(jobFilter==='Toutes'||o.job===jobFilter)&&(employeeFilter==='Tous'||o.requester===employeeFilter)&&(supplierFilter==='Tous'||o.items.some(i=>i.supplier===supplierFilter))&&(sourceFilter==='Toutes'||o.items.some(i=>i.source===sourceFilter))&&(yearFilter.startsWith('Toutes')||o.date.startsWith(yearFilter))&&(monthFilter==='Tous'||o.date.slice(5,7)===monthFilter)&&`${o.id} ${o.job} ${o.requester} ${o.items.map(i=>i.name).join(' ')}`.toLowerCase().includes(query.toLowerCase()));
  const metrics=[['NOUVELLES',orders.filter(o=>o.status==='Reçue').length],['À PRÉPARER',orders.filter(o=>['À traiter','En préparation'].includes(o.status)).length],['CHEZ FOURNISSEUR',orders.filter(o=>o.status==='Commandée fournisseur').length],['PRÊTES / EMBARQUÉES',orders.filter(o=>['Prête','Embarquée'].includes(o.status)).length],['COMPLÉTÉES',orders.filter(o=>o.status==='Complétée').length]];
  const totals=useMemo(()=>{const map=new Map<string,{name:string;unit:string;qty:number;orders:string[]}>();filtered.forEach(o=>o.items.forEach(i=>{const key=`${i.name}|${i.unit}`;const cur=map.get(key)||{name:i.name,unit:i.unit,qty:0,orders:[]};cur.qty+=i.qty;cur.orders.push(o.id);map.set(key,cur)}));return [...map.values()]},[filtered]);
- const changeStatus=(order:CenterOrder,nextStatus:string)=>{if(order.status===nextStatus)return;let nextInventory=inventory;if(nextStatus==='Embarquée'&&order.status!=='Embarquée'&&order.status!=='Complétée'){nextInventory=inventory.map(stock=>{const qty=order.items.filter(i=>i.source==='Inventaire MIR'&&i.name===stock.name&&i.unit===stock.unit).reduce((n,i)=>n+i.qty,0);return qty?{...stock,stock:Math.max(0,stock.stock-qty),reserved:Math.max(0,stock.reserved-qty)}:stock});saveInventory(nextInventory)}if(order.status==='Embarquée'&& !['Embarquée','Complétée'].includes(nextStatus)){nextInventory=inventory.map(stock=>{const qty=order.items.filter(i=>i.source==='Inventaire MIR'&&i.name===stock.name&&i.unit===stock.unit).reduce((n,i)=>n+i.qty,0);return qty?{...stock,stock:stock.stock+qty,reserved:stock.reserved+qty}:stock});saveInventory(nextInventory)}save(orders.map(o=>o.id===order.id?{...o,status:nextStatus,history:[...o.history,`${nextStatus} · ${new Date().toLocaleString('fr-CA',{dateStyle:'short',timeStyle:'short'})} · ${role}`]}:o))};
+ const changeStatus=(order:CenterOrder,nextStatus:string)=>{if(order.status===nextStatus)return;let nextInventory=inventory;if(nextStatus==='En préparation'&&order.status!=='En préparation'){nextInventory=inventory.map(stock=>{const qty=order.items.filter(i=>i.source==='Inventaire MIR'&&i.name===stock.name&&i.unit===stock.unit).reduce((n,i)=>n+i.qty,0);return qty?{...stock,reserved:stock.reserved+qty}:stock});saveInventory(nextInventory)}if(nextStatus==='Embarquée'&&order.status!=='Embarquée'&&order.status!=='Complétée'){nextInventory=inventory.map(stock=>{const qty=order.items.filter(i=>i.source==='Inventaire MIR'&&i.name===stock.name&&i.unit===stock.unit).reduce((n,i)=>n+i.qty,0);return qty?{...stock,stock:Math.max(0,stock.stock-qty),reserved:Math.max(0,stock.reserved-qty)}:stock});saveInventory(nextInventory)}if(order.status==='Embarquée'&& !['Embarquée','Complétée'].includes(nextStatus)){nextInventory=inventory.map(stock=>{const qty=order.items.filter(i=>i.source==='Inventaire MIR'&&i.name===stock.name&&i.unit===stock.unit).reduce((n,i)=>n+i.qty,0);return qty?{...stock,stock:stock.stock+qty,reserved:stock.reserved+qty}:stock});saveInventory(nextInventory)}save(orders.map(o=>o.id===order.id?{...o,status:nextStatus,history:[...o.history,`${nextStatus} · ${new Date().toLocaleString('fr-CA',{dateStyle:'short',timeStyle:'short'})} · ${role}`]}:o))};
  const exportCsv=()=>{const rows=[['Bon','Date','Job','Demandeur','Item','Quantité','Unité','Source','Fournisseur','Statut'],...filtered.flatMap(o=>o.items.map(i=>[o.id,o.date,o.job,o.requester,i.name,String(i.qty),i.unit,i.source,i.supplier||'',o.status]))];const blob=new Blob([rows.map(r=>r.map(v=>`"${v.replaceAll('"','""')}"`).join(',')).join('\n')],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`forge-commandes-${yearFilter}.csv`;a.click();URL.revokeObjectURL(url)};
- const active=orders.find(o=>o.id===selected);
- return <section className={`forge-command-center ${showNav?'':'standalone'}`} id="orders-admin"><div className="fcc-heading"><div><span>CENTRE DES OPÉRATIONS</span><h2>{tab}</h2><p>Un seul endroit pour recevoir, préparer, commander, livrer et analyser.</p></div><button><Plus/> Nouveau bon</button></div>{showNav&&<nav>{['Commandes','Inventaire','Catalogue','Fournisseurs','Rapports'].map(t=><button className={tab===t?'active':''} onClick={()=>setTab(t)} key={t}>{t}</button>)}</nav>}
- {tab==='Commandes'&&<><div className="fcc-metrics">{metrics.map(([k,v])=><article key={k}><span>{k}</span><b>{v}</b></article>)}</div><div className="fcc-toolbar advanced"><label><Search/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Bon, job, employé ou matériau…"/></label><select value={status} onChange={e=>setStatus(e.target.value)}><option>Tous</option>{statuses.map(s=><option key={s}>{s}</option>)}</select><select value={jobFilter} onChange={e=>setJobFilter(e.target.value)}><option>Toutes</option>{[...new Set(orders.map(o=>o.job))].map(j=><option key={j}>{j}</option>)}</select><select value={employeeFilter} onChange={e=>setEmployeeFilter(e.target.value)}><option>Tous</option>{[...new Set(orders.map(o=>o.requester))].map(v=><option key={v}>{v}</option>)}</select><select value={supplierFilter} onChange={e=>setSupplierFilter(e.target.value)}><option>Tous</option>{suppliers.map(s=><option key={s.name}>{s.name}</option>)}</select><select value={sourceFilter} onChange={e=>setSourceFilter(e.target.value)}><option>Toutes</option><option>Inventaire MIR</option><option>Fournisseur</option></select><select value={yearFilter} onChange={e=>setYearFilter(e.target.value)}><option>Toutes les années</option><option>2026</option><option>2025</option></select><select value={monthFilter} onChange={e=>setMonthFilter(e.target.value)} aria-label="Filtrer par mois"><option value="Tous">Tous les mois</option>{['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'].map((name,index)=><option key={name} value={String(index+1).padStart(2,'0')}>{name}</option>)}</select></div><div className="fcc-order-list"><div className="fcc-order-head"><span>BON / DATE</span><span>JOB / DEMANDEUR</span><span>ITEMS</span><span>STATUT</span><span/></div>{filtered.map(o=><div className="fcc-order-row" key={o.id}><div><b>{o.id}</b><small>{o.date}</small></div><div><b>{o.job}</b><small>{o.requester}</small></div><div><b>{o.items.length} article{o.items.length>1?'s':''}</b><small>{o.items.map(i=>i.name).join(', ')}</small></div><select value={o.status} onChange={e=>changeStatus(o,e.target.value)}>{statuses.map(s=><option key={s}>{s}</option>)}</select><button onClick={()=>setSelected(o.id)}><ChevronRight/></button></div>)}{!filtered.length&&<div className="fcc-empty">Aucun bon ne correspond à tous les filtres sélectionnés.</div>}</div></>}
- {tab==='Inventaire'&&<div className="fcc-cards"><div className="fcc-section-title"><div><h3>Inventaire MIR</h3><p>Le stock est réservé à la commande et retiré seulement au chargement.</p></div><button onClick={()=>{const name=window.prompt('Nom du nouvel item');if(name?.trim())saveInventory([...inventory,{name:name.trim(),stock:0,reserved:0,minimum:0,unit:'morceaux'}])}}><Plus/> Ajouter un item</button></div>{inventory.map(i=><article className="inventory-line" key={i.name}><Box/><div><b>{i.name}</b><small>Minimum {i.minimum} {i.unit}</small></div><span><small>EN STOCK</small><b>{i.stock}</b></span><span><small>RÉSERVÉ</small><b>{i.reserved}</b></span><span><small>DISPONIBLE</small><b>{i.stock-i.reserved}</b></span><button onClick={()=>saveInventory(inventory.map(x=>x.name===i.name?{...x,stock:Math.max(0,x.stock-x.reserved),reserved:0}:x))}><Check/> Embarqué</button></article>)}</div>}
- {tab==='Catalogue'&&<div className="fcc-cards"><CatalogBuilder companyId={companyId} suppliers={suppliers.filter(s=>s.active!==false).map(s=>s.name)} onSaved={()=>{}}/><div className="legacy-catalog"><div className="fcc-section-title"><div><h3>Articles simples existants</h3><p>Ils restent modifiables et leur historique est conservé.</p></div><button onClick={()=>saveCatalog([...catalog,{id:`p${Date.now()}`,name:'Nouvel item',category:'Matériaux',fields:'Quantité',units:'morceau',source:'Les deux',active:true}])}><Plus/> Article simple</button></div>{catalog.map(p=><article className={`catalog-line ${p.active?'':'inactive'}`} key={p.id}><PackageCheck/><div><input value={p.name} onChange={e=>saveCatalog(catalog.map(x=>x.id===p.id?{...x,name:e.target.value}:x))}/><small>{p.category} · {p.fields} · {p.units}</small></div><select value={p.source} onChange={e=>saveCatalog(catalog.map(x=>x.id===p.id?{...x,source:e.target.value}:x))}><option>Inventaire MIR</option><option>Fournisseur</option><option>Les deux</option></select><button onClick={()=>saveCatalog(catalog.map(x=>x.id===p.id?{...x,active:!x.active}:x))}>{p.active?'Actif':'Inactif'}</button><button onClick={()=>{const fields=window.prompt('Champs personnalisés (séparés par ·)',p.fields);const units=window.prompt('Unités permises (séparées par une virgule)',p.units);if(fields!==null&&units!==null)saveCatalog(catalog.map(x=>x.id===p.id?{...x,fields,units}:x))}}><Settings2/></button></article>)}</div></div>}
- {tab==='Fournisseurs'&&<div className="fcc-cards"><div className="fcc-section-title"><div><h3>Fournisseurs</h3><p>Coordonnées, représentant et préparation des courriels.</p></div><button onClick={()=>{const name=window.prompt('Nom de l’entreprise');const email=window.prompt('Courriel de commande');if(name?.trim()&&email?.trim())saveSuppliers([...suppliers,{name:name.trim(),rep:'À compléter',email:email.trim(),phone:'À compléter',address:'À compléter',active:true}])}}><Plus/> Nouveau fournisseur</button></div>{suppliers.map(s=><article className={`supplier-line ${s.active===false?'inactive':''}`} key={s.name}><Factory/><div><b>{s.name}</b><small>{s.rep} · {s.address}</small></div><span><b>{s.email}</b><small>{s.phone}{s.notes?` · ${s.notes}`:''}</small></span><button onClick={()=>{window.location.href=`mailto:${s.email}?subject=${encodeURIComponent('Bon de commande FORGE — Les Revêtements MIR')}&body=${encodeURIComponent(`Bonjour ${s.rep},\n\nVeuillez trouver la commande MIR préparée dans FORGE. Livraison demandée au chantier dans 2 jours.\n\nMerci.`)}`}}><Mail/> Préparer un courriel</button><button onClick={()=>saveSuppliers(suppliers.map(x=>x.name===s.name?{...x,active:x.active===false}:x))}>{s.active===false?'Réactiver':'Désactiver'}</button></article>)}</div>}
- {tab==='Rapports'&&<div className="fcc-report"><div className="fcc-section-title"><div><h3>Consommation — {yearFilter==='Toutes'?'toutes les années':yearFilter}</h3><p>Les unités différentes restent séparées. Cliquez un total pour ouvrir les bons.</p></div><div><button onClick={()=>window.print()}><Printer/> Imprimer</button><button onClick={exportCsv}><Download/> CSV / Excel</button></div></div><div className="report-filters"><select value={employeeFilter} onChange={e=>setEmployeeFilter(e.target.value)}><option>Tous</option>{[...new Set(orders.map(o=>o.requester))].map(v=><option key={v}>{v}</option>)}</select><select value={jobFilter} onChange={e=>setJobFilter(e.target.value)}><option>Toutes</option>{[...new Set(orders.map(o=>o.job))].map(v=><option key={v}>{v}</option>)}</select><select value={supplierFilter} onChange={e=>setSupplierFilter(e.target.value)}><option>Tous</option>{suppliers.map(s=><option key={s.name}>{s.name}</option>)}</select><select value={yearFilter} onChange={e=>setYearFilter(e.target.value)}><option>Toutes</option><option>2026</option><option>2025</option></select></div><div className="consumption-grid">{totals.map(t=><button key={t.name+t.unit} onClick={()=>setSelected(t.orders[0])}><span>{t.name}</span><b>{t.qty.toLocaleString('fr-CA')} <small>{t.unit}</small></b><em>{t.orders.length} bon{t.orders.length>1?'s':''} de commande</em></button>)}{!totals.length&&<div className="fcc-empty">Aucune consommation pour ces filtres.</div>}</div></div>}
- {active&&<div className="fcc-drawer"><button className="drawer-close" onClick={()=>setSelected(null)}>×</button><span>DÉTAIL DU BON</span><h3>{active.id}</h3><p>{active.job} · {active.requester} · {active.date}</p>{active.items.map((i,index)=><article key={`${i.name}-${index}`}><b>{i.name}</b><span>{i.qty} {i.unit}</span><small>{i.source}{i.supplier?` · ${i.supplier}`:''}</small>{i.detail&&<em className="order-item-detail">{i.detail}</em>}</article>)}<label className="drawer-status">STATUT<select value={active.status} onChange={e=>changeStatus(active,e.target.value)}>{statuses.map(s=><option key={s}>{s}</option>)}</select></label><h4>Historique permanent</h4>{active.history.map((h,i)=><div className="history-line" key={i}><i/><span>{h}</span></div>)}<button className="drawer-email" onClick={()=>{const supplier=active.items.find(i=>i.supplier)?.supplier||suppliers[0]?.name;const record=suppliers.find(s=>s.name===supplier);if(record)window.location.href=`mailto:${record.email}?subject=${encodeURIComponent(`${active.id} · ${active.job}`)}&body=${encodeURIComponent(`Bonjour ${record.rep},\n\nCommande ${active.id} pour ${active.job}:\n${active.items.filter(i=>i.source==='Fournisseur').map(i=>`- ${i.name}: ${i.qty} ${i.unit}`).join('\n')}\n\nLivraison demandée au chantier dans 2 jours.`)}`}}><Mail/> Préparer le courriel fournisseur</button></div>}</section>
+ const active=orders.find(o=>o.id===selected),baskets=orders.filter(o=>o.status==='En préparation'&&o.items.some(i=>i.source==='Inventaire MIR'));const loadBasket=(order:CenterOrder)=>{saveInventory(inventory.map(stock=>{const qty=order.items.filter(i=>i.source==='Inventaire MIR'&&i.name===stock.name&&i.unit===stock.unit).reduce((n,i)=>n+i.qty,0);return qty?{...stock,stock:Math.max(0,stock.stock-qty),reserved:Math.max(0,stock.reserved-qty)}:stock}));save(orders.map(o=>o.id===order.id?{...o,status:'Complétée',history:[...o.history,`Embarquée pour livraison · stock retiré · ${new Date().toLocaleString('fr-CA')} · Boss`]}:o))};
+ return <section className={`forge-command-center ${showNav?'':'standalone'}`} id="orders-admin">
+<div className="fcc-heading">
+<div>
+<span>CENTRE DES OPÉRATIONS</span>
+<h2>{tab}</h2>
+<p>Un seul endroit pour recevoir, préparer, commander, livrer et analyser.</p>
+</div>
+<div className="fcc-heading-actions">{role==='Boss'&&<button className="open-baskets" onClick={()=>setTab('Paniers')}>
+<Box/> Paniers <b>{baskets.length}</b>
+</button>}<button>
+<Plus/> Nouveau bon</button>
+</div>
+</div>{showNav&&<nav>{['Commandes','Paniers','Inventaire','Catalogue','Fournisseurs','Rapports'].filter(t=>t!=='Paniers'||role==='Boss').map(t=>
+<button className={tab===t?'active':''} onClick={()=>setTab(t)} key={t}>{t}</button>)}</nav>}
+ {tab==='Commandes'&&<>
+<div className="fcc-metrics">{metrics.map(([k,v])=>
+<article key={k}>
+<span>{k}</span>
+<b>{v}</b>
+</article>)}</div>
+<div className="fcc-toolbar advanced">
+<label>
+<Search/>
+<input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Bon, job, employé ou matériau…"/>
+</label>
+<select value={status} onChange={e=>setStatus(e.target.value)}>
+<option>Tous</option>{statuses.map(s=>
+<option key={s}>{s}</option>)}</select>
+<select value={jobFilter} onChange={e=>setJobFilter(e.target.value)}>
+<option>Toutes</option>{[...new Set(orders.map(o=>o.job))].map(j=>
+<option key={j}>{j}</option>)}</select>
+<select value={employeeFilter} onChange={e=>setEmployeeFilter(e.target.value)}>
+<option>Tous</option>{[...new Set(orders.map(o=>o.requester))].map(v=>
+<option key={v}>{v}</option>)}</select>
+<select value={supplierFilter} onChange={e=>setSupplierFilter(e.target.value)}>
+<option>Tous</option>{suppliers.map(s=>
+<option key={s.name}>{s.name}</option>)}</select>
+<select value={sourceFilter} onChange={e=>setSourceFilter(e.target.value)}>
+<option>Toutes</option>
+<option>Inventaire MIR</option>
+<option>Fournisseur</option>
+</select>
+<select value={yearFilter} onChange={e=>setYearFilter(e.target.value)}>
+<option>Toutes les années</option>
+<option>2026</option>
+<option>2025</option>
+</select>
+<select value={monthFilter} onChange={e=>setMonthFilter(e.target.value)} aria-label="Filtrer par mois">
+<option value="Tous">Tous les mois</option>{['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'].map((name,index)=>
+<option key={name} value={String(index+1).padStart(2,'0')}>{name}</option>)}</select>
+</div>
+<div className="fcc-order-list">
+<div className="fcc-order-head">
+<span>BON / DATE</span>
+<span>JOB / DEMANDEUR</span>
+<span>ITEMS</span>
+<span>STATUT</span>
+<span/>
+</div>{filtered.map(o=>
+<div className="fcc-order-row" key={o.id}>
+<div>
+<b>{o.id}</b>
+<small>{o.date}</small>
+</div>
+<div>
+<b>{o.job}</b>
+<small>{o.requester}</small>
+</div>
+<div>
+<b>{o.items.length} article{o.items.length>1?'s':''}</b>
+<small>{o.items.map(i=>i.name).join(', ')}</small>
+</div>
+<select value={o.status} onChange={e=>changeStatus(o,e.target.value)}>{statuses.map(s=>
+<option key={s}>{s}</option>)}</select>
+<button onClick={()=>setSelected(o.id)}>
+<ChevronRight/>
+</button>
+</div>)}{!filtered.length&&<div className="fcc-empty">Aucun bon ne correspond à tous les filtres sélectionnés.</div>}</div>
+</>}
+ {tab==='Paniers'&&<div className="boss-baskets"><div className="fcc-section-title"><div><h3>Paniers des chefs d’équipe</h3><p>Les articles Inventaire MIR arrivent ici automatiquement lorsqu’une commande passe en préparation.</p></div></div>{baskets.map(order=><article key={order.id}><div className="basket-chef"><Box/><span><b>{order.requester}</b><small>{order.job} · {order.id}</small></span></div><div className="basket-stock-items">{order.items.filter(i=>i.source==='Inventaire MIR').map(item=><span key={item.name}><Check/><b>{item.name}</b><em>{item.qty} {item.unit}</em></span>)}</div><button onClick={()=>loadBasket(order)}><PackageCheck/><span><b>Embarquer pour livraison</b><small>Retirer du stock et marquer la commande traitée</small></span></button></article>)}{!baskets.length&&<div className="fcc-empty">Aucun panier à préparer. Ils apparaîtront ici automatiquement.</div>}</div>}
+ {tab==='Inventaire'&&<div className="fcc-cards">
+<div className="fcc-section-title">
+<div>
+<h3>Inventaire MIR</h3>
+<p>Le stock est réservé à la commande et retiré seulement au chargement.</p>
+</div>
+<button onClick={()=>{const name=window.prompt('Nom du nouvel item');if(name?.trim())saveInventory([...inventory,{name:name.trim(),stock:0,reserved:0,minimum:0,unit:'morceaux'}])}}>
+<Plus/> Ajouter un item</button>
+</div>{inventory.map(i=>
+<article className="inventory-line" key={i.name}>
+<Box/>
+<div>
+<b>{i.name}</b>
+<small>Minimum {i.minimum} {i.unit}</small>
+</div>
+<span>
+<small>EN STOCK</small>
+<b>{i.stock}</b>
+</span>
+<span>
+<small>RÉSERVÉ</small>
+<b>{i.reserved}</b>
+</span>
+<span>
+<small>DISPONIBLE</small>
+<b>{i.stock-i.reserved}</b>
+</span>
+<button onClick={()=>saveInventory(inventory.map(x=>x.name===i.name?{...x,stock:Math.max(0,x.stock-x.reserved),reserved:0}:x))}>
+<Check/> Embarqué</button>
+</article>)}</div>}
+ {tab==='Catalogue'&&<div className="fcc-cards">
+<CatalogBuilder companyId={companyId} suppliers={suppliers.filter(s=>s.active!==false).map(s=>s.name)} onSaved={()=>{}}/>
+<div className="legacy-catalog">
+<div className="fcc-section-title">
+<div>
+<h3>Articles simples existants</h3>
+<p>Ils restent modifiables et leur historique est conservé.</p>
+</div>
+<button onClick={()=>saveCatalog([...catalog,{id:`p${Date.now()}`,name:'Nouvel item',category:'Matériaux',fields:'Quantité',units:'morceau',source:'Les deux',active:true}])}>
+<Plus/> Article simple</button>
+</div>{catalog.map(p=>
+<article className={`catalog-line ${p.active?'':'inactive'}`} key={p.id}>
+<PackageCheck/>
+<div>
+<input value={p.name} onChange={e=>saveCatalog(catalog.map(x=>x.id===p.id?{...x,name:e.target.value}:x))}/>
+<small>{p.category} · {p.fields} · {p.units}</small>
+</div>
+<select value={p.source} onChange={e=>saveCatalog(catalog.map(x=>x.id===p.id?{...x,source:e.target.value}:x))}>
+<option>Inventaire MIR</option>
+<option>Fournisseur</option>
+<option>Les deux</option>
+</select>
+<button onClick={()=>saveCatalog(catalog.map(x=>x.id===p.id?{...x,active:!x.active}:x))}>{p.active?'Actif':'Inactif'}</button>
+<button onClick={()=>{const fields=window.prompt('Champs personnalisés (séparés par ·)',p.fields);const units=window.prompt('Unités permises (séparées par une virgule)',p.units);if(fields!==null&&units!==null)saveCatalog(catalog.map(x=>x.id===p.id?{...x,fields,units}:x))}}>
+<Settings2/>
+</button>
+</article>)}</div>
+</div>}
+ {tab==='Fournisseurs'&&<div className="fcc-cards">
+<div className="fcc-section-title">
+<div>
+<h3>Fournisseurs</h3>
+<p>Coordonnées, représentant et préparation des courriels.</p>
+</div>
+<button onClick={()=>{const name=window.prompt('Nom de l’entreprise');const email=window.prompt('Courriel de commande');if(name?.trim()&&email?.trim())saveSuppliers([...suppliers,{name:name.trim(),rep:'À compléter',email:email.trim(),phone:'À compléter',address:'À compléter',active:true}])}}>
+<Plus/> Nouveau fournisseur</button>
+</div>{suppliers.map(s=>
+<article className={`supplier-line ${s.active===false?'inactive':''}`} key={s.name}>
+<Factory/>
+<div>
+<b>{s.name}</b>
+<small>{s.rep} · {s.address}</small>
+</div>
+<span>
+<b>{s.email}</b>
+<small>{s.phone}{s.notes?` · ${s.notes}`:''}</small>
+</span>
+<button onClick={()=>{window.location.href=`mailto:${s.email}?subject=${encodeURIComponent('Bon de commande FORGE — Les Revêtements MIR')}&body=${encodeURIComponent(`Bonjour ${s.rep},\n\nVeuillez trouver la commande MIR préparée dans FORGE. Livraison demandée au chantier dans 2 jours.\n\nMerci.`)}`}}>
+<Mail/> Préparer un courriel</button>
+<button onClick={()=>saveSuppliers(suppliers.map(x=>x.name===s.name?{...x,active:x.active===false}:x))}>{s.active===false?'Réactiver':'Désactiver'}</button>
+</article>)}</div>}
+ {tab==='Rapports'&&<div className="fcc-report">
+<div className="fcc-section-title">
+<div>
+<h3>Consommation — {yearFilter==='Toutes'?'toutes les années':yearFilter}</h3>
+<p>Les unités différentes restent séparées. Cliquez un total pour ouvrir les bons.</p>
+</div>
+<div>
+<button onClick={()=>window.print()}>
+<Printer/> Imprimer</button>
+<button onClick={exportCsv}>
+<Download/> CSV / Excel</button>
+</div>
+</div>
+<div className="report-filters">
+<select value={employeeFilter} onChange={e=>setEmployeeFilter(e.target.value)}>
+<option>Tous</option>{[...new Set(orders.map(o=>o.requester))].map(v=>
+<option key={v}>{v}</option>)}</select>
+<select value={jobFilter} onChange={e=>setJobFilter(e.target.value)}>
+<option>Toutes</option>{[...new Set(orders.map(o=>o.job))].map(v=>
+<option key={v}>{v}</option>)}</select>
+<select value={supplierFilter} onChange={e=>setSupplierFilter(e.target.value)}>
+<option>Tous</option>{suppliers.map(s=>
+<option key={s.name}>{s.name}</option>)}</select>
+<select value={yearFilter} onChange={e=>setYearFilter(e.target.value)}>
+<option>Toutes</option>
+<option>2026</option>
+<option>2025</option>
+</select>
+</div>
+<div className="consumption-grid">{totals.map(t=>
+<button key={t.name+t.unit} onClick={()=>setSelected(t.orders[0])}>
+<span>{t.name}</span>
+<b>{t.qty.toLocaleString('fr-CA')} <small>{t.unit}</small>
+</b>
+<em>{t.orders.length} bon{t.orders.length>1?'s':''} de commande</em>
+</button>)}{!totals.length&&<div className="fcc-empty">Aucune consommation pour ces filtres.</div>}</div>
+</div>}
+ {active&&<div className="fcc-drawer">
+<button className="drawer-close" onClick={()=>setSelected(null)}>×</button>
+<span>DÉTAIL DU BON</span>
+<h3>{active.id}</h3>
+<p>{active.job} · {active.requester} · {active.date}</p>{active.items.map((i,index)=>
+<article key={`${i.name}-${index}`}>
+<b>{i.name}</b>
+<span>{i.qty} {i.unit}</span>
+<small>{i.source}{i.supplier?` · ${i.supplier}`:''}</small>{i.detail&&<em className="order-item-detail">{i.detail}</em>}</article>)}<label className="drawer-status">STATUT<select value={active.status} onChange={e=>changeStatus(active,e.target.value)}>{statuses.map(s=>
+<option key={s}>{s}</option>)}</select>
+</label>
+<h4>Historique permanent</h4>{active.history.map((h,i)=>
+<div className="history-line" key={i}>
+<i/>
+<span>{h}</span>
+</div>)}<button className="drawer-email" onClick={()=>{const supplier=active.items.find(i=>i.supplier)?.supplier||suppliers[0]?.name;const record=suppliers.find(s=>s.name===supplier);if(record)window.location.href=`mailto:${record.email}?subject=${encodeURIComponent(`${active.id} · ${active.job}`)}&body=${encodeURIComponent(`Bonjour ${record.rep},\n\nCommande ${active.id} pour ${active.job}:\n${active.items.filter(i=>i.source==='Fournisseur').map(i=>`- ${i.name}: ${i.qty} ${i.unit}`).join('\n')}\n\nLivraison demandée au chantier dans 2 jours.`)}`}}>
+<Mail/> Préparer le courriel fournisseur</button>
+</div>}</section>
 }
