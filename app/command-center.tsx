@@ -45,11 +45,11 @@ export function CommandCenter({role,companyId,initialTab='Commandes',showNav=tru
 <h2>{tab}</h2>
 <p>Un seul endroit pour recevoir, préparer, commander, livrer et analyser.</p>
 </div>
-<div className="fcc-heading-actions">{role==='Boss'&&<button className="open-baskets" onClick={()=>setTab('Paniers')}>
+{tab!=='Catalogue'&&<div className="fcc-heading-actions">{role==='Boss'&&<button className="open-baskets" onClick={()=>setTab('Paniers')}>
 <Box/> Paniers <b>{baskets.length}</b>
 </button>}<button>
 <Plus/> Nouveau bon</button>
-</div>
+</div>}
 </div>{showNav&&<nav>{['Commandes','Paniers','Inventaire','Catalogue','Fournisseurs','Rapports'].filter(t=>t!=='Paniers'||role==='Boss').map(t=>
 <button className={tab===t?'active':''} onClick={()=>setTab(t)} key={t}>{t}</button>)}</nav>}
  {tab==='Commandes'&&<>
@@ -151,14 +151,7 @@ export function CommandCenter({role,companyId,initialTab='Commandes',showNav=tru
  {tab==='Catalogue'&&<div className="fcc-cards">
 <CatalogBuilder companyId={companyId} suppliers={suppliers.filter(s=>s.active!==false).map(s=>s.name)} onSaved={()=>{}}/>
 <div className="legacy-catalog">
-<div className="fcc-section-title">
-<div>
-<h3>Articles simples existants</h3>
-<p>Ils restent modifiables et leur historique est conservé.</p>
-</div>
-<button onClick={()=>saveCatalog([...catalog,{id:`p${Date.now()}`,name:'Nouvel item',category:'Matériaux',fields:'Quantité',units:'morceau',source:'Les deux',active:true}])}>
-<Plus/> Article simple</button>
-</div>{catalog.map(p=>
+<div className="fcc-section-title"><div><h3>Autres articles existants</h3><p>Articles déjà présents dans le catalogue Forge.</p></div></div>{catalog.map(p=>
 <article className={`catalog-line ${p.active?'':'inactive'}`} key={p.id}>
 <PackageCheck/>
 <div>
