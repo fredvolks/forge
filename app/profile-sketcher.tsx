@@ -27,13 +27,19 @@ index=i}}if(max>epsilon){const left=simplify(points.slice(0,index+1),epsilon),ri
 return[...left.slice(0,-1),...right]}return[points[0],points[points.length-1]]}
 function normalize(raw:Point[]):{points:Point[];
 segments:ProfileSegment[]}{if(raw.length<2)return{points:[],segments:[]};
-const filtered=[raw[0],...raw.slice(1).filter((p,i)=>distance(p,raw[i])>2)];
-let points=simplify(filtered,5);
+const filtered=[raw[0],...raw.slice(1).filter((p,i)=>distance(p,raw[i])>7)];
+let points=simplify(filtered,14);
+let changed=true;
+while(changed&&points.length>2){changed=false;
+const merged=[points[0]];
+for(let i=1;i<points.length-1;i++){const a=merged[merged.length-1],b=points[i],c=points[i+1],ab={x:b.x-a.x,y:b.y-a.y},bc={x:c.x-b.x,y:c.y-b.y},abLen=Math.hypot(ab.x,ab.y),bcLen=Math.hypot(bc.x,bc.y),dot=(ab.x*bc.x+ab.y*bc.y)/(Math.max(1,abLen*bcLen)),turn=Math.acos(Math.max(-1,Math.min(1,dot)))*180/Math.PI;
+if(abLen<22||bcLen<22||turn<20){changed=true;continue}merged.push(b)}
+merged.push(points[points.length-1]);points=merged}
 const adjusted:Point[]=[];
 points.forEach((p,i)=>{if(!i){adjusted.push({x:Math.round(p.x),y:Math.round(p.y)});
 return}const prev=adjusted[adjusted.length-1],dx=p.x-prev.x,dy=p.y-prev.y,angle=Math.abs(Math.atan2(dy,dx)*180/Math.PI)%90,axis=Math.min(angle,90-angle);
-const next=axis<10?(Math.abs(dx)>Math.abs(dy)?{x:Math.round(p.x),y:prev.y}:{x:prev.x,y:Math.round(p.y)}):{x:Math.round(p.x),y:Math.round(p.y)};
-if(distance(prev,next)>10)adjusted.push(next)});
+const next=axis<18?(Math.abs(dx)>Math.abs(dy)?{x:Math.round(p.x/2)*2,y:prev.y}:{x:prev.x,y:Math.round(p.y/2)*2}):{x:Math.round(p.x/2)*2,y:Math.round(p.y/2)*2};
+if(distance(prev,next)>18)adjusted.push(next)});
 points=adjusted;
 const segments=points.slice(1).map((point,index)=>{const prev=points[index],dx=point.x-prev.x,dy=point.y-prev.y;
 return{id:`draw-${Date.now()}-${index}`,direction:Math.abs(dx)>Math.abs(dy)*2?'horizontal':Math.abs(dy)>Math.abs(dx)*2?'vertical':'angle',label:'',length:Math.round(Math.hypot(dx,dy)),x1:prev.x,y1:prev.y,x2:point.x,y2:point.y} as ProfileSegment});
