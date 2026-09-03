@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ArrowRight, Building2, Check, Eye, HardHat, LockKeyhole, Mail, Plus, Upload, X } from 'lucide-react';
 
 export type ForgeSession = { companyId: string; companyName: string; userName: string; email: string; role: 'Boss' | 'Adjointe' | 'Chef' | 'Employé'; logo?: string; theme?: string; accent?: string };
-const companyThemes=[{id:'charcoal',name:'Charcoal chantier',desc:'Sombre et robuste'},{id:'light',name:'Clair professionnel',desc:'Lumineux et minimal'},{id:'steel',name:'Acier industriel',desc:'Gris métallique'},{id:'contrast',name:'Contraste maximum',desc:'Lisibilité terrain'}];
+const companyThemes=[{id:'forge',name:'Forge',desc:'Industriel, sombre et vert'},{id:'modern',name:'Modern',desc:'Premium, net et professionnel'},{id:'zen',name:'Zen',desc:'Calme, doux et très épuré'},{id:'boho',name:'Boho',desc:'Naturel, chaleureux et organique'},{id:'electro',name:'Electro',desc:'Technologique et lumineux'},{id:'luxe',name:'Luxe',desc:'Noir, crème et élégant'},{id:'nordic',name:'Nordique',desc:'Clair, frais et structuré'},{id:'terra',name:'Terra',desc:'Minéral et terre cuite'},{id:'ocean',name:'Océan',desc:'Bleu profond et apaisant'},{id:'mono',name:'Monochrome',desc:'Précis et utilitaire'},{id:'contrast',name:'Haute visibilité',desc:'Contraste terrain maximal'},{id:'studio',name:'Studio',desc:'Créatif et éditorial'}];
 const themeColors=['#A8FF2E','#73E22F','#21D97D','#00C2A8','#20C7E8','#2F80ED','#4966FF','#7557FF','#A855F7','#D946EF','#FF4DB8','#FF4778','#FF4B3E','#FF7043','#FF8A00','#FFB000','#FFD000','#F3E33B','#D4E157','#8BC34A','#4CAF50','#009688','#00ACC1','#0288D1','#3F51B5','#673AB7','#9C27B0','#C2185B','#B7410E','#E8E8E8'];
 
 const demoAccounts: Record<string, ForgeSession & { password: string }> = {
@@ -20,7 +20,7 @@ export function ForgeAccess({ onEnter }:{ onEnter:(session:ForgeSession)=>void }
   const [password,setPassword]=useState('forge');
   const [error,setError]=useState('');
   const [logo,setLogo]=useState('');
-  const [theme,setTheme]=useState('charcoal');
+  const [theme,setTheme]=useState('forge');
   const [accent,setAccent]=useState('#A8FF2E');
   function login(e:React.FormEvent) {
     e.preventDefault(); setError('');
@@ -49,5 +49,15 @@ export function ForgeAccess({ onEnter }:{ onEnter:(session:ForgeSession)=>void }
 }
 
 export function EmptyCompany({session,onLogout}:{session:ForgeSession;onLogout:()=>void}){
-  return <main className="empty-company"><header><div className="forge-wordmark"><span><HardHat/></span><b>FORGE</b></div><div><b>{session.companyName}</b><button onClick={onLogout}>Déconnexion</button></div></header><section><span>NOUVELLE COMPAGNIE</span><h1>Bienvenue, {session.userName}.</h1><p>Votre espace est vide, isolé et prêt à être configuré.</p><div className="empty-steps">{['Créer votre première job','Inviter les employés et attribuer les rôles','Configurer le catalogue de matériaux','Ajouter les fournisseurs','Définir l’inventaire de départ'].map((step,i)=><article key={step}><b>0{i+1}</b><span>{step}</span><button><ArrowRight/></button></article>)}</div><button className="empty-primary"><Plus/> Commencer la configuration</button></section></main>
+  const [step,setStep]=useState(()=>{const saved=typeof window==='undefined'?1:Number(localStorage.getItem(`forge:${session.companyId}:onboarding-step`)||'1');return Math.min(6,Math.max(1,saved))});
+  const labels=['Équipe','Job','Fournisseurs','Catalogue','Inventaire'];
+  const move=(next:number)=>{setStep(next);localStorage.setItem(`forge:${session.companyId}:onboarding-step`,String(next))};
+  const content=[
+    {title:'Créons votre équipe',text:'Ajoutez les personnes qui travailleront avec vous. Aucun salaire n’est demandé ici.',fields:['Prénom et nom','Courriel','Téléphone','Rôle Forge','Titre / métier','Grade et syndicat']},
+    {title:'Créons votre première Job',text:'Cette Job sera le véritable dossier maître du chantier.',fields:['Numéro et nom de Job','Client','Adresse','Date prévue','Heures estimées','Employés assignés']},
+    {title:'Ajoutez vos principaux fournisseurs',text:'Les fiches seront immédiatement disponibles dans Commandes → Fournisseurs.',fields:['Nom du fournisseur','Contact','Téléphone','Courriel']},
+    {title:'Préparez votre catalogue',text:'Créez quelques articles maintenant ou commencez avec un catalogue vide.',fields:['Catégorie','Nom de l’article','Source inventaire / fournisseur','Unité']},
+    {title:'Gérez-vous votre propre inventaire?',text:'Vous pourrez modifier cette décision et les quantités en tout temps.',fields:['Oui / Non','Quantités initiales si applicable']}
+  ];
+  return <main className="empty-company onboarding"><header><div className="forge-wordmark"><span><HardHat/></span><b>FORGE</b></div><div><b>{session.companyName}</b><button onClick={onLogout}>Déconnexion</button></div></header><section><div className="onboarding-progress">{labels.map((label,i)=><span className={step>i+1?'done':step===i+1?'active':''} key={label}><i>{step>i+1?'✓':i+1}</i>{label}</span>)}</div>{step<=5?<div className="onboarding-card"><span>ÉTAPE {step} SUR 5</span><h1>{content[step-1].title}</h1><p>{content[step-1].text}</p><div className="onboarding-fields">{content[step-1].fields.map((f,i)=><label key={f}>{f}{f.includes('Rôle')?<select><option>Employé</option><option>Chef d’équipe</option><option>Adjointe</option><option>Boss</option></select>:f.includes('Oui')?<div className="onboarding-choice"><button type="button">Oui</button><button type="button">Non</button></div>:<input placeholder={i===0?'Commencer ici…':''}/>}</label>)}</div>{step===1&&<button className="onboarding-add"><Plus/> Ajouter un autre membre</button>}<footer><button onClick={()=>move(6)}>Faire plus tard</button>{step>1&&<button onClick={()=>move(step-1)}>← Retour</button>}<button className="empty-primary" onClick={()=>move(step+1)}>Continuer <ArrowRight/></button></footer></div>:<div className="onboarding-card onboarding-done"><Check/><span>CONFIGURATION TERMINÉE</span><h1>Votre espace Forge est prêt.</h1><p>Votre équipe, votre première Job et vos outils de travail sont reliés aux vrais modules Forge.</p><div><b>6</b><small>membres</small><b>1</b><small>Job</small><b>3</b><small>fournisseurs</small></div><button className="empty-primary" onClick={()=>window.location.reload()}>Entrer dans Forge <ArrowRight/></button></div>}</section></main>
 }

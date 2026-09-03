@@ -1,29 +1,386 @@
 'use client';
+
 import { useEffect, useMemo, useState } from 'react';
+
 import { AlertTriangle, ArrowLeft, BarChart3, Bell, Box, BriefcaseBusiness, Building2, Check, ChevronRight, ClipboardList, Clock3, FileText, HardHat, History, Home, LogOut, MessageSquare, PackageCheck, Plus, Search, Settings, ShieldCheck, ShoppingCart, Users } from 'lucide-react';
+
 import { CommandCenter } from './command-center';
+
 import { AdjointeDesk } from './adjointe-desk';
+
 import { SimulationPanel } from './simulation-panel';
+
+import { DeliveryReport, Discussions, EmployeeRecords, EventsPage, NotificationCenter, PersonalSettings, PunchControl, PurchasesPage } from './forge-suite';
+
 import type { ForgeSession } from './forge-access';
 
+
 type Role='Boss'|'Adjointe';
-type AdminJob={id:string;number:string;name:string;address:string;chef:string;status:string;plan?:string};
+
+type AdminJob={id:string;
+number:string;
+name:string;
+address:string;
+chef:string;
+status:string;
+plan?:string};
+
 const defaultJobs:AdminJob[]=[{id:'j214',number:'JOB-214',name:'Breton',address:'1280, rue Industrielle, Québec',chef:'Fred G.',status:'Active',plan:'Plan architecture.pdf'},{id:'j315',number:'JOB-315',name:'Leduc',address:'480, boulevard Leduc, Québec',chef:'Marco T.',status:'Active'},{id:'j418',number:'JOB-418',name:'Bélanger',address:'72, rue Bélanger, Lévis',chef:'À assigner',status:'Planifiée'},{id:'j193',number:'JOB-193',name:'Laurentien',address:'Saint-Augustin-de-Desmaures',chef:'Patrick D.',status:'Terminée'}];
 
-const commandPages=[{id:'received',title:'Commandes reçues',desc:'Nouvelles demandes du terrain',count:'24',icon:ClipboardList},{id:'current',title:'Commandes en cours',desc:'Préparation, fournisseur et livraison',count:'91',icon:PackageCheck},{id:'completed',title:'Commandes complétées',desc:'Historique des bons terminés',count:'68',icon:Check},{id:'inventory',title:'Inventaire',desc:'Stock MIR, réservations et minimums',count:'',icon:Box},{id:'catalog',title:'Catalogue',desc:'Articles, presets et profils de pliage',count:'',icon:BriefcaseBusiness},{id:'suppliers',title:'Fournisseurs',desc:'Fiches et courriels de commande',count:'',icon:Building2},{id:'order-reports',title:'Rapports de commandes',desc:'Consommation, PDF et Excel',count:'',icon:BarChart3}];
+
+const commandPages=[{id:'received',title:'Commandes reçues',desc:'Nouvelles demandes du terrain',count:'24',icon:ClipboardList},{id:'current',title:'Commandes en cours',desc:'Préparation, fournisseur et livraison',count:'91',icon:PackageCheck},{id:'completed',title:'Commandes complétées',desc:'Historique des bons terminés',count:'68',icon:Check},{id:'inventory',title:'Inventaire',desc:'Stock MIR, réservations et minimums',count:'',icon:Box},{id:'catalog',title:'Catalogue',desc:'Articles, presets et profils de pliage',count:'',icon:BriefcaseBusiness},{id:'suppliers',title:'Fournisseurs',desc:'Fiches et courriels de commande',count:'',icon:Building2},{id:'order-reports',title:'Rapports de commandes',desc:'Consommation, PDF et Excel',count:'',icon:BarChart3},{id:'delivery-report',title:'Rapport des livraisons',desc:'Sorties réelles, restants et export CSV',count:'',icon:PackageCheck}];
+
 const teamPages=[{id:'employees',title:'Employés',desc:'Fiches, rôles et assignations',icon:Users},{id:'crews',title:'Équipes',desc:'Chefs et composition des équipes',icon:ShieldCheck},{id:'punches',title:'Punchs',desc:'Entrées, sorties et chantiers',icon:Clock3},{id:'corrections',title:'Corrections',desc:'Corriger avec historique permanent',icon:History},{id:'time-reports',title:"Rapports d’heures",desc:'CCQ, mois, année et export',icon:BarChart3}];
 
-function routeFromHash(){const raw=window.location.hash.replace(/^#/,'');if(raw.startsWith('admin/'))return raw.slice(6);if(['orders','inventory','suppliers'].includes(raw))return raw==='inventory'?'commands/inventory':raw==='suppliers'?'commands/suppliers':'commands';return 'home'}
 
-export function AdminPortal({role,session,onLogout}:{role:Role;session:ForgeSession;onLogout:()=>void}){const [route,setRoute]=useState('home');const [jobs,setJobs]=useState<AdminJob[]>(defaultJobs);const [jobQuery,setJobQuery]=useState('');useEffect(()=>{setRoute(routeFromHash());const raw=localStorage.getItem(`forge:${session.companyId}:admin-jobs`);if(raw)setJobs(JSON.parse(raw));const pop=()=>setRoute(routeFromHash());window.addEventListener('popstate',pop);window.addEventListener('hashchange',pop);return()=>{window.removeEventListener('popstate',pop);window.removeEventListener('hashchange',pop)}},[session.companyId]);const go=(next:string)=>{window.history.pushState({},'',`#admin/${next}`);setRoute(next);window.scrollTo({top:0,behavior:'smooth'})};const parts=route.split('/');const section=parts[0];const currentJob=parts[1]?jobs.find(j=>j.id===parts[1]):undefined;const jobTab=parts[2]||'overview';const filteredJobs=jobs.filter(j=>`${j.number} ${j.name} ${j.address} ${j.chef}`.toLowerCase().includes(jobQuery.toLowerCase()));const commandTab=parts[1];const teamTab=parts[1];const commandMap:Record<string,string>={received:'Commandes',current:'Commandes',completed:'Commandes',inventory:'Inventaire',catalog:'Catalogue',suppliers:'Fournisseurs','order-reports':'Rapports'};const breadcrumbs=useMemo(()=>{const result=[{label:'Accueil',route:'home'}];if(section==='jobs'){result.push({label:'Jobs',route:'jobs'});if(currentJob)result.push({label:`${currentJob.number} · ${currentJob.name}`,route:`jobs/${currentJob.id}/${jobTab}`})}if(section==='teams'){result.push({label:'Équipes & heures',route:'teams'});if(teamTab)result.push({label:teamPages.find(p=>p.id===teamTab)?.title||teamTab,route})}if(section==='commands'){result.push({label:'Commandes',route:'commands'});if(commandTab)result.push({label:commandPages.find(p=>p.id===commandTab)?.title||commandTab,route})}if(section==='reports')result.push({label:'Rapports',route:'reports'});if(section==='administration')result.push({label:'Administration',route:'administration'});return result},[section,currentJob,jobTab,commandTab,teamTab,route]);return <main className="admin-portal"><aside className="admin-sidebar"><div className="admin-brand"><span><HardHat/></span><div><b>FORGE</b><small>{session.companyName}</small></div></div><nav>{[{id:'home',label:'Accueil',icon:Home},{id:'jobs',label:'Jobs',icon:HardHat},{id:'teams',label:'Équipes & Heures',icon:Users},{id:'commands',label:'Commandes',icon:ShoppingCart},{id:'reports',label:'Rapports',icon:BarChart3},{id:'administration',label:'Administration',icon:Settings}].map(item=><button key={item.id} className={section===item.id?'active':''} onClick={()=>go(item.id)}><item.icon/>{item.label}</button>)}</nav><div className="admin-user"><span>{session.userName.slice(0,2).toUpperCase()}</span><div><b>{session.userName}</b><small>{role}</small></div><button onClick={onLogout}><LogOut/></button></div></aside><section className="admin-page"><header className="admin-topbar"><div className="admin-breadcrumbs">{breadcrumbs.map((crumb,index)=><span key={`${crumb.route}-${index}`}>{index>0&&<i>/</i>}<button onClick={()=>go(crumb.route)}>{crumb.label}</button></span>)}</div><button className="admin-alert"><Bell/><b>12</b></button></header><div className="admin-content">{route==='home'&&<Dashboard role={role} go={go}/>} {route==='jobs'&&<JobsPage jobs={filteredJobs} query={jobQuery} setQuery={setJobQuery} go={go}/>} {section==='jobs'&&currentJob&&<JobPage job={currentJob} tab={jobTab} go={go} role={role} companyId={session.companyId}/>} {route==='teams'&&<TeamsHub go={go}/>} {section==='teams'&&teamTab&&<TeamWorkspace page={teamTab} role={role} companyId={session.companyId} go={go}/>} {route==='commands'&&<CommandsHub go={go}/>} {section==='commands'&&commandTab&&<div className="portal-page"><BackButton onClick={()=>go('commands')} label="Retour aux commandes"/><PageTitle eyebrow="APPROVISIONNEMENT" title={commandPages.find(p=>p.id===commandTab)?.title||'Commandes'} text="Même source de données, présentée dans sa page de travail dédiée."/><CommandCenter role={role} companyId={session.companyId} initialTab={commandMap[commandTab]||'Commandes'} showNav={false}/></div>} {route==='reports'&&<ReportsPage go={go}/>} {route==='administration'&&<AdministrationPage role={role}/>}</div></section></main>}
+function routeFromHash(){const raw=window.location.hash.replace(/^#/,'');
+if(raw.startsWith('admin/'))return raw.slice(6);
+if(['orders','inventory','suppliers'].includes(raw))return raw==='inventory'?'commands/inventory':raw==='suppliers'?'commands/suppliers':'commands';
+return 'home'}
 
-function PageTitle({eyebrow,title,text}:{eyebrow:string;title:string;text:string}){return <div className="portal-title"><span>{eyebrow}</span><h1>{title}</h1><p>{text}</p></div>}
-function BackButton({onClick,label}:{onClick:()=>void;label:string}){return <button className="portal-back" onClick={onClick}><ArrowLeft/>{label}</button>}
-function Dashboard({role,go}:{role:Role;go:(route:string)=>void}){const cards=[{label:'Nouvelles commandes',value:24,note:'8 urgentes',route:'commands/received',icon:ShoppingCart},{label:'Commandes à traiter',value:37,note:'12 fournisseur',route:'commands/current',icon:PackageCheck},{label:'Punchs à vérifier',value:14,note:'Depuis lundi',route:'teams',icon:Clock3},{label:'Jobs actives',value:3,note:'1 démarre bientôt',route:'jobs',icon:HardHat},{label:'Extras à traiter',value:9,note:'3 sans approbation',route:'jobs',icon:Plus},{label:'Alertes importantes',value:5,note:'Stock et échéances',route:'commands/inventory',icon:AlertTriangle}];return <div className="portal-dashboard"><PageTitle eyebrow={`VUE ${role.toUpperCase()}`} title={`Bonjour, ${role==='Adjointe'?'Ester':'Simon'}.`} text="Voici uniquement ce qui demande ton attention aujourd’hui."/><div className="attention-grid">{cards.map(card=><button key={card.label} onClick={()=>go(card.route)}><card.icon/><span>{card.label}</span><b>{card.value}</b><small>{card.note}</small><ChevronRight/></button>)}</div><div className="dashboard-flow"><div><span>FLUX DE TRAVAIL</span><h2>Une job, un seul dossier maître</h2><p>Plans, équipes, heures, commandes, extras, chat et historique restent attachés à la même job.</p></div><button onClick={()=>go('jobs')}><HardHat/> Ouvrir les Jobs</button></div></div>}
-function JobsPage({jobs,query,setQuery,go}:{jobs:AdminJob[];query:string;setQuery:(v:string)=>void;go:(route:string)=>void}){return <div className="portal-page"><PageTitle eyebrow="DOSSIERS DE CHANTIER" title="Jobs" text="Chaque chantier possède un dossier maître qui rassemble toutes ses données."/><div className="jobs-toolbar"><label><Search/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Numéro, client, adresse ou chef…"/></label><button><Plus/> Nouvelle Job</button></div><div className="job-status-tabs"><button className="active">Actives</button><button>À venir</button><button>Terminées</button><button>Archivées</button><button>Historique</button></div><div className="portal-job-list">{jobs.map(job=><button key={job.id} onClick={()=>go(`jobs/${job.id}/overview`)}><span className={`job-state ${job.status.toLowerCase().replace('é','e')}`}>{job.status}</span><div><b>{job.number} · {job.name}</b><small>{job.address} · Chef {job.chef}</small></div><span>{job.plan?<><FileText/> Plan disponible</>:'Aucun plan'}</span><ChevronRight/></button>)}</div></div>}
-function JobPage({job,tab,go,role,companyId}:{job:AdminJob;tab:string;go:(route:string)=>void;role:Role;companyId:string}){const tabs=[['overview','Aperçu'],['documents','Plans & documents'],['team','Équipe & heures'],['orders','Commandes'],['extras','Extras'],['chat','Chat'],['history','Historique']];return <div className="portal-page"><BackButton onClick={()=>go('jobs')} label="Retour aux Jobs"/><div className="job-page-head"><div><span>DOSSIER MAÎTRE</span><h1>{job.number} — {job.name}</h1><p>{job.address} · Chef {job.chef} · {job.status}</p></div><span className="job-state active">{job.status}</span></div><nav className="job-tabs">{tabs.map(([id,label])=><button key={id} className={tab===id?'active':''} onClick={()=>go(`jobs/${job.id}/${id}`)}>{label}</button>)}</nav>{tab==='overview'&&<div className="job-overview-grid"><article><span>HEURES ESTIMÉES</span><b>410 h</b></article><article><span>HEURES TRAVAILLÉES</span><b>213 h</b></article><article><span>HEURES RESTANTES</span><b>197 h</b></article><article><span>PROGRESSION</span><b>52 %</b></article></div>}{tab==='documents'&&<div className="job-section-card"><div><h2>Plans & documents</h2><p>Tout ajout appartient exclusivement à {job.number}.</p></div><button><Plus/> Ajouter</button><article><FileText/><span><b>{job.plan||'Plan architecture.pdf'}</b><small>Version 3 · 2 septembre 2026 · versions précédentes conservées</small></span><History/></article></div>}{tab==='team'&&<SimulationPanel/>}{tab==='orders'&&<CommandCenter role={role} companyId={companyId} initialTab="Commandes" showNav={false}/>} {tab==='extras'&&<div className="job-section-card"><div><h2>Extras de la Job</h2><p>Les extras restent rattachés à {job.number}.</p></div><button><Plus/> Ajouter un extra</button><article><Plus/><span><b>EX-014 · Solin imprévu</b><small>2 h 45 · Approuvé par J. Breton · 3 photos</small></span><Check/></article></div>} {tab==='chat'&&<div className="job-chat-page"><MessageSquare/><h2>Chat · {job.number}</h2><p>Le chat affiché aux employés change automatiquement avec la job sélectionnée au punch.</p><article><b>ESTER</b><span>Le plan révisé est maintenant dans le dossier.</span><small>09:42</small></article><article><b>FRED</b><span>Parfait, l’équipe travaille avec la version 3.</span><small>09:44</small></article></div>} {tab==='history'&&<div className="job-history-page">{['Job créée par Ester','Fred assigné comme chef','Plan architecture.pdf — version 3','Commande BC-2026-0841 reçue','Extra EX-014 approuvé'].map((event,index)=><article key={event}><i/><span><b>{event}</b><small>{2+index} septembre 2026</small></span></article>)}</div>}</div>}
-function TeamsHub({go}:{go:(route:string)=>void}){return <div className="portal-page"><PageTitle eyebrow="GESTION DU PERSONNEL" title="Équipes & heures" text="Choisis une tâche. Aucun tableau géant : chaque fonction s’ouvre dans sa propre page."/><div className="command-hub-grid">{teamPages.map(page=><button key={page.id} onClick={()=>go(`teams/${page.id}`)}><page.icon/><div><b>{page.title}</b><small>{page.desc}</small></div><ChevronRight/></button>)}</div></div>}
-function TeamWorkspace({page,go}:{page:string;role:Role;companyId:string;go:(route:string)=>void}){const [period,setPeriod]=useState('week-current'),[employee,setEmployee]=useState('Tous');const selected=teamPages.find(p=>p.id===page),punches=[['Fred G.','JOB-214 · 06:31 → 15:42','9 h 11','week-current'],['Alex P.','JOB-214 · 06:44 → 15:19','8 h 35','week-current'],['Marco T.','JOB-315 · 06:28 → —','Actif','week-current'],['Fred G.','JOB-315 · 06:28 → 15:12','8 h 44','week-last'],['Alex P.','JOB-214 · 06:41 → 15:18','8 h 37','month-current'],['Marco T.','JOB-418 · 07:02 → 16:10','9 h 08','month-last']],base=page==='employees'?[['Fred G.','Chef · JOB-214','Actif'],['Alex P.','Employé · JOB-214','Actif'],['Marco T.','Chef · JOB-315','Actif']]:page==='crews'?[['Équipe Fred','JOB-214 · 5 employés','Sur chantier'],['Équipe Marco','JOB-315 · 4 employés','Sur chantier']]:page==='corrections'?[['Marco T.','JOB-214 → JOB-315','À vérifier'],['Alex P.','OUT 15:19 → 15:31','Corrigé']]:[['Août 2026','1 842 h · 18 employés','Prêt CCQ'],['Juillet 2026','1 796 h · 17 employés','Exporté'],['Juin 2026','1 688 h · 16 employés','Archivé']],rows=page==='punches'?punches.filter(r=>(period==='all'||r[3]===period)&&(employee==='Tous'||r[0]===employee)):base;return <div className="portal-page"><BackButton onClick={()=>go('teams')} label="Retour à Équipes & heures"/><PageTitle eyebrow="GESTION DU PERSONNEL" title={selected?.title||'Équipes & heures'} text={selected?.desc||'Gestion administrative'}/>{page==='punches'&&<div className="punch-filter-bar"><label>Période<select value={period} onChange={e=>setPeriod(e.target.value)}><option value="week-current">Cette semaine</option><option value="week-last">Semaine passée</option><option value="month-current">Ce mois-ci</option><option value="month-last">Mois passé</option><option value="all">Toutes les périodes</option></select></label><label>Employé<select value={employee} onChange={e=>setEmployee(e.target.value)}><option>Tous</option><option>Fred G.</option><option>Alex P.</option><option>Marco T.</option></select></label></div>}<div className="clean-workspace-toolbar"><label><Search/><input placeholder={`Rechercher dans ${selected?.title.toLowerCase()}…`}/></label><button><Plus/> {page==='employees'?'Ajouter un employé':page==='crews'?'Créer une équipe':page==='corrections'?'Nouvelle correction':'Exporter'}</button></div><div className="clean-admin-list">{rows.map(([name,detail,state],index)=><button key={name+detail+index}><span className="clean-admin-icon">{page==='punches'?<Clock3/>:page==='time-reports'?<FileText/>:<Users/>}</span><div><b>{name}</b><small>{detail}</small></div><em>{state}</em><ChevronRight/></button>)}{!rows.length&&<div className="fcc-empty">Aucun punch pour cette période et cet employé.</div>}</div>{page==='corrections'&&<div className="permissions-note"><History/><span><b>Historique permanent</b><small>Chaque correction conserve l’ancienne valeur, la nouvelle valeur, la personne et l’heure du changement.</small></span></div>}</div>}
-function CommandsHub({go}:{go:(route:string)=>void}){return <div className="portal-page"><PageTitle eyebrow="APPROVISIONNEMENT" title="Commandes" text="Choisis la fonction à ouvrir. Chaque espace possède sa propre page et un retour clair."/><div className="command-hub-grid">{commandPages.map(page=><button key={page.id} onClick={()=>go(`commands/${page.id}`)}><page.icon/><div><b>{page.title}</b><small>{page.desc}</small></div>{page.count&&<strong>{page.count}</strong>}<ChevronRight/></button>)}</div></div>}
-function ReportsPage({go}:{go:(route:string)=>void}){return <div className="portal-page"><PageTitle eyebrow="ANALYSE" title="Rapports" text="Heures, coûts, rendement et consommation sans dupliquer les données sources."/><div className="report-hub"><button onClick={()=>go('teams')}><Clock3/><div><b>Rapports d’heures</b><small>CCQ, audit et corrections</small></div><ChevronRight/></button><button onClick={()=>go('commands/order-reports')}><BarChart3/><div><b>Rapports de commandes</b><small>Consommation par item, job et fournisseur</small></div><ChevronRight/></button><button onClick={()=>go('jobs')}><HardHat/><div><b>Rendement par Job</b><small>Heures, matériaux et extras</small></div><ChevronRight/></button></div></div>}
-function AdministrationPage({role}:{role:Role}){const cards=[['Fiches employés','Coordonnées, statut et dossier'],['Rôles & permissions','Boss, Adjointe, Chef et Employé'],['Métiers & grades','Apprentis, compagnons et spécialités'],['Syndicats','Affiliations des employés'],['Taux & grilles salariales','Taux horaires et historique'],['Compagnie','Logo, coordonnées et paramètres']];return <div className="portal-page"><PageTitle eyebrow="PARAMÈTRES" title="Administration" text={`Gestion réservée au ${role} et regroupée dans une seule section.`}/><div className="administration-grid">{cards.map(([title,text])=><button key={title}><Settings/><div><b>{title}</b><small>{text}</small></div><ChevronRight/></button>)}</div><div className="permissions-note"><ShieldCheck/><span><b>Une compagnie, une source de données</b><small>Chaque fiche et chaque paramètre restent liés au company_id de Les Revêtements MIR.</small></span></div></div>}
+export function AdminPortal({role,session,onLogout}:{role:Role;
+session:ForgeSession;
+onLogout:()=>void}){const [route,setRoute]=useState('home');
+const [jobs,setJobs]=useState<AdminJob[]>(defaultJobs);
+const [jobQuery,setJobQuery]=useState('');
+const [notificationsOpen,setNotificationsOpen]=useState(false);
+useEffect(()=>{setRoute(routeFromHash());
+const raw=localStorage.getItem(`forge:${session.companyId}:admin-jobs`);
+if(raw)setJobs(JSON.parse(raw));
+const pop=()=>setRoute(routeFromHash());
+window.addEventListener('popstate',pop);
+window.addEventListener('hashchange',pop);
+return()=>{window.removeEventListener('popstate',pop);
+window.removeEventListener('hashchange',pop)}},[session.companyId]);
+const go=(next:string)=>{window.history.pushState({},'',`#admin/${next}`);
+setRoute(next);
+window.scrollTo({top:0,behavior:'smooth'})};
+const parts=route.split('/');
+const section=parts[0];
+const currentJob=parts[1]?jobs.find(j=>j.id===parts[1]):undefined;
+const jobTab=parts[2]||'overview';
+const filteredJobs=jobs.filter(j=>`${j.number} ${j.name} ${j.address} ${j.chef}`.toLowerCase().includes(jobQuery.toLowerCase()));
+const commandTab=parts[1];
+const teamTab=parts[1];
+const commandMap:Record<string,string>={received:'Commandes',current:'Commandes',completed:'Commandes',inventory:'Inventaire',catalog:'Catalogue',suppliers:'Fournisseurs','order-reports':'Rapports'};
+const breadcrumbs=useMemo(()=>{const result=[{label:'Accueil',route:'home'}];
+if(section==='jobs'){result.push({label:'Jobs',route:'jobs'});
+if(currentJob)result.push({label:`${currentJob.number} · ${currentJob.name}`,route:`jobs/${currentJob.id}/${jobTab}`})}if(section==='teams'){result.push({label:'Équipes & heures',route:'teams'});
+if(teamTab)result.push({label:teamPages.find(p=>p.id===teamTab)?.title||teamTab,route})}if(section==='commands'){result.push({label:'Commandes',route:'commands'});
+if(commandTab)result.push({label:commandPages.find(p=>p.id===commandTab)?.title||commandTab,route})}if(section==='reports')result.push({label:'Rapports',route:'reports'});
+if(section==='administration')result.push({label:'Administration',route:'administration'});
+return result},[section,currentJob,jobTab,commandTab,teamTab,route]);
+return <main className="admin-portal">
+<aside className="admin-sidebar">
+<div className="admin-brand">
+<span>
+<HardHat/>
+</span>
+<div>
+<b>FORGE</b>
+<small>{session.companyName}</small>
+</div>
+</div>
+<nav>{[{id:'home',label:'Accueil',icon:Home},{id:'jobs',label:'Jobs',icon:HardHat},{id:'teams',label:'Équipes & Heures',icon:Users},{id:'commands',label:'Commandes',icon:ShoppingCart},{id:'discussion',label:'Discussion · 8',icon:MessageSquare},{id:'purchases',label:'Achats',icon:FileText},{id:'events',label:'Événements',icon:Clock3},{id:'reports',label:'Rapports',icon:BarChart3},{id:'administration',label:'Administration',icon:Settings},{id:'settings',label:'Paramètres',icon:Settings}].map(item=>
+<button key={item.id} className={section===item.id?'active':''} onClick={()=>go(item.id)}>
+<item.icon/>{item.label}</button>)}</nav>
+<div className="admin-user">
+<span>{session.userName.slice(0,2).toUpperCase()}</span>
+<div>
+<b>{session.userName}</b>
+<small>{role}</small>
+</div>
+<button onClick={onLogout}>
+<LogOut/>
+</button>
+</div>
+</aside>
+<section className="admin-page">
+<header className="admin-topbar">
+<div className="admin-breadcrumbs">{breadcrumbs.map((crumb,index)=>
+<span key={`${crumb.route}-${index}`}>{index>0&&<i>/</i>}<button onClick={()=>go(crumb.route)}>{crumb.label}</button>
+</span>)}</div>
+<button className="admin-alert" onClick={()=>setNotificationsOpen(v=>!v)}>
+<Bell/>
+<b>12</b>
+</button>
+{notificationsOpen&&<NotificationCenter go={go} close={()=>setNotificationsOpen(false)}/>} 
+</header>
+<div className="admin-content">{route==='home'&&<Dashboard role={role} go={go}/>} {route==='jobs'&&<JobsPage jobs={filteredJobs} query={jobQuery} setQuery={setJobQuery} go={go}/>} {section==='jobs'&&currentJob&&<JobPage job={currentJob} tab={jobTab} go={go} role={role} companyId={session.companyId}/>} {route==='teams'&&<TeamsHub go={go}/>} {section==='teams'&&teamTab&&teamTab!=='employees'&&teamTab!=='punches'&&<TeamWorkspace page={teamTab} role={role} companyId={session.companyId} go={go}/>} {route==='teams/employees'&&<EmployeeRecords/>} {route==='teams/punches'&&<PunchControl/>} {route==='commands'&&<CommandsHub go={go}/>} {section==='commands'&&commandTab&&commandTab!=='delivery-report'&&<div className="portal-page">
+<BackButton onClick={()=>go('commands')} label="Retour aux commandes"/>
+<PageTitle eyebrow="APPROVISIONNEMENT" title={commandPages.find(p=>p.id===commandTab)?.title||'Commandes'} text="Même source de données, présentée dans sa page de travail dédiée."/>
+<CommandCenter role={role} companyId={session.companyId} initialTab={commandMap[commandTab]||'Commandes'} showNav={false}/>
+</div>} {route==='commands/delivery-report'&&<DeliveryReport/>} {route==='discussion'&&<Discussions/>} {route==='purchases'&&<PurchasesPage/>} {route==='events'&&<EventsPage/>} {route==='settings'&&<PersonalSettings session={session}/>} {route==='reports'&&<ReportsPage go={go}/>} {route==='administration'&&<AdministrationPage role={role}/>}</div>
+</section>
+</main>}
+
+function PageTitle({eyebrow,title,text}:{eyebrow:string;
+title:string;
+text:string}){return <div className="portal-title">
+<span>{eyebrow}</span>
+<h1>{title}</h1>
+<p>{text}</p>
+</div>}
+function BackButton({onClick,label}:{onClick:()=>void;
+label:string}){return <button className="portal-back" onClick={onClick}>
+<ArrowLeft/>{label}</button>}
+function Dashboard({role,go}:{role:Role;
+go:(route:string)=>void}){const cards=[{label:'Nouvelles commandes',value:24,note:'8 urgentes',route:'commands/received',icon:ShoppingCart},{label:'Commandes à traiter',value:37,note:'12 fournisseur',route:'commands/current',icon:PackageCheck},{label:'Punchs à vérifier',value:14,note:'Depuis lundi',route:'teams/punches',icon:Clock3},{label:'Achats à vérifier',value:8,note:'1 284,62 $',route:'purchases',icon:FileText},{label:'Jobs actives',value:3,note:'1 démarre bientôt',route:'jobs',icon:HardHat},{label:'Événements à venir',value:2,note:'7 sans réponse',route:'events',icon:Clock3},{label:'Extras à traiter',value:9,note:'3 sans approbation',route:'jobs',icon:Plus},{label:'Alertes importantes',value:5,note:'Stock et échéances',route:'commands/inventory',icon:AlertTriangle}];
+return <div className="portal-dashboard">
+<PageTitle eyebrow={`VUE ${role.toUpperCase()}`} title={`Bonjour, ${role==='Adjointe'?'Ester':'Simon'}.`} text="Voici uniquement ce qui demande ton attention aujourd’hui."/>
+<div className="attention-grid">{cards.map(card=>
+<button key={card.label} onClick={()=>go(card.route)}>
+<card.icon/>
+<span>{card.label}</span>
+<b>{card.value}</b>
+<small>{card.note}</small>
+<ChevronRight/>
+</button>)}</div>
+<div className="dashboard-flow">
+<div>
+<span>FLUX DE TRAVAIL</span>
+<h2>Une job, un seul dossier maître</h2>
+<p>Plans, équipes, heures, commandes, extras, chat et historique restent attachés à la même job.</p>
+</div>
+<button onClick={()=>go('jobs')}>
+<HardHat/> Ouvrir les Jobs</button>
+</div>
+</div>}
+function JobsPage({jobs,query,setQuery,go}:{jobs:AdminJob[];
+query:string;
+setQuery:(v:string)=>void;
+go:(route:string)=>void}){return <div className="portal-page">
+<PageTitle eyebrow="DOSSIERS DE CHANTIER" title="Jobs" text="Chaque chantier possède un dossier maître qui rassemble toutes ses données."/>
+<div className="jobs-toolbar">
+<label>
+<Search/>
+<input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Numéro, client, adresse ou chef…"/>
+</label>
+<button>
+<Plus/> Nouvelle Job</button>
+</div>
+<div className="job-status-tabs">
+<button className="active">Actives</button>
+<button>À venir</button>
+<button>Terminées</button>
+<button>Archivées</button>
+<button>Historique</button>
+</div>
+<div className="portal-job-list">{jobs.map(job=>
+<button key={job.id} onClick={()=>go(`jobs/${job.id}/overview`)}>
+<span className={`job-state ${job.status.toLowerCase().replace('é','e')}`}>{job.status}</span>
+<div>
+<b>{job.number} · {job.name}</b>
+<small>{job.address} · Chef {job.chef}</small>
+</div>
+<span>{job.plan?<>
+<FileText/> Plan disponible</>:'Aucun plan'}</span>
+<ChevronRight/>
+</button>)}</div>
+</div>}
+function JobPage({job,tab,go,role,companyId}:{job:AdminJob;
+tab:string;
+go:(route:string)=>void;
+role:Role;
+companyId:string}){const tabs=[['overview','Aperçu'],['documents','Plans & documents'],['team','Équipe & heures'],['orders','Commandes'],['extras','Extras'],['chat','Chat'],['history','Historique']];
+return <div className="portal-page">
+<BackButton onClick={()=>go('jobs')} label="Retour aux Jobs"/>
+<div className="job-page-head">
+<div>
+<span>DOSSIER MAÎTRE</span>
+<h1>{job.number} — {job.name}</h1>
+<p>{job.address} · Chef {job.chef} · {job.status}</p>
+</div>
+<span className="job-state active">{job.status}</span>
+</div>
+<nav className="job-tabs">{tabs.map(([id,label])=>
+<button key={id} className={tab===id?'active':''} onClick={()=>go(`jobs/${job.id}/${id}`)}>{label}</button>)}</nav>{tab==='overview'&&<div className="job-overview-grid">
+<article>
+<span>HEURES ESTIMÉES</span>
+<b>410 h</b>
+</article>
+<article>
+<span>HEURES TRAVAILLÉES</span>
+<b>213 h</b>
+</article>
+<article>
+<span>HEURES RESTANTES</span>
+<b>197 h</b>
+</article>
+<article>
+<span>PROGRESSION</span>
+<b>52 %</b>
+</article>
+</div>}{tab==='documents'&&<div className="job-section-card">
+<div>
+<h2>Plans & documents</h2>
+<p>Tout ajout appartient exclusivement à {job.number}.</p>
+</div>
+<button>
+<Plus/> Ajouter</button>
+<article>
+<FileText/>
+<span>
+<b>{job.plan||'Plan architecture.pdf'}</b>
+<small>Version 3 · 2 septembre 2026 · versions précédentes conservées</small>
+</span>
+<History/>
+</article>
+</div>}{tab==='team'&&<SimulationPanel/>}{tab==='orders'&&<CommandCenter role={role} companyId={companyId} initialTab="Commandes" showNav={false}/>} {tab==='extras'&&<div className="job-section-card">
+<div>
+<h2>Extras de la Job</h2>
+<p>Les extras restent rattachés à {job.number}.</p>
+</div>
+<button>
+<Plus/> Ajouter un extra</button>
+<article>
+<Plus/>
+<span>
+<b>EX-014 · Solin imprévu</b>
+<small>2 h 45 · Approuvé par J. Breton · 3 photos</small>
+</span>
+<Check/>
+</article>
+</div>} {tab==='chat'&&<div className="job-chat-page">
+<MessageSquare/>
+<h2>Chat · {job.number}</h2>
+<p>Le chat affiché aux employés change automatiquement avec la job sélectionnée au punch.</p>
+<article>
+<b>ESTER</b>
+<span>Le plan révisé est maintenant dans le dossier.</span>
+<small>09:42</small>
+</article>
+<article>
+<b>FRED</b>
+<span>Parfait, l’équipe travaille avec la version 3.</span>
+<small>09:44</small>
+</article>
+</div>} {tab==='history'&&<div className="job-history-page">{['Job créée par Ester','Fred assigné comme chef','Plan architecture.pdf — version 3','Commande BC-2026-0841 reçue','Extra EX-014 approuvé'].map((event,index)=>
+<article key={event}>
+<i/>
+<span>
+<b>{event}</b>
+<small>{2+index} septembre 2026</small>
+</span>
+</article>)}</div>}</div>}
+function TeamsHub({go}:{go:(route:string)=>void}){return <div className="portal-page">
+<PageTitle eyebrow="GESTION DU PERSONNEL" title="Équipes & heures" text="Choisis une tâche. Aucun tableau géant : chaque fonction s’ouvre dans sa propre page."/>
+<div className="command-hub-grid">{teamPages.map(page=>
+<button key={page.id} onClick={()=>go(`teams/${page.id}`)}>
+<page.icon/>
+<div>
+<b>{page.title}</b>
+<small>{page.desc}</small>
+</div>
+<ChevronRight/>
+</button>)}</div>
+</div>}
+function TeamWorkspace({page,go}:{page:string;
+role:Role;
+companyId:string;
+go:(route:string)=>void}){const [period,setPeriod]=useState('week-current'),[employee,setEmployee]=useState('Tous');
+const selected=teamPages.find(p=>p.id===page),punches=[['Fred G.','JOB-214 · 06:31 → 15:42','9 h 11','week-current'],['Alex P.','JOB-214 · 06:44 → 15:19','8 h 35','week-current'],['Marco T.','JOB-315 · 06:28 → —','Actif','week-current'],['Fred G.','JOB-315 · 06:28 → 15:12','8 h 44','week-last'],['Alex P.','JOB-214 · 06:41 → 15:18','8 h 37','month-current'],['Marco T.','JOB-418 · 07:02 → 16:10','9 h 08','month-last']],base=page==='employees'?[['Fred G.','Chef · JOB-214','Actif'],['Alex P.','Employé · JOB-214','Actif'],['Marco T.','Chef · JOB-315','Actif']]:page==='crews'?[['Équipe Fred','JOB-214 · 5 employés','Sur chantier'],['Équipe Marco','JOB-315 · 4 employés','Sur chantier']]:page==='corrections'?[['Marco T.','JOB-214 → JOB-315','À vérifier'],['Alex P.','OUT 15:19 → 15:31','Corrigé']]:[['Août 2026','1 842 h · 18 employés','Prêt CCQ'],['Juillet 2026','1 796 h · 17 employés','Exporté'],['Juin 2026','1 688 h · 16 employés','Archivé']],rows=page==='punches'?punches.filter(r=>(period==='all'||r[3]===period)&&(employee==='Tous'||r[0]===employee)):base;
+return <div className="portal-page">
+<BackButton onClick={()=>go('teams')} label="Retour à Équipes & heures"/>
+<PageTitle eyebrow="GESTION DU PERSONNEL" title={selected?.title||'Équipes & heures'} text={selected?.desc||'Gestion administrative'}/>{page==='punches'&&<div className="punch-filter-bar">
+<label>Période<select value={period} onChange={e=>setPeriod(e.target.value)}>
+<option value="week-current">Cette semaine</option>
+<option value="week-last">Semaine passée</option>
+<option value="month-current">Ce mois-ci</option>
+<option value="month-last">Mois passé</option>
+<option value="all">Toutes les périodes</option>
+</select>
+</label>
+<label>Employé<select value={employee} onChange={e=>setEmployee(e.target.value)}>
+<option>Tous</option>
+<option>Fred G.</option>
+<option>Alex P.</option>
+<option>Marco T.</option>
+</select>
+</label>
+</div>}<div className="clean-workspace-toolbar">
+<label>
+<Search/>
+<input placeholder={`Rechercher dans ${selected?.title.toLowerCase()}…`}/>
+</label>
+<button>
+<Plus/> {page==='employees'?'Ajouter un employé':page==='crews'?'Créer une équipe':page==='corrections'?'Nouvelle correction':'Exporter'}</button>
+</div>
+<div className="clean-admin-list">{rows.map(([name,detail,state],index)=>
+<button key={name+detail+index}>
+<span className="clean-admin-icon">{page==='punches'?<Clock3/>:page==='time-reports'?<FileText/>:<Users/>}</span>
+<div>
+<b>{name}</b>
+<small>{detail}</small>
+</div>
+<em>{state}</em>
+<ChevronRight/>
+</button>)}{!rows.length&&<div className="fcc-empty">Aucun punch pour cette période et cet employé.</div>}</div>{page==='corrections'&&<div className="permissions-note">
+<History/>
+<span>
+<b>Historique permanent</b>
+<small>Chaque correction conserve l’ancienne valeur, la nouvelle valeur, la personne et l’heure du changement.</small>
+</span>
+</div>}</div>}
+function CommandsHub({go}:{go:(route:string)=>void}){return <div className="portal-page">
+<PageTitle eyebrow="APPROVISIONNEMENT" title="Commandes" text="Choisis la fonction à ouvrir. Chaque espace possède sa propre page et un retour clair."/>
+<div className="command-hub-grid">{commandPages.map(page=>
+<button key={page.id} onClick={()=>go(`commands/${page.id}`)}>
+<page.icon/>
+<div>
+<b>{page.title}</b>
+<small>{page.desc}</small>
+</div>{page.count&&<strong>{page.count}</strong>}<ChevronRight/>
+</button>)}</div>
+</div>}
+function ReportsPage({go}:{go:(route:string)=>void}){return <div className="portal-page">
+<PageTitle eyebrow="ANALYSE" title="Rapports" text="Heures, coûts, rendement et consommation sans dupliquer les données sources."/>
+<div className="report-hub">
+<button onClick={()=>go('commands/delivery-report')}><PackageCheck/><div><b>Rapport des livraisons</b><small>Sorties réelles, restants et export CSV</small></div><ChevronRight/></button>
+<button onClick={()=>go('purchases')}><FileText/><div><b>Achats & remboursements</b><small>Factures, validations et remboursements</small></div><ChevronRight/></button>
+<button onClick={()=>go('teams')}>
+<Clock3/>
+<div>
+<b>Rapports d’heures</b>
+<small>CCQ, audit et corrections</small>
+</div>
+<ChevronRight/>
+</button>
+<button onClick={()=>go('commands/order-reports')}>
+<BarChart3/>
+<div>
+<b>Rapports de commandes</b>
+<small>Consommation par item, job et fournisseur</small>
+</div>
+<ChevronRight/>
+</button>
+<button onClick={()=>go('jobs')}>
+<HardHat/>
+<div>
+<b>Rendement par Job</b>
+<small>Heures, matériaux et extras</small>
+</div>
+<ChevronRight/>
+</button>
+</div>
+</div>}
+function AdministrationPage({role}:{role:Role}){const cards=[['Fiches employés','Coordonnées, statut et dossier'],['Rôles & permissions','Boss, Adjointe, Chef et Employé'],['Métiers & grades','Apprentis, compagnons et spécialités'],['Syndicats','Affiliations des employés'],['Taux & grilles salariales','Taux horaires et historique'],['Compagnie','Logo, coordonnées et paramètres']];
+return <div className="portal-page">
+<PageTitle eyebrow="PARAMÈTRES" title="Administration" text={`Gestion réservée au ${role} et regroupée dans une seule section.`}/>
+<div className="administration-grid">{cards.map(([title,text])=>
+<button key={title}>
+<Settings/>
+<div>
+<b>{title}</b>
+<small>{text}</small>
+</div>
+<ChevronRight/>
+</button>)}</div>
+<div className="permissions-note">
+<ShieldCheck/>
+<span>
+<b>Une compagnie, une source de données</b>
+<small>Chaque fiche et chaque paramètre restent liés au company_id de Les Revêtements MIR.</small>
+</span>
+</div>
+</div>}
