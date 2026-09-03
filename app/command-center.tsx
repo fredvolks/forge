@@ -63,31 +63,31 @@ export function CommandCenter({role,companyId,initialTab='Commandes',showNav=tru
 <Search/>
 <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Bon, job, employé ou matériau…"/>
 </label>
-<select value={status} onChange={e=>setStatus(e.target.value)}>
+<label className="filter-field"><span>Statut</span><select value={status} onChange={e=>setStatus(e.target.value)}>
 <option>Tous</option>{statuses.map(s=>
-<option key={s}>{s}</option>)}</select>
-<select value={jobFilter} onChange={e=>setJobFilter(e.target.value)}>
+<option key={s}>{s}</option>)}</select></label>
+<label className="filter-field"><span>Job</span><select value={jobFilter} onChange={e=>setJobFilter(e.target.value)}>
 <option>Toutes</option>{[...new Set(orders.map(o=>o.job))].map(j=>
-<option key={j}>{j}</option>)}</select>
-<select value={employeeFilter} onChange={e=>setEmployeeFilter(e.target.value)}>
+<option key={j}>{j}</option>)}</select></label>
+<label className="filter-field"><span>Employé</span><select value={employeeFilter} onChange={e=>setEmployeeFilter(e.target.value)}>
 <option>Tous</option>{[...new Set(orders.map(o=>o.requester))].map(v=>
-<option key={v}>{v}</option>)}</select>
-<select value={supplierFilter} onChange={e=>setSupplierFilter(e.target.value)}>
+<option key={v}>{v}</option>)}</select></label>
+<label className="filter-field"><span>Fournisseur</span><select value={supplierFilter} onChange={e=>setSupplierFilter(e.target.value)}>
 <option>Tous</option>{suppliers.map(s=>
-<option key={s.name}>{s.name}</option>)}</select>
-<select value={sourceFilter} onChange={e=>setSourceFilter(e.target.value)}>
+<option key={s.name}>{s.name}</option>)}</select></label>
+<label className="filter-field"><span>Source</span><select value={sourceFilter} onChange={e=>setSourceFilter(e.target.value)}>
 <option>Toutes</option>
 <option>Inventaire MIR</option>
 <option>Fournisseur</option>
-</select>
-<select value={yearFilter} onChange={e=>setYearFilter(e.target.value)}>
+</select></label>
+<label className="filter-field"><span>Année</span><select value={yearFilter} onChange={e=>setYearFilter(e.target.value)}>
 <option>Toutes les années</option>
 <option>2026</option>
 <option>2025</option>
-</select>
-<select value={monthFilter} onChange={e=>setMonthFilter(e.target.value)} aria-label="Filtrer par mois">
+</select></label>
+<label className="filter-field"><span>Mois</span><select value={monthFilter} onChange={e=>setMonthFilter(e.target.value)} aria-label="Filtrer par mois">
 <option value="Tous">Tous les mois</option>{['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'].map((name,index)=>
-<option key={name} value={String(index+1).padStart(2,'0')}>{name}</option>)}</select>
+<option key={name} value={String(index+1).padStart(2,'0')}>{name}</option>)}</select></label>
 </div>
 <div className="fcc-order-list">
 <div className="fcc-order-head">

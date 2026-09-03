@@ -100,6 +100,7 @@
 @media(max-width:520px){.forge-access{padding:0}.forge-access>header{padding:0 16px}.access-grid{padding:22px 16px 70px}.access-story{padding-top:24px}.access-story h1{font-size:48px;line-height:.96;letter-spacing:-3px}.access-story>p{font-size:14px}.access-login h2{font-size:31px}.access-login label>div,.access-submit{height:54px}.forge-access>footer{padding:0 16px}}
 
 .fcc-toolbar.advanced{grid-template-columns:minmax(260px,2fr) repeat(3,minmax(120px,1fr));flex-wrap:wrap}
+.fcc-toolbar.advanced>label:first-child{margin-top:16px}.fcc-toolbar.advanced .filter-field{height:auto;min-width:0;border:0;background:transparent;border-radius:0;padding:0;margin-top:0;display:grid;grid-template-rows:12px 38px;gap:4px;align-items:stretch}.fcc-toolbar.advanced .filter-field span{display:block;color:#819087;font-size:6px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;padding-left:3px}.fcc-toolbar.advanced .filter-field select{width:100%;height:38px;min-width:0}
 .fcc-toolbar.advanced>select:nth-of-type(n+4){margin-top:7px}
 .fcc-empty{padding:28px;color:#89948e;text-align:center;font-size:9px;border:1px dashed #3c4741;border-radius:10px}
 .drawer-status{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:15px 0;padding:10px;background:#202a1d;border-radius:8px;color:#a9b4ad;font-size:7px;font-weight:900;letter-spacing:1px}
@@ -108,7 +109,7 @@
 .soffit-options{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:9px 0}
 .soffit-options label{margin:0!important;color:#89948e;font-size:7px;font-weight:900}
 .soffit-options input,.soffit-options select{width:100%;height:40px;margin-top:5px}
-@media(max-width:850px){.fcc-toolbar.advanced{grid-template-columns:1fr 1fr}.fcc-toolbar.advanced label{grid-column:1/-1}.fcc-toolbar.advanced>select:nth-of-type(n+4){margin-top:0}}
+@media(max-width:850px){.fcc-toolbar.advanced{grid-template-columns:1fr 1fr}.fcc-toolbar.advanced>label:first-child{grid-column:1/-1}.fcc-toolbar.advanced .filter-field{grid-column:auto}.fcc-toolbar.advanced>select:nth-of-type(n+4){margin-top:0}}
 @media(max-width:520px){.fcc-toolbar.advanced,.soffit-options{grid-template-columns:1fr}.fcc-toolbar.advanced label{grid-column:auto}.drawer-status{align-items:stretch;flex-direction:column}.drawer-status select{min-width:0;width:100%}}
 @media print{.sidebar,.topbar,.forge-command-center>nav,.fcc-heading>button,.fcc-toolbar,.fcc-drawer{display:none!important}.content{margin:0!important;padding:0!important}.forge-command-center{border:0!important;box-shadow:none!important}.fcc-report{display:block!important}}
 
