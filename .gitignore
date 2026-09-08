@@ -36,3 +36,5 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+/.sites-stage-*/
+/forge-*.tar.gz
