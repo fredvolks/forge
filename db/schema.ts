@@ -17,5 +17,17 @@ export const schemaStatements = [
   `CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, conversation_id TEXT NOT NULL, sender_id TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS idx_messages_conversation_time ON messages(conversation_id,created_at)`,
   `CREATE TABLE IF NOT EXISTS audit_log (id TEXT PRIMARY KEY, company_id TEXT NOT NULL, actor_id TEXT NOT NULL, action TEXT NOT NULL, entity_type TEXT NOT NULL, entity_id TEXT NOT NULL, detail_json TEXT, created_at TEXT NOT NULL)`,
-  `CREATE INDEX IF NOT EXISTS idx_audit_company_time ON audit_log(company_id,created_at)`
+  `CREATE INDEX IF NOT EXISTS idx_audit_company_time ON audit_log(company_id,created_at)`,
+  `CREATE TABLE IF NOT EXISTS employees (id TEXT PRIMARY KEY, company_id TEXT NOT NULL, user_id TEXT, first_name TEXT NOT NULL, last_name TEXT NOT NULL, phone TEXT, email TEXT, trade TEXT, role TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'active', hired_at TEXT, created_at TEXT NOT NULL, FOREIGN KEY(company_id) REFERENCES companies(id), FOREIGN KEY(user_id) REFERENCES users(id))`,
+  `CREATE INDEX IF NOT EXISTS idx_employees_company_status ON employees(company_id,status)`,
+  `CREATE TABLE IF NOT EXISTS employee_emergency_info (id TEXT PRIMARY KEY, company_id TEXT NOT NULL, employee_id TEXT NOT NULL UNIQUE, contact_name TEXT, relationship TEXT, contact_phone TEXT, blood_type TEXT, medical_note TEXT, updated_at TEXT NOT NULL, FOREIGN KEY(employee_id) REFERENCES employees(id))`,
+  `CREATE TABLE IF NOT EXISTS employee_documents (id TEXT PRIMARY KEY, company_id TEXT NOT NULL, employee_id TEXT NOT NULL, attachment_id TEXT, document_type TEXT NOT NULL, issued_at TEXT, expires_at TEXT, status TEXT NOT NULL, created_at TEXT NOT NULL, FOREIGN KEY(employee_id) REFERENCES employees(id), FOREIGN KEY(attachment_id) REFERENCES attachments(id))`,
+  `CREATE INDEX IF NOT EXISTS idx_employee_documents_expiry ON employee_documents(company_id,expires_at)`,
+  `CREATE TABLE IF NOT EXISTS incidents (id TEXT PRIMARY KEY, company_id TEXT NOT NULL, job_id TEXT NOT NULL, reported_by_user_id TEXT NOT NULL, incident_type TEXT NOT NULL, severity TEXT NOT NULL, incident_at TEXT NOT NULL, location TEXT, description TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL, FOREIGN KEY(job_id) REFERENCES jobs(id), FOREIGN KEY(reported_by_user_id) REFERENCES users(id))`,
+  `CREATE INDEX IF NOT EXISTS idx_incidents_company_job ON incidents(company_id,job_id,incident_at)`,
+  `CREATE TABLE IF NOT EXISTS absence_requests (id TEXT PRIMARY KEY, company_id TEXT NOT NULL, employee_id TEXT NOT NULL, absence_type TEXT NOT NULL, start_date TEXT NOT NULL, end_date TEXT NOT NULL, full_day INTEGER NOT NULL DEFAULT 1, note TEXT, status TEXT NOT NULL, reviewed_by_user_id TEXT, reviewed_at TEXT, created_at TEXT NOT NULL, FOREIGN KEY(employee_id) REFERENCES employees(id))`,
+  `CREATE INDEX IF NOT EXISTS idx_absences_employee_date ON absence_requests(company_id,employee_id,start_date)`,
+  `CREATE TABLE IF NOT EXISTS approvals (id TEXT PRIMARY KEY, company_id TEXT NOT NULL, object_type TEXT NOT NULL, object_id TEXT NOT NULL, decision TEXT NOT NULL, decided_by_user_id TEXT NOT NULL, note TEXT, created_at TEXT NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS notifications (id TEXT PRIMARY KEY, company_id TEXT NOT NULL, recipient_user_id TEXT NOT NULL, source_type TEXT NOT NULL, source_id TEXT NOT NULL, title TEXT NOT NULL, body TEXT, deep_link TEXT, read_at TEXT, created_at TEXT NOT NULL, FOREIGN KEY(recipient_user_id) REFERENCES users(id))`,
+  `CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(company_id,recipient_user_id,read_at,created_at)`
 ] as const;

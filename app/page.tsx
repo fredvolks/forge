@@ -8,6 +8,7 @@ import { AdjointeDesk } from './adjointe-desk';
 import { SimulationPanel } from './simulation-panel';
 import { AdminPortal } from './admin-portal';
 import { applyAppearance, getBranding, getUserAppearance, resolveLogo, type ForgeThemeId } from './forge-branding';
+import { FieldWorkspace, type FieldView } from './field-workspace';
 type Role = 'Boss' | 'Adjointe' | 'Chef' | 'Employé';
 type Order = {
     id: string;
@@ -53,6 +54,7 @@ const payrollRows = [
 ];
 export default function Home() {
     const [role, setRole] = useState<Role>('Boss');
+    const [fieldView, setFieldView] = useState<FieldView | 'work'>('home');
     const [session, setSession] = useState<ForgeSession | null>(null);
     const [accessReady, setAccessReady] = useState(false);
     const [punched, setPunched] = useState(false);
@@ -176,6 +178,7 @@ export default function Home() {
     }>; const dynamic = loadDynamicCatalog(session.companyId); setDynamicCatalog(dynamic); setPresetSets(current => { const next = { ...current }; (['Matériaux', 'Outils', 'Pliage'] as const).forEach(category => { const names = [...products.filter(p => p.active && p.category === category).map(p => p.name), ...dynamic.filter(p => p.active && p.category === category).map(p => p.name)]; if (names.length)
         next[category] = [...new Set(names)]; }); return next; }); }; sync(); window.addEventListener('forge-catalog-updated', sync); return () => window.removeEventListener('forge-catalog-updated', sync); }, [session]);
     useEffect(() => { if(!session)return; const sync=()=>{const appearance=getUserAppearance(session.companyId,session.email,(session.theme as ForgeThemeId)||'forge');applyAppearance(appearance);setLogoSrc(resolveLogo(getBranding(session.companyId),document.documentElement.dataset.mode==='light'?'light':'dark'))};sync();window.addEventListener('forge-appearance-updated',sync);window.addEventListener('forge-branding-updated',sync);return()=>{window.removeEventListener('forge-appearance-updated',sync);window.removeEventListener('forge-branding-updated',sync)} }, [session]);
+    useEffect(() => { const sync=()=>{const hash=window.location.hash.replace('#field/','');const fieldPages:FieldView[]=['home','projects','project','menu','profile','hours','absences','emergency','documents','incidents','documentation','settings'];if(fieldPages.includes(hash as FieldView))setFieldView(hash as FieldView)};sync();window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync)}, []);
     if (!accessReady)
         return <div className="forge-loading">FORGE</div>;
     if (!session)
@@ -188,6 +191,17 @@ export default function Home() {
     const quickItems = presetSets[orderCategory];
     const activeDynamicProduct = dynamicCatalog.find(product => product.active && product.category === orderCategory && product.name === selectedPreset);
     const switchingJob = punched && selectedJob !== activeJob;
+    const navigateField = (destination:FieldView|'punch'|'orders'|'messages'|'purchases') => {
+        if (['punch','orders','messages','purchases'].includes(destination)) {
+            setFieldView('work');
+            window.location.hash = destination;
+            window.setTimeout(() => document.getElementById(destination)?.scrollIntoView({behavior:'smooth'}), 50);
+            return;
+        }
+        setFieldView(destination as FieldView);
+        window.location.hash = `field/${destination}`;
+        window.scrollTo({top:0,behavior:'smooth'});
+    };
     return <main className={`app-shell ${isFieldRole ? 'field-mobile' : ''} role-${role.toLowerCase().replace('é', 'e')}`}>
     <aside className={`sidebar ${mobileNav ? 'open' : ''}`}>
       <div className="brand">
@@ -295,7 +309,8 @@ export default function Home() {
 </>}</label>
 </div>
 </header>
-      <div className="content">
+      <div className={`content ${fieldView !== 'work' ? 'field-page-active' : ''}`}>
+        {fieldView !== 'work' && <FieldWorkspace view={fieldView} session={session} role={role as 'Chef'|'Employé'} navigate={navigateField}/>}
         <div className="welcome">
 <div>
 <p>FORGE · LES REVÊTEMENTS MIR · VUE {role.toUpperCase()}</p>
@@ -1616,27 +1631,11 @@ export default function Home() {
 </div>
 </div>}
     {isFieldRole && <nav className="mobile-bottom-nav" aria-label="Navigation mobile">
-<a className="active" href="#punch">
-<Clock3 />
-<span>Punch</span>
-</a>
-<a href="#job">
-<FileText />
-<span>Plan</span>
-</a>
-<a href="#orders">
-<PackageCheck />
-<span>Commande</span>
-</a>
-<a href="#messages">
-<MessageSquare />
-<span>Chat</span>
-<i />
-</a>
-<a href="#purchases">
-<ReceiptText />
-<span>Achat</span>
-</a>
+<button className={fieldView==='home'?'active':''} onClick={()=>navigateField('home')}><LayoutDashboard/><span>Accueil</span></button>
+<button className={fieldView==='projects'||fieldView==='project'?'active':''} onClick={()=>navigateField('projects')}><Folder/><span>Projets</span></button>
+<button className="punch-nav" onClick={()=>navigateField('punch')}><Clock3/><span>Punch</span></button>
+<button onClick={()=>navigateField('messages')}><MessageSquare/><span>Messages</span><i /></button>
+<button className={fieldView==='menu'?'active':''} onClick={()=>navigateField('menu')}><Menu/><span>Menu</span></button>
 </nav>}
   </main>;
 }
