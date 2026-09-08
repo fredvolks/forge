@@ -3,9 +3,10 @@
 
 import { useMemo, useState } from 'react';
 
-import { Bell, CalendarDays, Check, ChevronRight, Clock3, Download, FileText, Filter, MessageSquare, PackageCheck, Plus, Receipt, Search, Settings, Truck, Users, X } from 'lucide-react';
+import { Bell, CalendarDays, Check, ChevronRight, Clock3, Download, FileText, Filter, Image, MessageSquare, PackageCheck, Plus, Receipt, RefreshCcw, Search, Settings, Trash2, Truck, Upload, Users, X } from 'lucide-react';
 
 import type { ForgeSession } from './forge-access';
+import { applyAppearance, FORGE_THEMES, getBranding, getCompanyDefaultTheme, getUserAppearance, processCompanyLogo, resolveLogo, saveBranding, saveUserAppearance, type CompanyBranding, type ForgeMode, type ForgeThemeId } from './forge-branding';
 
 
 const jobs=['Toutes les Jobs','JOB-214 · Breton','JOB-315 · Leduc','JOB-418 · Bélanger'];
@@ -392,36 +393,46 @@ return <div className="suite-page">
 </div>
 </div>}
 
-const styles=[['forge','🏗','Forge','Industriel, sombre, vert'],['modern','◼','Modern','Premium, net, professionnel'],['zen','🧘','Zen','Calme, épuré, beaucoup d’espace'],['boho','🌿','Boho','Naturel, chaleureux, organique'],['electro','⚡','Electro','Technologique et lumineux'],['luxe','◆','Luxe','Noir, crème, très sobre'],['nordic','❄','Nordique','Clair, frais et structuré'],['terra','◒','Terra','Terre cuite et minéral'],['ocean','≈','Océan','Bleu profond et apaisant'],['mono','▦','Monochrome','Gris précis et utilitaire'],['contrast','◩','Haute visibilité','Contraste terrain maximal'],['studio','✦','Studio','Créatif et éditorial']];
-
-export function PersonalSettings({session}:{session:ForgeSession}){const [theme,setTheme]=useState(()=>typeof window==='undefined'?'forge':localStorage.getItem(`forge:${session.companyId}:${session.email}:theme`)||'forge'),[mode,setMode]=useState('Sombre'),[saved,setSaved]=useState(theme);
-const apply=()=>{setSaved(theme);
-localStorage.setItem(`forge:${session.companyId}:${session.email}:theme`,theme);
-document.documentElement.dataset.forgeTheme=theme;
-document.documentElement.dataset.mode=mode.toLowerCase()};
+export function PersonalSettings({session}:{session:ForgeSession}){const initial=()=>getUserAppearance(session.companyId,session.email,(session.theme as ForgeThemeId)||'forge');const [appearance,setAppearance]=useState(initial),[saved,setSaved]=useState(initial),[branding,setBranding]=useState<CompanyBranding>(()=>getBranding(session.companyId)),[brandError,setBrandError]=useState(''),[processing,setProcessing]=useState(false);
+const preview=(theme:ForgeThemeId)=>{const next={...appearance,theme};setAppearance(next);applyAppearance(next)};
+const apply=()=>{const next={...appearance,updatedAt:new Date().toISOString()};setSaved(next);setAppearance(next);saveUserAppearance(session.companyId,session.email,next);applyAppearance(next)};
+const upload=async(file?:File)=>{if(!file)return;setBrandError('');setProcessing(true);try{setBranding(await processCompanyLogo(file,session.companyId))}catch(error){setBrandError(error instanceof Error?error.message:'Impossible de préparer ce logo.')}finally{setProcessing(false)}};
+const updateBrand=(changes:Partial<CompanyBranding>,action:string)=>setBranding(saveBranding({...branding,...changes},action));
+const effectiveMode=(document.documentElement.dataset.mode==='light'?'light':'dark') as 'light'|'dark';
 return <div className="suite-page settings-page">
 <Head eyebrow="PARAMÈTRES PERSONNELS" title="Apparence" text="Ces choix appartiennent uniquement à votre compte."/>
 <div className="mode-picker">
-<span>Mode</span>{['Clair','Sombre','Système'].map(v=>
-<button className={mode===v?'active':''} onClick={()=>setMode(v)} key={v}>{v}</button>)}</div>
+<span>Mode</span>{([['light','Clair'],['dark','Sombre'],['system','Système']] as [ForgeMode,string][]).map(([value,label])=>
+<button className={appearance.mode===value?'active':''} onClick={()=>{const next={...appearance,mode:value};setAppearance(next);applyAppearance(next)}} key={value}>{label}</button>)}</div>
 <h2>Choisissez votre style Forge</h2>
-<div className="style-grid">{styles.map(s=>
-<button className={theme===s[0]?'active':''} onClick={()=>{setTheme(s[0]);
-document.documentElement.dataset.forgeTheme=s[0]}} key={s[0]}>
-<i className={`style-preview ${s[0]}`}>
-<b>{s[1]}</b>
+<p className="settings-intro">Un aperçu en direct s’applique sans modifier vos permissions, vos données ni les autres utilisateurs.</p>
+<div className="style-grid">{FORGE_THEMES.map(s=>
+<button className={appearance.theme===s.id?'active':''} onClick={()=>preview(s.id)} key={s.id}>
+<i className={`style-preview ${s.id}`}>
+<b>F</b>
 <span/>
 <em/>
 </i>
-<b>{s[2]}</b>
-<small>{s[3]}</small>
+<b>{s.name}</b>
+<small>{s.description}</small>
 </button>)}</div>
 <div className="theme-actions">
-<button onClick={()=>{setTheme(saved);
-document.documentElement.dataset.forgeTheme=saved}}>Annuler</button>
+<button onClick={()=>{setAppearance(saved);applyAppearance(saved)}}>Annuler</button>
+<button onClick={()=>preview(getCompanyDefaultTheme(session.companyId,(session.theme as ForgeThemeId)||'forge'))}>Utiliser le thème compagnie</button>
 <button className="suite-primary" onClick={apply}>
 <Check/> Appliquer ce style</button>
 </div>
+<section className="branding-panel">
+<div className="branding-title"><div><span>IDENTITÉ VISUELLE COMPAGNIE</span><h2>Logo et écran de chargement</h2><p>Le logo appartient à {session.companyName}. Le thème ci-dessus reste personnel.</p></div><label className="branding-upload"><Upload/> Remplacer le logo<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void upload(e.target.files?.[0])}/></label></div>
+{brandError&&<div className="branding-error">{brandError} L’original existant a été conservé.</div>}
+{processing&&<div className="branding-processing"><RefreshCcw/> Préparation de votre logo… Vous pouvez continuer à utiliser Forge.</div>}
+<div className="branding-compare">
+<LogoVariant title="Original" src={branding.original} active={branding.activeVariant==='original'} onUse={()=>updateBrand({activeVariant:'original'},'company_logo_variant_selected')}/>
+<LogoVariant title="Version transparente" src={branding.transparent} active={branding.activeVariant==='transparent'} onUse={()=>updateBrand({activeVariant:'transparent'},'company_logo_variant_selected')}/>
+</div>
+<div className="loader-settings"><div className={`loader-preview ${branding.loaderAnimation} ${branding.loaderSpeed}`}><img src={resolveLogo(branding,effectiveMode)} alt="Aperçu du logo compagnie"/><small>Chargement de Forge…</small></div><div><h3>Écran de chargement</h3><label><input type="checkbox" checked={branding.useAsLoader} onChange={e=>updateBrand({useAsLoader:e.target.checked},e.target.checked?'company_loader_enabled':'company_loader_disabled')}/> Utiliser le logo de la compagnie</label><label>Animation<select value={branding.loaderAnimation} onChange={e=>updateBrand({loaderAnimation:e.target.value as CompanyBranding['loaderAnimation']},'company_loader_animation_changed')}><option value="pulse">Pulse</option><option value="fade">Fondu</option><option value="rotate">Rotation</option><option value="none">Aucune</option></select></label><label>Vitesse<select value={branding.loaderSpeed} onChange={e=>updateBrand({loaderSpeed:e.target.value as 'slow'|'normal'},'company_loader_settings_changed')}><option value="slow">Lente</option><option value="normal">Normale</option></select></label>{branding.original&&<button className="remove-branding" onClick={()=>updateBrand({original:undefined,transparent:undefined,light:undefined,dark:undefined,loader:undefined,useAsLoader:false,activeVariant:'original'},'company_logo_removed')}><Trash2/> Supprimer le logo</button>}</div></div>
+<details><summary>Historique des modifications</summary>{branding.audit.length?branding.audit.map((a,i)=><p key={`${a.at}-${i}`}>{new Date(a.at).toLocaleString('fr-CA')} · {a.action.replaceAll('_',' ')}</p>):<p>Aucune modification enregistrée.</p>}</details>
+</section>
 <div className="settings-sections">
 <article>
 <Bell/>
@@ -441,3 +452,5 @@ document.documentElement.dataset.forgeTheme=saved}}>Annuler</button>
 </article>
 </div>
 </div>}
+
+function LogoVariant({title,src,active,onUse}:{title:string;src?:string;active:boolean;onUse:()=>void}){return <article className={active?'active':''}><div className="logo-checker">{src?<img src={src} alt={title}/>:<Image/>}</div><b>{title}</b>{active?<strong><Check/> Actuellement utilisé</strong>:src?<button onClick={onUse}>Utiliser cette version</button>:<small>Non disponible</small>}</article>}

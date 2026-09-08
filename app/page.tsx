@@ -7,6 +7,7 @@ import { loadDynamicCatalog, ProfilePreview, type DynamicProduct } from './catal
 import { AdjointeDesk } from './adjointe-desk';
 import { SimulationPanel } from './simulation-panel';
 import { AdminPortal } from './admin-portal';
+import { applyAppearance, getBranding, getUserAppearance, resolveLogo, type ForgeThemeId } from './forge-branding';
 type Role = 'Boss' | 'Adjointe' | 'Chef' | 'Employé';
 type Order = {
     id: string;
@@ -174,7 +175,7 @@ export default function Home() {
         active: boolean;
     }>; const dynamic = loadDynamicCatalog(session.companyId); setDynamicCatalog(dynamic); setPresetSets(current => { const next = { ...current }; (['Matériaux', 'Outils', 'Pliage'] as const).forEach(category => { const names = [...products.filter(p => p.active && p.category === category).map(p => p.name), ...dynamic.filter(p => p.active && p.category === category).map(p => p.name)]; if (names.length)
         next[category] = [...new Set(names)]; }); return next; }); }; sync(); window.addEventListener('forge-catalog-updated', sync); return () => window.removeEventListener('forge-catalog-updated', sync); }, [session]);
-    useEffect(() => { const root = document.documentElement; root.style.setProperty('--accent', session?.accent || '#a8ff2e'); root.dataset.companyTheme = session?.theme || 'charcoal'; }, [session]);
+    useEffect(() => { if(!session)return; const sync=()=>{const appearance=getUserAppearance(session.companyId,session.email,(session.theme as ForgeThemeId)||'forge');applyAppearance(appearance);setLogoSrc(resolveLogo(getBranding(session.companyId),document.documentElement.dataset.mode==='light'?'light':'dark'))};sync();window.addEventListener('forge-appearance-updated',sync);window.addEventListener('forge-branding-updated',sync);return()=>{window.removeEventListener('forge-appearance-updated',sync);window.removeEventListener('forge-branding-updated',sync)} }, [session]);
     if (!accessReady)
         return <div className="forge-loading">FORGE</div>;
     if (!session)

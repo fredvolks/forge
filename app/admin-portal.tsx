@@ -13,6 +13,7 @@ import { SimulationPanel } from './simulation-panel';
 import { DeliveryReport, Discussions, EmployeeRecords, EventsPage, NotificationCenter, PersonalSettings, PunchControl, PurchasesPage } from './forge-suite';
 
 import type { ForgeSession } from './forge-access';
+import { getBranding, resolveLogo } from './forge-branding';
 
 
 type Role='Boss'|'Adjointe';
@@ -44,6 +45,7 @@ onLogout:()=>void}){const [route,setRoute]=useState('home');
 const [jobs,setJobs]=useState<AdminJob[]>(defaultJobs);
 const [jobQuery,setJobQuery]=useState('');
 const [notificationsOpen,setNotificationsOpen]=useState(false);
+const [companyLogo,setCompanyLogo]=useState('/mir-company-logo-transparent.png');
 useEffect(()=>{setRoute(routeFromHash());
 const raw=localStorage.getItem(`forge:${session.companyId}:admin-jobs`);
 if(raw)setJobs(JSON.parse(raw));
@@ -52,6 +54,7 @@ window.addEventListener('popstate',pop);
 window.addEventListener('hashchange',pop);
 return()=>{window.removeEventListener('popstate',pop);
 window.removeEventListener('hashchange',pop)}},[session.companyId]);
+useEffect(()=>{const sync=()=>setCompanyLogo(resolveLogo(getBranding(session.companyId),document.documentElement.dataset.mode==='light'?'light':'dark'));sync();window.addEventListener('forge-branding-updated',sync);window.addEventListener('forge-appearance-updated',sync);return()=>{window.removeEventListener('forge-branding-updated',sync);window.removeEventListener('forge-appearance-updated',sync)}},[session.companyId]);
 const go=(next:string)=>{window.history.pushState({},'',`#admin/${next}`);
 setRoute(next);
 window.scrollTo({top:0,behavior:'smooth'})};
@@ -73,9 +76,7 @@ return result},[section,currentJob,jobTab,commandTab,teamTab,route]);
 return <main className="admin-portal">
 <aside className="admin-sidebar">
 <div className="admin-brand">
-<span>
-<HardHat/>
-</span>
+<span className="admin-company-logo"><img src={companyLogo} alt={`Logo ${session.companyName}`} onError={e=>{e.currentTarget.src='/mir-company-logo-transparent.png'}}/></span>
 <div>
 <b>FORGE</b>
 <small>{session.companyName}</small>
