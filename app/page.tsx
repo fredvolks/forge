@@ -9,6 +9,7 @@ import { SimulationPanel } from './simulation-panel';
 import { AdminPortal } from './admin-portal';
 import { applyAppearance, getBranding, getUserAppearance, resolveLogo, type ForgeThemeId } from './forge-branding';
 import { FieldWorkspace, type FieldView } from './field-workspace';
+import { PunchPreview } from './punch-preview';
 type Role = 'Boss' | 'Adjointe' | 'Chef' | 'Employé';
 type Order = {
     id: string;
@@ -329,6 +330,7 @@ export default function Home() {
 </div>
 </div>
         {(role === 'Employé' || role === 'Chef') && <section className="punch-module" id="punch">
+          <PunchPreview role={role} punched={punched} selectedJob={selectedJob} startedAt={punchStartedAt} onJob={setSelectedJob} onOpenJob={()=>navigateField('project')} onHours={()=>navigateField('hours')} onToggle={()=>{if(punched){setPunched(false);setPunchStartedAt(null);setToastText('Punch terminé');}else{setActiveJob(selectedJob);setPunched(true);setPunchStartedAt(Date.now());setToastText(`Punch démarré sur ${selectedJob}`);}setToast(true);window.setTimeout(()=>setToast(false),3200)}}/>
           {switchingJob && <div className="job-switch-card">
 <button className="switch-back" onClick={() => { setSelectedJob(activeJob); setJobSwitchPending(false); }} aria-label="Annuler le changement de job">
 <ArrowLeft />
