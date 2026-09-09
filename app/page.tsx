@@ -55,6 +55,7 @@ const payrollRows = [
 export default function Home() {
     const [role, setRole] = useState<Role>('Boss');
     const [fieldView, setFieldView] = useState<FieldView | 'work'>('home');
+    const [workTarget, setWorkTarget] = useState<'punch'|'orders'|'messages'|'purchases'>('punch');
     const [session, setSession] = useState<ForgeSession | null>(null);
     const [accessReady, setAccessReady] = useState(false);
     const [punched, setPunched] = useState(false);
@@ -193,6 +194,7 @@ export default function Home() {
     const switchingJob = punched && selectedJob !== activeJob;
     const navigateField = (destination:FieldView|'punch'|'orders'|'messages'|'purchases') => {
         if (['punch','orders','messages','purchases'].includes(destination)) {
+            setWorkTarget(destination as 'punch'|'orders'|'messages'|'purchases');
             setFieldView('work');
             window.location.hash = destination;
             window.setTimeout(() => document.getElementById(destination)?.scrollIntoView({behavior:'smooth'}), 50);
@@ -309,7 +311,7 @@ export default function Home() {
 </>}</label>
 </div>
 </header>
-      <div className={`content ${fieldView !== 'work' ? 'field-page-active' : ''}`}>
+      <div className={`content ${fieldView !== 'work' ? 'field-page-active' : `work-focus work-${workTarget}`}`}>
         {fieldView !== 'work' && <FieldWorkspace view={fieldView} session={session} role={role as 'Chef'|'Employé'} navigate={navigateField}/>}
         <div className="welcome">
 <div>
