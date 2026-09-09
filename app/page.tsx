@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, ArrowLeft, Bell, Box, CalendarDays, Check, ChevronRight, ClipboardCheck, Clock3, Download, Factory, FileText, HardHat, LayoutDashboard, Camera, CreditCard, Mail, MapPin, Menu, MessageSquare, PackageCheck, Paperclip, Play, Plus, ReceiptText, Search, Send, Settings, ShieldCheck, Navigation, ShoppingCart, Square, Trash2, Users, X, Zap, } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Bell, Box, CalendarDays, Check, ChevronRight, ClipboardCheck, Clock3, Download, Factory, FileText, Folder, HardHat, LayoutDashboard, Camera, CreditCard, Mail, MapPin, Menu, MessageSquare, PackageCheck, Paperclip, Play, Plus, ReceiptText, Search, Send, Settings, ShieldCheck, Navigation, ShoppingCart, Square, Trash2, Users, X, Zap, } from 'lucide-react';
 import { EmptyCompany, ForgeAccess, type ForgeSession } from './forge-access';
 import { CommandCenter } from './command-center';
 import { loadDynamicCatalog, ProfilePreview, type DynamicProduct } from './catalog-builder';
