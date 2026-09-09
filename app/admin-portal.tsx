@@ -12,6 +12,7 @@ import { SimulationPanel } from './simulation-panel';
 
 import { DeliveryReport, Discussions, EmployeeRecords, EventsPage, NotificationCenter, PersonalSettings, PunchControl, PurchasesPage } from './forge-suite';
 
+import { TimeAdmin, TimeSettings } from './time-admin';
 import type { ForgeSession } from './forge-access';
 import { getBranding, resolveLogo } from './forge-branding';
 
@@ -105,13 +106,13 @@ return <main className="admin-portal">
 <Bell/>
 <b>12</b>
 </button>
-{notificationsOpen&&<NotificationCenter go={go} close={()=>setNotificationsOpen(false)}/>} 
+{notificationsOpen&&<NotificationCenter go={go} close={()=>setNotificationsOpen(false)} actor={session}/>}
 </header>
-<div className="admin-content">{route==='home'&&<Dashboard role={role} go={go}/>} {route==='jobs'&&<JobsPage jobs={filteredJobs} query={jobQuery} setQuery={setJobQuery} go={go}/>} {section==='jobs'&&currentJob&&<JobPage job={currentJob} tab={jobTab} go={go} role={role} companyId={session.companyId}/>} {route==='teams'&&<TeamsHub go={go}/>} {section==='teams'&&teamTab&&teamTab!=='employees'&&teamTab!=='punches'&&<TeamWorkspace page={teamTab} role={role} companyId={session.companyId} go={go}/>} {route==='teams/employees'&&<EmployeeRecords/>} {route==='teams/punches'&&<PunchControl/>} {route==='commands'&&<CommandsHub go={go}/>} {section==='commands'&&commandTab&&commandTab!=='delivery-report'&&<div className="portal-page">
+<div className="admin-content">{route==='home'&&<Dashboard role={role} go={go}/>} {route==='jobs'&&<JobsPage jobs={filteredJobs} query={jobQuery} setQuery={setJobQuery} go={go}/>} {section==='jobs'&&currentJob&&<JobPage job={currentJob} tab={jobTab} go={go} role={role} companyId={session.companyId} session={session}/>} {route==='teams'&&<TeamsHub go={go}/>} {section==='teams'&&teamTab&&teamTab==='crews'&&<TeamWorkspace page={teamTab} role={role} companyId={session.companyId} go={go}/>} {route==='teams/employees'&&<EmployeeRecords/>} {section==='teams'&&['punches','corrections','time-reports'].includes(teamTab)&&<TimeAdmin actor={session} mode={teamTab} requestId={route.split('/')[2]}/>}  {route==='commands'&&<CommandsHub go={go}/>} {section==='commands'&&commandTab&&commandTab!=='delivery-report'&&<div className="portal-page">
 <BackButton onClick={()=>go('commands')} label="Retour aux commandes"/>
 <PageTitle eyebrow="APPROVISIONNEMENT" title={commandPages.find(p=>p.id===commandTab)?.title||'Commandes'} text="Même source de données, présentée dans sa page de travail dédiée."/>
 <CommandCenter role={role} companyId={session.companyId} initialTab={commandMap[commandTab]||'Commandes'} showNav={false}/>
-</div>} {route==='commands/delivery-report'&&<DeliveryReport/>} {route==='discussion'&&<Discussions/>} {route==='purchases'&&<PurchasesPage/>} {route==='events'&&<EventsPage/>} {route==='settings'&&<PersonalSettings session={session}/>} {route==='reports'&&<ReportsPage go={go}/>} {route==='administration'&&<AdministrationPage role={role}/>}</div>
+</div>} {route==='commands/delivery-report'&&<DeliveryReport/>} {route==='discussion'&&<Discussions/>} {route==='purchases'&&<PurchasesPage/>} {route==='events'&&<EventsPage/>} {route==='settings'&&<PersonalSettings session={session}/>} {route==='reports'&&<ReportsPage go={go}/>} {route==='administration'&&<><AdministrationPage role={role}/><TimeSettings actor={session}/></>}</div>
 </section>
 </main>}
 
@@ -179,11 +180,11 @@ go:(route:string)=>void}){return <div className="portal-page">
 <ChevronRight/>
 </button>)}</div>
 </div>}
-function JobPage({job,tab,go,role,companyId}:{job:AdminJob;
+function JobPage({job,tab,go,role,companyId,session}:{job:AdminJob;
 tab:string;
 go:(route:string)=>void;
 role:Role;
-companyId:string}){const tabs=[['overview','Aperçu'],['documents','Plans & documents'],['team','Équipe & heures'],['orders','Commandes'],['extras','Extras'],['chat','Chat'],['history','Historique']];
+companyId:string;session:ForgeSession}){const tabs=[['overview','Aperçu'],['documents','Plans & documents'],['team','Équipe & heures'],['orders','Commandes'],['extras','Extras'],['chat','Chat'],['history','Historique']];
 return <div className="portal-page">
 <BackButton onClick={()=>go('jobs')} label="Retour aux Jobs"/>
 <div className="job-page-head">
@@ -227,7 +228,7 @@ return <div className="portal-page">
 </span>
 <History/>
 </article>
-</div>}{tab==='team'&&<SimulationPanel/>}{tab==='orders'&&<CommandCenter role={role} companyId={companyId} initialTab="Commandes" showNav={false}/>} {tab==='extras'&&<div className="job-section-card">
+</div>}{tab==='team'&&<TimeAdmin actor={session} jobId={job.id}/>}{tab==='orders'&&<CommandCenter role={role} companyId={companyId} initialTab="Commandes" showNav={false}/>} {tab==='extras'&&<div className="job-section-card">
 <div>
 <h2>Extras de la Job</h2>
 <p>Les extras restent rattachés à {job.number}.</p>
@@ -339,7 +340,7 @@ function ReportsPage({go}:{go:(route:string)=>void}){return <div className="port
 <div className="report-hub">
 <button onClick={()=>go('commands/delivery-report')}><PackageCheck/><div><b>Rapport des livraisons</b><small>Sorties réelles, restants et export CSV</small></div><ChevronRight/></button>
 <button onClick={()=>go('purchases')}><FileText/><div><b>Achats & remboursements</b><small>Factures, validations et remboursements</small></div><ChevronRight/></button>
-<button onClick={()=>go('teams')}>
+<button onClick={()=>go('teams/time-reports')}>
 <Clock3/>
 <div>
 <b>Rapports d’heures</b>
