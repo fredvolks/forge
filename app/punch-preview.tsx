@@ -2,22 +2,17 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight, Check, ChevronRight, Clock3, Folder, MapPin, Navigation } from 'lucide-react';
 
-const variants=[
- ['01','Forge Terrain','Direct et robuste'],['02','Compact Pro','Dense et efficace'],['03','Focus Punch','Action centrale'],['04','Cartes Claires','Sections très lisibles'],['05','Split Job','Job et temps séparés'],
- ['06','Ligne Active','Timeline dominante'],['07','Minimal Lime','Très épuré'],['08','Dashboard','Résumé opérationnel'],['09','Grand Tactile','Grosses zones terrain'],['10','Premium Noir','Sobre et haut de gamme']
-] as const;
 const jobs:Record<string,{name:string;address:string}>={
  'JOB-214':{name:'Breton',address:'1280, rue Industrielle, Québec'},'JOB-315':{name:'Leduc',address:'480, boulevard Leduc, Québec'},'JOB-418':{name:'Bélanger',address:'72, rue Bélanger, Lévis'}
 };
 const progressItems=[['Élévation droite',75],['Élévation arrière',25],['Élévation gauche',75],['Façade',100]] as const;
 
 export function PunchPreview({role,punched,selectedJob,startedAt,onJob,onToggle,onOpenJob,onHours}:{role:'Chef'|'Employé';punched:boolean;selectedJob:string;startedAt:number|null;onJob:(v:string)=>void;onToggle:()=>void;onOpenJob:()=>void;onHours:()=>void}){
- const [variant,setVariant]=useState(1);const [now,setNow]=useState(Date.now());const [reportOpen,setReportOpen]=useState(false);const [progress,setProgress]=useState<Record<string,number>>(()=>Object.fromEntries(progressItems));
+ const [now,setNow]=useState(Date.now());const [reportOpen,setReportOpen]=useState(false);const [progress,setProgress]=useState<Record<string,number>>(()=>Object.fromEntries(progressItems));
  useEffect(()=>{if(!punched)return;const id=window.setInterval(()=>setNow(Date.now()),1000);return()=>window.clearInterval(id)},[punched]);
  const elapsed=startedAt?Math.max(0,now-startedAt):0;const total=Math.floor(elapsed/1000);const timer=`${Math.floor(total/3600)} h ${String(Math.floor(total/60)%60).padStart(2,'0')} min ${String(total%60).padStart(2,'0')} s`;const job=jobs[selectedJob]||{name:'Chantier',address:'Adresse à confirmer'};
  const punch=()=>{if(role==='Chef'&&punched)setReportOpen(true);else onToggle()};
- return <div className={`punch-redesign punch-v${variant}`}>
-  <section className="punch-version-picker"><div><span>MODE DÉMO</span><b>Choisir une version Punch</b><small>La fonction reste la même. Seule la présentation change.</small></div><div>{variants.map(([id,name])=><button key={id} className={variant===Number(id)?'active':''} onClick={()=>setVariant(Number(id))}><i>{id}</i>{name}</button>)}</div><p><b>{variants[variant-1][1]}</b> · {variants[variant-1][2]}</p></section>
+ return <div className="punch-redesign punch-v9">
   <header className="new-punch-title"><h1>PUNCH</h1>{role==='Chef'&&<span>CHEF D’ÉQUIPE</span>}</header>
   <div className="new-punch-layout"><div className="new-punch-main">
    <section className={`new-punch-status ${punched?'active':''}`}><div><i/><span>{punched?'EN COURS':'PRÊT À COMMENCER'}</span></div>{punched?<><h2>{selectedJob} — {job.name}</h2><p>Depuis {new Date(startedAt||Date.now()).toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'})} · Temps actuel : {timer}</p></>:<p>Vous n’êtes pas pointé.<br/>Sélectionnez un job puis pointez.</p>}</section>
