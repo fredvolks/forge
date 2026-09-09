@@ -12,7 +12,7 @@ import { FieldWorkspace, type FieldView } from './field-workspace';
 import { PunchPreview } from './punch-preview';
 import { useTimeData } from './use-time-data';
 import { changeTimeDemo } from '../lib/time-demo';
-import { dateKey, duration, employeeId, punch, totals } from '../lib/time-domain';
+import { addDays, dateKey, duration, employeeId, punch, totals, weekOf } from '../lib/time-domain';
 type Role = 'Boss' | 'Adjointe' | 'Chef' | 'Employé';
 type Order = {
     id: string;
@@ -54,158 +54,7 @@ const payrollRows = [
     { name: 'Fred G.', role: 'Chef', gross: '42 h 15', lunch: '- 1 h 15', payable: '41 h 00', state: 'Correction' },
     { name: 'Alex P.', role: 'Employé', gross: '39 h 30', lunch: '- 1 h 15', payable: '38 h 15', state: 'Confirmé' },
     { name: 'Marco T.', role: 'Chef', gross: '44 h 00', lunch: '- 1 h 15', payable: '42 h 45', state: 'À confirmer' },
-    { name: 'Samir B.', role: 'Employé', gross: '37 h 45', lunch: '- 1 h 00', payable: '36 h 45', state: 'Confirmé' },
-];
-export default function Home() {
-    const [role, setRole] = useState<Role>('Boss');
-    const [devicePreview,setDevicePreview]=useState<'mobile'|'tablet'|'desktop'>('mobile');
-    const [fieldView, setFieldView] = useState<FieldView | 'work'>('home');
-    const [workTarget, setWorkTarget] = useState<'punch'|'orders'|'messages'|'purchases'>('punch');
-    const [session, setSession] = useState<ForgeSession | null>(null);
-    const demoIdentity:Record<Role,Pick<ForgeSession,'userName'|'email'|'role'>>={Boss:{userName:'Simon',email:'simon@mir.ca',role:'Boss'},Adjointe:{userName:'Ester',email:'ester@mir.ca',role:'Adjointe'},Chef:{userName:'Fred',email:'fred@mir.ca',role:'Chef'},Employé:{userName:'Alex',email:'alex@mir.ca',role:'Employé'}};
-    const activeSession=session?.companyId==='mir-demo'?{...session,...demoIdentity[role]}:session;
-    const [accessReady, setAccessReady] = useState(false);
-    const timeData = useTimeData(session?.companyId || '');
-    const activeSegment = timeData?.segments.find(s=>activeSession && s.employee_id===employeeId(activeSession) && !s.end_time);
-    const punched = !!activeSegment;
-    const punchStartedAt = activeSegment ? Date.parse(activeSegment.start_time) : null;
-    const activeJob = timeData?.jobs.find(j=>j.id===activeSegment?.job_id)?.number || 'JOB-214';
-    const ownSegments = timeData?.segments.filter(s=>activeSession&&s.employee_id===employeeId(activeSession))||[];
-    const timeTotals = timeData ? totals(ownSegments,timeData.settings) : null;
-    const todaySegments = timeData ? ownSegments.filter(s=>dateKey(s.start_time,timeData.settings.timezone)===dateKey(new Date(),timeData.settings.timezone)) : [];
-    const todayMinutes = todaySegments.reduce((n,s)=>n+(timeTotals?.byId[s.id]?.payable||0),0);
-    const togglePunch = async (action:'toggle'|'switch'='toggle') => {
-      if(!activeSession||!timeData)return;
-      try {const job=timeData.jobs.find(j=>j.number===selectedJob);if(!job)throw Error('Choisissez une Job assignée.');await changeTimeDemo(activeSession,d=>punch(d,activeSession,job.id,action));setToastText(action==='switch'?'Job changée':punched?'Punch terminé':'Punch démarré');}
-      catch(error){setToastText((error as Error).message);}
-      setToast(true);window.setTimeout(()=>setToast(false),3200);
-    };
-    const [toastText, setToastText] = useState('Demande envoyée');
-    const [selectedJob, setSelectedJob] = useState('JOB-214');
-    const [jobSwitchPending, setJobSwitchPending] = useState(false);
-    const [temporaryJobs, setTemporaryJobs] = useState(['TEMP-009']);
-    const [temporaryJobNames, setTemporaryJobNames] = useState<Record<string, string>>({ 'TEMP-009': 'Réparation urgence' });
-    const [pendingOrders, setPendingOrders] = useState(1);
-    const [clearedJobs, setClearedJobs] = useState<string[]>([]);
-    const [bidPrice, setBidPrice] = useState(45251.01);
-    const [materialsCost, setMaterialsCost] = useState(21480);
-    const [fixedCost, setFixedCost] = useState(3450);
-    const [rentalCost, setRentalCost] = useState(1895);
-    const [laborCost, setLaborCost] = useState(9870);
-    const [extrasCost, setExtrasCost] = useState(1450);
-    const [accidentOpen, setAccidentOpen] = useState(false);
-    const [documentationOpen, setDocumentationOpen] = useState(false);
-    const [mapChoiceOpen, setMapChoiceOpen] = useState(false);
-    const [accidentSubmitted, setAccidentSubmitted] = useState(false);
-    const [accidentApproved, setAccidentApproved] = useState(false);
-    const [planName, setPlanName] = useState('Plan architecture.pdf');
-    const [logoSrc, setLogoSrc] = useState('/mir-company-logo-transparent.png');
-    const [jobDossierOpen, setJobDossierOpen] = useState(false);
-    const [extraFormOpen, setExtraFormOpen] = useState(false);
-    const [orderCategory, setOrderCategory] = useState<'Matériaux' | 'Outils' | 'Pliage'>('Matériaux');
-    const [selectedPreset, setSelectedPreset] = useState('Lame de Skill');
-    const [orderCart, setOrderCart] = useState<Array<{
-        id: number;
-        category: string;
-        item: string;
-        detail: string;
-        photos: string[];
-    }>>([]);
-    const [orderPhotos, setOrderPhotos] = useState<string[]>([]);
-    const [draggedPreset, setDraggedPreset] = useState<string | null>(null);
-    const [presetSets, setPresetSets] = useState<Record<'Matériaux' | 'Outils' | 'Pliage', string[]>>({
-        Outils: ['Gun à revêtement', 'Gun à charpente', 'Gun à finition', 'Scie circulaire', 'Scie sauteuse', 'OLSA — grosseur manuelle', 'Scie à onglet', 'Patte d’échafaud', 'Vérin', 'Batterie FlexVolt', 'Batterie non FlexVolt', 'Hose à air'],
-        Pliage: ['Fascia', 'Chaise', 'Colonne', 'T transition soffite/revêtement', 'L 1½″ fenêtre', 'Moulure anti-rongeur', 'Moulure de départ', 'Capage porte de garage', 'Beam', 'Autre pliage custom'],
-        Matériaux: ['Lame de Skill', 'Lame Olfa 1″', 'Broche à soffite', 'Clou à revêtement', 'Clou 3¼', 'Clou finition', 'Tape 3M', 'Joint fibro 5′', 'Joint fibro 7′', 'J soffite', 'Boîte de soffite'],
-    });
-    const [length1, setLength1] = useState('120');
-    const [length2, setLength2] = useState('');
-    const [lengthQty1, setLengthQty1] = useState(1);
-    const [lengthQty2, setLengthQty2] = useState(1);
-    const [beamDoubleFold, setBeamDoubleFold] = useState(false);
-    const [columnQty, setColumnQty] = useState(1);
-    const [itemColor, setItemColor] = useState('Noir');
-    const [customColor, setCustomColor] = useState('');
-    const [itemUnit, setItemUnit] = useState('morceau');
-    const [dynamicCatalog, setDynamicCatalog] = useState<DynamicProduct[]>([]);
-    const [dynamicValues, setDynamicValues] = useState<Record<string, string | boolean>>({});
-    const [basketItems, setBasketItems] = useState([
-        { id: 1, chef: 'Fred G.', job: 'JOB-214', name: 'Lames Olfa 1″', qty: '2 boîtes', loaded: false },
-        { id: 2, chef: 'Fred G.', job: 'JOB-214', name: 'Tape rouge', qty: '6 rouleaux', loaded: false },
-        { id: 3, chef: 'Fred G.', job: 'JOB-214', name: 'Clous gun 3¼', qty: '3 boîtes', loaded: true },
-        { id: 4, chef: 'Marco T.', job: 'JOB-315', name: 'Broche soffite', qty: '2 boîtes', loaded: false },
-        { id: 5, chef: 'Marco T.', job: 'JOB-315', name: 'Papier joint fibro', qty: '4 rouleaux', loaded: false },
-    ]);
-    const [filter, setFilter] = useState('Tous');
-    const [query, setQuery] = useState('');
-    const [modal, setModal] = useState(false);
-    const [toast, setToast] = useState(false);
-    const [mobileNav, setMobileNav] = useState(false);
-    const visibleOrders = useMemo(() => orders.filter((o) => !clearedJobs.includes(o.job) && o.access.includes(role) && (filter === 'Tous' || o.stage === filter) && `${o.id} ${o.job} ${o.client} ${o.title}`.toLowerCase().includes(query.toLowerCase())), [clearedJobs, filter, query, role]);
-    const totalCost = materialsCost + fixedCost + rentalCost + laborCost + extrasCost;
-    const profit = bidPrice - totalCost;
-    const performance = bidPrice ? (profit / bidPrice) * 100 : 0;
-    function submitRequest(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault();
-        if (!orderCart.length || !session)
-            return;
-        const key = `forge:${session.companyId}:orders`;
-        const existing = JSON.parse(localStorage.getItem(key) || '[]');
-        const catalog = JSON.parse(localStorage.getItem(`forge:${session.companyId}:catalog`) || '[]') as Array<{
-            name: string;
-            source: string;
-        }>;
-        const dynamic = loadDynamicCatalog(session.companyId);
-        const jobNames: Record<string, string> = { 'JOB-214': 'Breton', 'JOB-315': 'Leduc', 'JOB-418': 'Bélanger' };
-        const next = { id: `BC-2026-${String(Date.now()).slice(-4)}`, companyId: session.companyId, date: new Date().toISOString().slice(0, 10), job: `${selectedJob} · ${jobNames[selectedJob] || temporaryJobNames[selectedJob] || 'Chantier temporaire'}`, requester: session.userName, items: orderCart.map(item => {
-                const product = catalog.find(p => p.name === item.item);
-                const dynamicProduct = dynamic.find(p => p.name === item.item);
-                const source = dynamicProduct?.source || product?.source || 'Inventaire MIR';
-                const unit = item.detail.match(/Unité:\s*([^·]+)/)?.[1]?.trim() || (item.detail.includes('boîte') ? 'boîtes' : item.detail.includes('morceau') ? 'morceaux' : dynamicProduct?.units[0] || 'morceaux');
-                const qty = Number(item.detail.match(/Quantité:\s*(\d+)/)?.[1] || item.detail.match(/Quantité\s+(\d+)/)?.[1] || item.detail.match(/×\s*(\d+)/)?.[1] || 2);
-                return { name: item.item, qty, unit, detail: item.detail, source: source === 'Fournisseur' ? 'Fournisseur' : 'Inventaire MIR', supplier: source === 'Fournisseur' ? (dynamicProduct?.supplier || 'Acier Breton') : undefined };
-            }), status: 'Reçue', history: [`Créée par ${session.userName} · ${new Date().toLocaleString('fr-CA')}`] };
-        localStorage.setItem(key, JSON.stringify([next, ...existing]));
-        window.dispatchEvent(new Event('forge-orders-updated'));
-        setModal(false);
-        setOrderCart([]);
-        setPendingOrders((n) => n + 1);
-        setToastText('Commande envoyée dans le centre administratif');
-        setToast(true);
-        window.setTimeout(() => setToast(false), 3200);
-    }
-    function submitPurchase(e: React.FormEvent<HTMLFormElement>) { e.preventDefault(); setToastText('Achat confirmé'); setToast(true); window.setTimeout(() => setToast(false), 3200); }
-
-    useEffect(() => { ['JOB-214', 'JOB-315'].forEach((job) => { if (!basketItems.some((item) => item.job === job))
-        setClearedJobs((jobs) => jobs.includes(job) ? jobs : [...jobs, job]); }); }, [basketItems]);
-    useEffect(() => { const raw = localStorage.getItem('forge:session'); if (raw) {
-        try {
-            const current = JSON.parse(raw) as ForgeSession;
-            setSession(current);
-            setRole(current.role);
-        }
-        catch {
-            localStorage.removeItem('forge:session');
-        }
-    } setAccessReady(true); }, []);
-    useEffect(() => { if (!session)
-        return; const sync = () => { const simpleRaw = localStorage.getItem(`forge:${session.companyId}:catalog`); const products = (simpleRaw ? JSON.parse(simpleRaw) : []) as Array<{
-        name: string;
-        category: string;
-        active: boolean;
-    }>; const dynamic = loadDynamicCatalog(session.companyId); setDynamicCatalog(dynamic); setPresetSets(current => { const next = { ...current }; (['Matériaux', 'Outils', 'Pliage'] as const).forEach(category => { const names = [...products.filter(p => p.active && p.category === category).map(p => p.name), ...dynamic.filter(p => p.active && p.category === category).map(p => p.name)]; if (names.length)
-        next[category] = [...new Set(names)]; }); return next; }); }; sync(); window.addEventListener('forge-catalog-updated', sync); return () => window.removeEventListener('forge-catalog-updated', sync); }, [session]);
-    useEffect(() => { if(!session)return; const sync=()=>{const appearance=getUserAppearance(session.companyId,session.email,(session.theme as ForgeThemeId)||'forge');applyAppearance(appearance);setLogoSrc(resolveLogo(getBranding(session.companyId),document.documentElement.dataset.mode==='light'?'light':'dark'))};sync();window.addEventListener('forge-appearance-updated',sync);window.addEventListener('forge-branding-updated',sync);return()=>{window.removeEventListener('forge-appearance-updated',sync);window.removeEventListener('forge-branding-updated',sync)} }, [session]);
-    useEffect(() => { const sync=()=>{const hash=window.location.hash.replace('#field/','').split('/')[0];const fieldPages:FieldView[]=['home','projects','project','menu','profile','hours','absences','emergency','documents','incidents','documentation','settings'];if(fieldPages.includes(hash as FieldView))setFieldView(hash as FieldView)};sync();window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync)}, []);
-    if (!accessReady)
-        return <div className="forge-loading">FORGE</div>;
-    if (!session)
-        return <ForgeAccess onEnter={(current) => { setSession(current); setRole(current.role); }}/>;
-    if (session.companyId !== 'mir-demo')
-        return <EmptyCompany session={session} onLogout={() => { localStorage.removeItem('forge:session'); setSession(null); }}/>;
-    const isFieldRole = role === 'Employé' || role === 'Chef';
-    if (!isFieldRole)
-        return <AdminPortal role={role as 'Boss' | 'Adjointe'} session={activeSession!} onLogout={() => { localStorage.removeItem('forge:session'); setSession(null); }}/>;
+    { name: 'Sao�4��$z{-���jם:session'); setSession(null); }}/>;
     // Keep the declared role union for the legacy demo sections below. The
     // current route is field-only, but those sections remain for regression QA.
     const displayedRole: Role = session.role;
@@ -334,7 +183,7 @@ export default function Home() {
 </div>
 </header>
       <div className={`content ${fieldView !== 'work' ? 'field-page-active' : `work-focus work-${workTarget}`}`}>
-        {fieldView !== 'work' && <FieldWorkspace view={fieldView} session={activeSession!} role={role as 'Chef'|'Employé'} navigate={navigateField} punch={{punched,selectedJob,activeJob,startedAt:punchStartedAt,onToggle:()=>void togglePunch(),onChangeJob:setSelectedJob}}/>}
+        {fieldView !== 'work' && <FieldWorkspace view={fieldView} session={activeSession!} role={role as 'Chef'|'Employé'} navigate={navigateField} punch={{punched,selectedJob,activeJob,startedAt:punchStartedAt,todayLabel:duration(todayMinutes),weekLabel:duration(weekMinutes),onToggle:()=>void togglePunch(),onChangeJob:setSelectedJob}}/>}
         <div className="welcome">
 <div>
 <p>FORGE · LES REVÊTEMENTS MIR · VUE {role.toUpperCase()}</p>
