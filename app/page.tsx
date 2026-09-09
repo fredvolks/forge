@@ -10,6 +10,9 @@ import { AdminPortal } from './admin-portal';
 import { applyAppearance, getBranding, getUserAppearance, resolveLogo, type ForgeThemeId } from './forge-branding';
 import { FieldWorkspace, type FieldView } from './field-workspace';
 import { PunchPreview } from './punch-preview';
+import { useTimeData } from './use-time-data';
+import { changeTimeDemo } from '../lib/time-demo';
+import { dateKey, duration, employeeId, punch, totals } from '../lib/time-domain';
 type Role = 'Boss' | 'Adjointe' | 'Chef' | 'Employé';
 type Order = {
     id: string;
@@ -58,12 +61,26 @@ export default function Home() {
     const [fieldView, setFieldView] = useState<FieldView | 'work'>('home');
     const [workTarget, setWorkTarget] = useState<'punch'|'orders'|'messages'|'purchases'>('punch');
     const [session, setSession] = useState<ForgeSession | null>(null);
+    const demoIdentity:Record<Role,Pick<ForgeSession,'userName'|'email'|'role'>>={Boss:{userName:'Simon',email:'simon@mir.ca',role:'Boss'},Adjointe:{userName:'Ester',email:'ester@mir.ca',role:'Adjointe'},Chef:{userName:'Fred',email:'fred@mir.ca',role:'Chef'},Employé:{userName:'Alex',email:'alex@mir.ca',role:'Employé'}};
+    const activeSession=session?.companyId==='mir-demo'?{...session,...demoIdentity[role]}:session;
     const [accessReady, setAccessReady] = useState(false);
-    const [punched, setPunched] = useState(false);
-    const [punchStartedAt, setPunchStartedAt] = useState<number | null>(null);
+    const timeData = useTimeData(session?.companyId || '');
+    const activeSegment = timeData?.segments.find(s=>activeSession && s.employee_id===employeeId(activeSession) && !s.end_time);
+    const punched = !!activeSegment;
+    const punchStartedAt = activeSegment ? Date.parse(activeSegment.start_time) : null;
+    const activeJob = timeData?.jobs.find(j=>j.id===activeSegment?.job_id)?.number || 'JOB-214';
+    const ownSegments = timeData?.segments.filter(s=>activeSession&&s.employee_id===employeeId(activeSession))||[];
+    const timeTotals = timeData ? totals(ownSegments,timeData.settings) : null;
+    const todaySegments = timeData ? ownSegments.filter(s=>dateKey(s.start_time,timeData.settings.timezone)===dateKey(new Date(),timeData.settings.timezone)) : [];
+    const todayMinutes = todaySegments.reduce((n,s)=>n+(timeTotals?.byId[s.id]?.payable||0),0);
+    const togglePunch = async (action:'toggle'|'switch'='toggle') => {
+      if(!activeSession||!timeData)return;
+      try {const job=timeData.jobs.find(j=>j.number===selectedJob);if(!job)throw Error('Choisissez une Job assignée.');await changeTimeDemo(activeSession,d=>punch(d,activeSession,job.id,action));setToastText(action==='switch'?'Job changée':punched?'Punch terminé':'Punch démarré');}
+      catch(error){setToastText((error as Error).message);}
+      setToast(true);window.setTimeout(()=>setToast(false),3200);
+    };
     const [toastText, setToastText] = useState('Demande envoyée');
     const [selectedJob, setSelectedJob] = useState('JOB-214');
-    const [activeJob, setActiveJob] = useState('JOB-214');
     const [jobSwitchPending, setJobSwitchPending] = useState(false);
     const [temporaryJobs, setTemporaryJobs] = useState(['TEMP-009']);
     const [temporaryJobNames, setTemporaryJobNames] = useState<Record<string, string>>({ 'TEMP-009': 'Réparation urgence' });
@@ -157,10 +174,7 @@ export default function Home() {
         window.setTimeout(() => setToast(false), 3200);
     }
     function submitPurchase(e: React.FormEvent<HTMLFormElement>) { e.preventDefault(); setToastText('Achat confirmé'); setToast(true); window.setTimeout(() => setToast(false), 3200); }
-    useEffect(() => { if (!punched) {
-        setActiveJob(selectedJob);
-        setJobSwitchPending(false);
-    } }, [punched, selectedJob]);
+
     useEffect(() => { ['JOB-214', 'JOB-315'].forEach((job) => { if (!basketItems.some((item) => item.job === job))
         setClearedJobs((jobs) => jobs.includes(job) ? jobs : [...jobs, job]); }); }, [basketItems]);
     useEffect(() => { const raw = localStorage.getItem('forge:session'); if (raw) {
@@ -181,7 +195,7 @@ export default function Home() {
     }>; const dynamic = loadDynamicCatalog(session.companyId); setDynamicCatalog(dynamic); setPresetSets(current => { const next = { ...current }; (['Matériaux', 'Outils', 'Pliage'] as const).forEach(category => { const names = [...products.filter(p => p.active && p.category === category).map(p => p.name), ...dynamic.filter(p => p.active && p.category === category).map(p => p.name)]; if (names.length)
         next[category] = [...new Set(names)]; }); return next; }); }; sync(); window.addEventListener('forge-catalog-updated', sync); return () => window.removeEventListener('forge-catalog-updated', sync); }, [session]);
     useEffect(() => { if(!session)return; const sync=()=>{const appearance=getUserAppearance(session.companyId,session.email,(session.theme as ForgeThemeId)||'forge');applyAppearance(appearance);setLogoSrc(resolveLogo(getBranding(session.companyId),document.documentElement.dataset.mode==='light'?'light':'dark'))};sync();window.addEventListener('forge-appearance-updated',sync);window.addEventListener('forge-branding-updated',sync);return()=>{window.removeEventListener('forge-appearance-updated',sync);window.removeEventListener('forge-branding-updated',sync)} }, [session]);
-    useEffect(() => { const sync=()=>{const hash=window.location.hash.replace('#field/','');const fieldPages:FieldView[]=['home','projects','project','menu','profile','hours','absences','emergency','documents','incidents','documentation','settings'];if(fieldPages.includes(hash as FieldView))setFieldView(hash as FieldView)};sync();window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync)}, []);
+    useEffect(() => { const sync=()=>{const hash=window.location.hash.replace('#field/','').split('/')[0];const fieldPages:FieldView[]=['home','projects','project','menu','profile','hours','absences','emergency','documents','incidents','documentation','settings'];if(fieldPages.includes(hash as FieldView))setFieldView(hash as FieldView)};sync();window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync)}, []);
     if (!accessReady)
         return <div className="forge-loading">FORGE</div>;
     if (!session)
@@ -190,7 +204,10 @@ export default function Home() {
         return <EmptyCompany session={session} onLogout={() => { localStorage.removeItem('forge:session'); setSession(null); }}/>;
     const isFieldRole = role === 'Employé' || role === 'Chef';
     if (!isFieldRole)
-        return <AdminPortal role={role as 'Boss' | 'Adjointe'} session={session} onLogout={() => { localStorage.removeItem('forge:session'); setSession(null); }}/>;
+        return <AdminPortal role={role as 'Boss' | 'Adjointe'} session={activeSession!} onLogout={() => { localStorage.removeItem('forge:session'); setSession(null); }}/>;
+    // Keep the declared role union for the legacy demo sections below. The
+    // current route is field-only, but those sections remain for regression QA.
+    const displayedRole: Role = session.role;
     const quickItems = presetSets[orderCategory];
     const activeDynamicProduct = dynamicCatalog.find(product => product.active && product.category === orderCategory && product.name === selectedPreset);
     const switchingJob = punched && selectedJob !== activeJob;
@@ -206,7 +223,7 @@ export default function Home() {
         window.location.hash = `field/${destination}`;
         window.scrollTo({top:0,behavior:'smooth'});
     };
-    return <main className={`app-shell ${isFieldRole ? 'field-mobile' : ''} role-${role.toLowerCase().replace('é', 'e')}`}>
+    return <main className={`app-shell ${isFieldRole ? 'field-mobile' : ''} role-${displayedRole.toLowerCase().replace('é', 'e')}`}>
     <aside className={`sidebar ${mobileNav ? 'open' : ''}`}>
       <div className="brand">
 <div className="brand-mark">
@@ -221,9 +238,9 @@ export default function Home() {
 <X />
 </button>
       <nav aria-label="Navigation principale">
-<p>ESPACE DE TRAVAIL</p>{role === 'Employé' ? <>
-<a className="active" href="#punch">
-<Clock3 />Punch</a>
+<p>ESPACE DE TRAVAIL</p>{displayedRole === 'Employé' ? <>
+<a className={fieldView==='work'?'active':''} href="#punch" onClick={()=>navigateField('punch')}>
+<Clock3 />Punch</a><a className={fieldView==='hours'?'active':''} href="#field/hours" onClick={()=>navigateField('hours')}><Clock3/>Mes heures</a>
 <a href="#job">
 <HardHat />Mon job</a>
 <a href="#orders">
@@ -236,7 +253,7 @@ export default function Home() {
 <a className="active" href="#dashboard">
 <LayoutDashboard />Vue d’ensemble</a>
 <a href="#punch">
-<Clock3 />{role === 'Chef' ? 'Punch & mon équipe' : 'Punch & heures'}</a>
+<Clock3 />{displayedRole === 'Chef' ? 'Punch & mon équipe' : 'Punch & heures'}</a>
 <a href="#orders">
 <PackageCheck />Commandes <em>{visibleOrders.length}</em>
 </a>
@@ -248,7 +265,7 @@ export default function Home() {
 </a>
 <p>GESTION</p>
 <a href="#team">
-<Users />Équipes</a>{(role === 'Boss' || role === 'Adjointe') && <>
+<Users />Équipes</a>{(displayedRole === 'Boss' || displayedRole === 'Adjointe') && <>
 <a href="#inventory">
 <Box />Inventaire</a>
 <a href="#suppliers">
@@ -299,9 +316,9 @@ export default function Home() {
 <button aria-label="Notifications" className="icon-btn">
 <Bell />
 <b>4</b>
-</button>{role !== 'Employé' && <button className="new-request" onClick={() => setModal(true)}>
-<Plus /> Nouvelle demande</button>}<label className={`company-logo ${role === 'Adjointe' ? 'editable' : ''}`} aria-label={role === 'Adjointe' ? 'Modifier le logo de la compagnie' : 'Les Revêtements MIR'}>
-<img src={logoSrc} alt="Les Revêtements MIR"/>{role === 'Adjointe' && <>
+</button>{displayedRole !== 'Employé' && <button className="new-request" onClick={() => setModal(true)}>
+<Plus /> Nouvelle demande</button>}<label className={`company-logo ${displayedRole === 'Adjointe' ? 'editable' : ''}`} aria-label={displayedRole === 'Adjointe' ? 'Modifier le logo de la compagnie' : 'Les Revêtements MIR'}>
+<img src={logoSrc} alt="Les Revêtements MIR"/>{displayedRole === 'Adjointe' && <>
 <input type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) {
         setLogoSrc(URL.createObjectURL(file));
         setToastText('Nouveau logo importé');
@@ -314,12 +331,12 @@ export default function Home() {
 </div>
 </header>
       <div className={`content ${fieldView !== 'work' ? 'field-page-active' : `work-focus work-${workTarget}`}`}>
-        {fieldView !== 'work' && <FieldWorkspace view={fieldView} session={session} role={role as 'Chef'|'Employé'} navigate={navigateField} punch={{punched,selectedJob,activeJob,startedAt:punchStartedAt,onToggle:()=>{if(punched){setPunched(false);setPunchStartedAt(null);setToastText('Punch terminé');}else{setActiveJob(selectedJob);setPunched(true);setPunchStartedAt(Date.now());setToastText(`Punch démarré sur ${selectedJob}`);}setToast(true);window.setTimeout(()=>setToast(false),3200)},onChangeJob:setSelectedJob}}/>}
+        {fieldView !== 'work' && <FieldWorkspace view={fieldView} session={activeSession!} role={role as 'Chef'|'Employé'} navigate={navigateField} punch={{punched,selectedJob,activeJob,startedAt:punchStartedAt,onToggle:()=>void togglePunch(),onChangeJob:setSelectedJob}}/>}
         <div className="welcome">
 <div>
 <p>FORGE · LES REVÊTEMENTS MIR · VUE {role.toUpperCase()}</p>
-<h1>{role === 'Adjointe' ? 'Bon matin, Ester.' : role === 'Chef' ? 'Bon matin, Fred.' : role === 'Employé' ? 'Bon matin, Alex.' : 'Bon matin, Simon.'}</h1>
-<span>{role === 'Boss' || role === 'Adjointe' ? 'Vue complète de la compagnie.' : 'Seulement les projets auxquels tu es assigné.'}</span>
+<h1>{displayedRole === 'Adjointe' ? 'Bon matin, Ester.' : displayedRole === 'Chef' ? 'Bon matin, Fred.' : displayedRole === 'Employé' ? 'Bon matin, Alex.' : 'Bon matin, Simon.'}</h1>
+<span>{displayedRole === 'Boss' || displayedRole === 'Adjointe' ? 'Vue complète de la compagnie.' : 'Seulement les projets auxquels tu es assigné.'}</span>
 </div>
 <div className="weather">
 <span>☀</span>
@@ -329,8 +346,8 @@ export default function Home() {
 </div>
 </div>
 </div>
-        {(role === 'Employé' || role === 'Chef') && <section className="punch-module" id="punch">
-          <PunchPreview role={role} punched={punched} selectedJob={selectedJob} startedAt={punchStartedAt} onJob={setSelectedJob} onOpenJob={()=>navigateField('project')} onHours={()=>navigateField('hours')} onToggle={()=>{if(punched){setPunched(false);setPunchStartedAt(null);setToastText('Punch terminé');}else{setActiveJob(selectedJob);setPunched(true);setPunchStartedAt(Date.now());setToastText(`Punch démarré sur ${selectedJob}`);}setToast(true);window.setTimeout(()=>setToast(false),3200)}}/>
+        {(displayedRole === 'Employé' || displayedRole === 'Chef') && <section className="punch-module" id="punch">
+          <PunchPreview todayLabel={duration(todayMinutes)} todaySegments={todaySegments.map(s=>({id:s.id,job:timeData?.jobs.find(j=>j.id===s.job_id)?.number||s.job_id,start:s.start_time,end:s.end_time}))} onSwitch={()=>void togglePunch('switch')} role={displayedRole} punched={punched} selectedJob={selectedJob} startedAt={punchStartedAt} onJob={setSelectedJob} onOpenJob={()=>navigateField('project')} onHours={()=>navigateField('hours')} onToggle={()=>void togglePunch()}/>
           {switchingJob && <div className="job-switch-card">
 <button className="switch-back" onClick={() => { setSelectedJob(activeJob); setJobSwitchPending(false); }} aria-label="Annuler le changement de job">
 <ArrowLeft />
@@ -340,7 +357,7 @@ export default function Home() {
 <b>{activeJob} → {selectedJob}</b>
 <small>Le temps de {activeJob} sera fermé seulement quand tu commenceras la prochaine job.</small>
 </div>
-<button className="switch-start" onClick={() => { setActiveJob(selectedJob); setJobSwitchPending(false); setToastText(`Punch démarré sur ${selectedJob}`); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<button className="switch-start" onClick={() => { void togglePunch('switch'); setJobSwitchPending(false); setToastText(`Punch démarré sur ${selectedJob}`); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
 <Play /> PUNCH IN</button>
 </div>}
           <div className={`punch-panel ${punched ? 'active' : ''}`}>
@@ -364,7 +381,7 @@ export default function Home() {
         } }}>
 <option value="JOB-214">★ SUGGÉRÉ · JOB-214 — Breton · 86 m</option>
 <option value="JOB-315">JOB-315 — Leduc</option>
-<option value="JOB-418">JOB-418 — Bélanger</option>{temporaryJobs.map((job) => <option key={job} value={job}>{job} — {temporaryJobNames[job] || 'Chantier temporaire'}{job !== 'TEMP-009' ? ' · Non approuvé' : ''}</option>)}{role === 'Chef' && <option value="CREATE_TEMP">＋ Créer un chantier temporaire</option>}</select>{role === 'Chef' && selectedJob.startsWith('TEMP-') && <button type="button" className="rename-temp-job" onClick={(e) => { e.preventDefault(); const name = window.prompt('Nouveau nom du chantier temporaire', temporaryJobNames[selectedJob] || 'Chantier temporaire'); if (name?.trim()) {
+<option value="JOB-418">JOB-418 — Bélanger</option>{temporaryJobs.map((job) => <option key={job} value={job}>{job} — {temporaryJobNames[job] || 'Chantier temporaire'}{job !== 'TEMP-009' ? ' · Non approuvé' : ''}</option>)}{displayedRole === 'Chef' && <option value="CREATE_TEMP">＋ Créer un chantier temporaire</option>}</select>{displayedRole === 'Chef' && selectedJob.startsWith('TEMP-') && <button type="button" className="rename-temp-job" onClick={(e) => { e.preventDefault(); const name = window.prompt('Nouveau nom du chantier temporaire', temporaryJobNames[selectedJob] || 'Chantier temporaire'); if (name?.trim()) {
             setTemporaryJobNames((names) => ({ ...names, [selectedJob]: name.trim() }));
             setToastText(`${selectedJob} renommé ${name.trim()}`);
             setToast(true);
@@ -394,7 +411,7 @@ export default function Home() {
 <span>JOB-315 · 2 h 18</span>
 </div>
 </div>
-<button onClick={() => setPunched(!punched)}>{punched ? <Square /> : <Play />}<span>{punched ? 'PUNCH OUT' : 'PUNCH IN'}</span>
+<button onClick={()=>void togglePunch()}>{punched ? <Square /> : <Play />}<span>{punched ? 'PUNCH OUT' : 'PUNCH IN'}</span>
 <small>{punched ? `Arrêter sur ${selectedJob}` : `Commencer sur ${selectedJob}`}</small>
 </button>
 <div className="daily-time">
@@ -432,7 +449,7 @@ export default function Home() {
 <button className="confirm-hours">
 <Check /> Confirmer mes heures</button>
 </article>
-          {role === 'Chef' && <article className="panel crew-punch">
+          {displayedRole === 'Chef' && <article className="panel crew-punch">
 <div className="panel-head">
 <div>
 <h2>Mon équipe sur JOB-214</h2>
@@ -453,7 +470,7 @@ export default function Home() {
 </div>)}</article>}
           </div>
         </section>}
-        {role === 'Chef' && <section className="chef-field-flow">
+        {displayedRole === 'Chef' && <section className="chef-field-flow">
 <article className="panel employee-order-create" id="orders">
 <div className="order-create-icon">
 <ShoppingCart />
@@ -501,7 +518,7 @@ export default function Home() {
 <ChevronRight />
 </div>)}</article>
 </section>}
-        {(role === 'Boss' || role === 'Adjointe') && <section className="admin-hours" id="punch">
+        {(displayedRole === 'Boss' || displayedRole === 'Adjointe') && <section className="admin-hours" id="punch">
 <div className="hours-head">
 <div>
 <span>VALIDATION HEBDOMADAIRE</span>
@@ -542,7 +559,7 @@ export default function Home() {
 <div className="approval-actions">
 <button>Exporter</button>
 <button className="approve-all">
-<Check /> {role === 'Boss' ? 'Approbation finale' : 'Soumettre au Boss'}</button>
+<Check /> {displayedRole === 'Boss' ? 'Approbation finale' : 'Soumettre au Boss'}</button>
 </div>
 </div>
 <div className="payroll-table">
@@ -576,7 +593,7 @@ export default function Home() {
 <button>Examiner</button>
 </div>
 </section>}
-        {(role === 'Boss' || role === 'Adjointe') && <section className="panel admin-plan-sync">
+        {(displayedRole === 'Boss' || displayedRole === 'Adjointe') && <section className="panel admin-plan-sync">
 <div>
 <span>JOB ET PLANS PARTAGÉS</span>
 <h2>JOB-214 · Breton</h2>
@@ -598,12 +615,12 @@ export default function Home() {
 </label>
 </div>
 </section>}
-        {role === 'Adjointe' && <>
+        {displayedRole === 'Adjointe' && <>
 <AdjointeDesk companyId={session.companyId}/>
 <SimulationPanel />
 </>} 
-        {(role === 'Boss' || role === 'Adjointe') && <CommandCenter role={role} companyId={session.companyId}/>}
-        {role === 'Adjointe' && <section className="panel punch-correction">
+        {(displayedRole === 'Boss' || displayedRole === 'Adjointe') && <CommandCenter role={displayedRole} companyId={session.companyId}/>}
+        {displayedRole === 'Adjointe' && <section className="panel punch-correction">
 <div>
 <span>CORRECTION DE PUNCH EN TOUT TEMPS</span>
 <h2>Changer un employé de job</h2>
@@ -628,7 +645,7 @@ export default function Home() {
 <Check /> Enregistrer</button>
 </div>
 </section>}
-        {role === 'Boss' && <section className="boss-reporting">
+        {displayedRole === 'Boss' && <section className="boss-reporting">
 <div className="reporting-head">
 <div>
 <span>REGISTRE PERMANENT · CCQ</span>
@@ -708,7 +725,7 @@ export default function Home() {
 </div>
 </div>
 </section>}
-        {role === 'Chef' && <section className="chef-order-board" id="chef-orders">
+        {displayedRole === 'Chef' && <section className="chef-order-board" id="chef-orders">
 <div className="chef-order-tabs">
 <button className="active">En attente <span>{pendingOrders}</span>
 </button>
@@ -766,7 +783,7 @@ export default function Home() {
 </div>)}</article>
 </div>
 </section>}
-        {role === 'Adjointe' && <section className="supplier-sorter">
+        {displayedRole === 'Adjointe' && <section className="supplier-sorter">
 <div className="sorter-head">
 <div>
 <span>TRI D’UNE COMMANDE MULTI-MATÉRIAUX</span>
@@ -801,7 +818,7 @@ export default function Home() {
 <Send /> Envoyer les commandes séparées</button>
 </div>
 </section>}
-        {(role === 'Boss' || role === 'Adjointe') && <section className="metrics" aria-label="Indicateurs du jour">
+        {(displayedRole === 'Boss' || displayedRole === 'Adjointe') && <section className="metrics" aria-label="Indicateurs du jour">
           <article>
 <div className="metric-icon amber">
 <PackageCheck />
@@ -864,7 +881,7 @@ export default function Home() {
 </div>
 </article>
         </section>}
-        {(role === 'Adjointe' || role === 'Boss') && <section className="order-control">
+        {(displayedRole === 'Adjointe' || displayedRole === 'Boss') && <section className="order-control">
 <article className="panel incoming-order">
 <div className="panel-head">
 <div>
@@ -884,14 +901,14 @@ export default function Home() {
 <small>Photos du chantier jointes · Priorité normale</small>
 </div>
 </div>
-<div className="decision-actions">{role === 'Adjointe' && <button className="ask-approval" onClick={() => { setToastText('Approbation demandée au Boss'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
+<div className="decision-actions">{displayedRole === 'Adjointe' && <button className="ask-approval" onClick={() => { setToastText('Approbation demandée au Boss'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
 <ClipboardCheck /> Faire approuver par le Boss</button>}<button className="add-basket" onClick={() => { setToastText('Commande ajoutée au panier de Fred'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
 <ShoppingCart /> Mettre dans le panier</button>
 <button className="order-now" onClick={() => { setToastText('Commande passée immédiatement'); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
 <Zap /> Commander maintenant</button>
 </div>
 </div>
-</article>{role === 'Boss' && <article className="panel chef-baskets">
+</article>{displayedRole === 'Boss' && <article className="panel chef-baskets">
 <div className="panel-head">
 <div>
 <h2>Paniers des chefs d’équipe</h2>
@@ -922,7 +939,7 @@ export default function Home() {
 <button className="confirm-load" onClick={() => { setToastText(`Chargement de ${chef} confirmé`); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
 <Check /> Confirmer les articles embarqués</button>
 </div>; })}</article>}</section>}
-        <div className={`main-grid ${role === 'Employé' ? 'employee-grid' : ''}`}>{role === 'Employé' ? <section className="panel employee-order-create" id="orders">
+        <div className={`main-grid ${displayedRole === 'Employé' ? 'employee-grid' : ''}`}>{displayedRole === 'Employé' ? <section className="panel employee-order-create" id="orders">
 <div className="order-create-icon">
 <PackageCheck />
 </div>
@@ -976,7 +993,7 @@ export default function Home() {
 <ChevronRight />
 </button>
 </article>)}{visibleOrders.length === 0 && <div className="empty">Aucune commande assignée dans cette vue.</div>}</div>
-        </section>}{role !== 'Employé' && <aside className="right-stack">
+        </section>}{displayedRole !== 'Employé' && <aside className="right-stack">
           <section className="panel requests" id="requests">
 <div className="panel-head">
 <div>
@@ -1089,7 +1106,7 @@ export default function Home() {
 <Check /> Confirmer l’achat</button>
 </form>
 </section>}
-        {role === 'Chef' && <section className="panel job-extra">
+        {displayedRole === 'Chef' && <section className="panel job-extra">
 <div className="panel-head">
 <div>
 <h2>Extra au dossier de job</h2>
@@ -1122,9 +1139,9 @@ export default function Home() {
           <article className="panel job-hub" id="job">
 <div className="panel-head">
 <div>
-<h2>{role === 'Employé' ? 'Mon job assigné' : 'Dossier de job'}</h2>
-<p>{role === 'Employé' ? 'Les informations utiles pour ton chantier' : 'Tout ce qui suit le chantier'}</p>
-</div>{role !== 'Employé' && <button>
+<h2>{displayedRole === 'Employé' ? 'Mon job assigné' : 'Dossier de job'}</h2>
+<p>{displayedRole === 'Employé' ? 'Les informations utiles pour ton chantier' : 'Tout ce qui suit le chantier'}</p>
+</div>{displayedRole !== 'Employé' && <button>
 <Plus /> Nouveau job</button>}</div>
 <div className="job-body">
 <div className="job-badge">214</div>
@@ -1134,9 +1151,9 @@ export default function Home() {
 <p>Plans, commandes, photos et historique réunis au même endroit.</p>
 <div className="job-actions">
 <button>
-<FileText /> Plan architecture.pdf</button>{role !== 'Employé' && <button>
+<FileText /> Plan architecture.pdf</button>{displayedRole !== 'Employé' && <button>
 <Paperclip /> Déposer un plan</button>}</div>
-</div>{role !== 'Employé' && <div className="hours">
+</div>{displayedRole !== 'Employé' && <div className="hours">
 <span>HEURES PROJET</span>
 <b>213 / 410 h</b>
 <div>
@@ -1145,7 +1162,7 @@ export default function Home() {
 <small>197 h restantes · 52%</small>
 </div>}</div>
 </article>
-          {(role === 'Boss' || role === 'Adjointe') && <article className="panel supplier-card" id="suppliers">
+          {(displayedRole === 'Boss' || displayedRole === 'Adjointe') && <article className="panel supplier-card" id="suppliers">
 <div className="panel-head">
 <div>
 <h2>Commande fournisseur</h2>
@@ -1173,7 +1190,7 @@ export default function Home() {
 <div className="panel-head">
 <div>
 <h2>Discussion · JOB-214</h2>
-<p>{role === 'Chef' ? 'Fred, Simon et Ester' : 'Simon, Ester et Fred'}</p>
+<p>{displayedRole === 'Chef' ? 'Fred, Simon et Ester' : 'Simon, Ester et Fred'}</p>
 </div>
 <span className="private-pill">PRIVÉE</span>
 </div>
@@ -1184,7 +1201,7 @@ export default function Home() {
 <span>09:42</span>
 </div>
 <div className="mine">
-<b>{role === 'Chef' ? 'FRED' : role.toUpperCase()}</b>
+<b>{displayedRole === 'Chef' ? 'FRED' : role.toUpperCase()}</b>
 <p>Parfait. Il faut livrer directement au chantier dans 2 jours.</p>
 <span>09:44 · Lu</span>
 </div>
@@ -1314,7 +1331,7 @@ export default function Home() {
 </div>
 <button type="submit">
 <Send /> Envoyer la déclaration</button>
-</form>}{role === 'Chef' && accidentSubmitted && <div className={`accident-approval ${accidentApproved ? 'approved' : ''}`}>
+</form>}{displayedRole === 'Chef' && accidentSubmitted && <div className={`accident-approval ${accidentApproved ? 'approved' : ''}`}>
 <ShieldCheck />
 <div>
 <b>{accidentApproved ? 'Accident confirmé par le chef' : 'Déclaration à confirmer'}</b>
@@ -1385,7 +1402,7 @@ export default function Home() {
 </label>
 </div>
       <div className="preset-title">
-<span>ARTICLES RAPIDES · {orderCategory.toUpperCase()}</span>{role === 'Adjointe' && <button type="button" onClick={() => { const name = window.prompt('Nom du nouveau choix'); if (name?.trim()) {
+<span>ARTICLES RAPIDES · {orderCategory.toUpperCase()}</span>{displayedRole === 'Adjointe' && <button type="button" onClick={() => { const name = window.prompt('Nom du nouveau choix'); if (name?.trim()) {
             setPresetSets((sets) => ({ ...sets, [orderCategory]: [...sets[orderCategory], name.trim()] }));
             setSelectedPreset(name.trim());
         } }}>
@@ -1394,7 +1411,7 @@ export default function Home() {
             return; setPresetSets((sets) => { const list = [...sets[orderCategory]]; const from = list.indexOf(draggedPreset); const to = list.indexOf(item); if (from < 0 || to < 0)
             return sets; list.splice(to, 0, list.splice(from, 1)[0]); return { ...sets, [orderCategory]: list }; }); setDraggedPreset(null); }}>
 <button className={selectedPreset === item ? 'selected' : ''} type="button" onClick={() => setSelectedPreset(item)}>
-<span className="drag-handle">↕</span>{item}</button>{role === 'Adjointe' && <span className="preset-admin">
+<span className="drag-handle">↕</span>{item}</button>{displayedRole === 'Adjointe' && <span className="preset-admin">
 <button type="button" aria-label={`Modifier ${item}`} onClick={() => { const name = window.prompt('Modifier ce choix', item); if (!name?.trim())
             return; setPresetSets((sets) => ({ ...sets, [orderCategory]: sets[orderCategory].map((choice) => choice === item ? name.trim() : choice) })); if (selectedPreset === item)
             setSelectedPreset(name.trim()); }}>✎</button>

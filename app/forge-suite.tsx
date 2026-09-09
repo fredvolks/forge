@@ -1,4 +1,5 @@
 'use client';
+import { TimeNotifications } from './time-admin';
 
 
 import { useMemo, useState } from 'react';
@@ -48,7 +49,7 @@ return <div className="suite-page delivery-report">
 <Download/> Exporter CSV</button>}/>
 <div className="suite-metrics">{[[Truck,'Livraisons',filtered.length],[PackageCheck,'Articles embarqués',items],[Check,'Livraisons complètes',complete],[Clock3,'Livraisons partielles',partial],[FileText,'Bons concernés',bons]].map(([Icon,label,value])=>
 <article key={String(label)}>
-<Icon/>
+{(() => { const MetricIcon=Icon as React.ElementType; return <MetricIcon/> })()}
 <span>{label as string}</span>
 <b>{Number(value).toLocaleString('fr-CA')}</b>
 </article>)}</div>
@@ -114,8 +115,8 @@ return <div className="suite-page delivery-report">
 
 const notices=[{id:1,type:'Commandes',title:'Nouvelle commande reçue',detail:'Fred · JOB-214 · BC-2026-0841 · 6 articles',time:'Il y a 3 min',unread:true,route:'commands/received'},{id:2,type:'Dépenses',title:'Nouvelle dépense à vérifier',detail:'Fred · JOB-214 · Canac · 184,37 $',time:'Il y a 5 min',unread:true,route:'purchases'},{id:3,type:'Punchs',title:'Punch hors rayon',detail:'Marco · JOB-315 · 1,4 km · justification reçue',time:'08:12',unread:true,route:'teams/punches'},{id:4,type:'Jobs',title:'Photo Problème / À signaler',detail:'Alex · JOB-214 · infiltration près de la fenêtre',time:'Hier',unread:false,route:'jobs/j214/photos'}];
 
-export function NotificationCenter({go,close}:{go:(route:string)=>void;
-close:()=>void}){const [items,setItems]=useState(notices),[filter,setFilter]=useState('Toutes');
+export function NotificationCenter({go,close,actor}:{go:(route:string)=>void;
+close:()=>void;actor:ForgeSession}){const [items,setItems]=useState(notices),[filter,setFilter]=useState('Toutes');
 const shown=items.filter(n=>filter==='Toutes'||filter==='À traiter'?filter==='Toutes'||n.unread:n.type===filter);
 return <aside className="notice-center">
 <header>
@@ -134,7 +135,7 @@ return <aside className="notice-center">
 <button className={filter===v?'active':''} onClick={()=>setFilter(v)} key={v}>{v}</button>)}</nav>
 <button className="mark-all" onClick={()=>setItems(items.map(n=>({...n,unread:false})))}>
 <Check/> Tout marquer comme lu</button>
-<section>{shown.map(n=>
+<TimeNotifications actor={actor} onOpen={close}/><section>{shown.map(n=>
 <button className={n.unread?'unread':''} key={n.id} onClick={()=>{setItems(items.map(x=>x.id===n.id?{...x,unread:false}:x));
 go(n.route);
 close()}}>
@@ -264,7 +265,7 @@ return <div className="suite-page">
 <Download/> Exporter CSV</button>}/>
 <div className="suite-metrics">{[[Receipt,'À vérifier',expenses.filter(e=>e[5]==='À vérifier').length],[Clock3,'À rembourser',expenses.filter(e=>e[6]==='À rembourser').length],[Check,'Approuvées',expenses.filter(e=>e[5]==='Approuvée').length],[PackageCheck,'Remboursé ce mois','4 820 $']].map(([Icon,l,v])=>
 <article key={String(l)} onClick={()=>setFilter(String(l).replace('Approuvées','Approuvée'))}>
-<Icon/>
+{(() => { const MetricIcon=Icon as React.ElementType; return <MetricIcon/> })()}
 <span>{String(l)}</span>
 <b>{String(v)}</b>
 </article>)}</div>
@@ -346,7 +347,7 @@ return <div className="suite-page">
 <Download/> Exporter CSV</button>}/>
 <div className="suite-metrics">{[[Clock3,'Punchés maintenant',6],[Check,'Modifications à approuver',3],[Filter,'Hors rayon',1],[Bell,'Punchs incomplets',1]].map(([Icon,l,v])=>
 <article onClick={()=>setAnomaly(String(l).replace('Punchs incomplets','Punch incomplet'))} key={String(l)}>
-<Icon/>
+{(() => { const MetricIcon=Icon as React.ElementType; return <MetricIcon/> })()}
 <span>{String(l)}</span>
 <b>{String(v)}</b>
 </article>)}</div>
