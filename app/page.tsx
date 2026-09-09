@@ -59,6 +59,7 @@ export default function Home() {
     const [session, setSession] = useState<ForgeSession | null>(null);
     const [accessReady, setAccessReady] = useState(false);
     const [punched, setPunched] = useState(false);
+    const [punchStartedAt, setPunchStartedAt] = useState<number | null>(null);
     const [toastText, setToastText] = useState('Demande envoyée');
     const [selectedJob, setSelectedJob] = useState('JOB-214');
     const [activeJob, setActiveJob] = useState('JOB-214');
@@ -312,7 +313,7 @@ export default function Home() {
 </div>
 </header>
       <div className={`content ${fieldView !== 'work' ? 'field-page-active' : `work-focus work-${workTarget}`}`}>
-        {fieldView !== 'work' && <FieldWorkspace view={fieldView} session={session} role={role as 'Chef'|'Employé'} navigate={navigateField}/>}
+        {fieldView !== 'work' && <FieldWorkspace view={fieldView} session={session} role={role as 'Chef'|'Employé'} navigate={navigateField} punch={{punched,selectedJob,activeJob,startedAt:punchStartedAt,onToggle:()=>{if(punched){setPunched(false);setPunchStartedAt(null);setToastText('Punch terminé');}else{setActiveJob(selectedJob);setPunched(true);setPunchStartedAt(Date.now());setToastText(`Punch démarré sur ${selectedJob}`);}setToast(true);window.setTimeout(()=>setToast(false),3200)},onChangeJob:setSelectedJob}}/>}
         <div className="welcome">
 <div>
 <p>FORGE · LES REVÊTEMENTS MIR · VUE {role.toUpperCase()}</p>
