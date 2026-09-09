@@ -12,6 +12,12 @@
 .punch-v5 .new-punch-status h2{font-size:20px;margin:8px 0 2px}
 .punch-v5 .new-punch-status small{display:block;margin-top:8px;color:var(--pv-accent)}
 .punch-v5 .new-job-picker select{height:50px}
+.punch-v5 .new-punch-navigation{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.punch-v5 .new-punch-navigation a{min-width:0;min-height:52px;padding:10px 13px;border:1px solid var(--pv-line);border-radius:11px;background:var(--pv-card);color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:10px}
+.punch-v5 .new-punch-navigation a:first-child span{min-width:0;flex:1;overflow-wrap:anywhere}
+.punch-v5 .new-punch-navigation a b{font-size:11px;color:var(--pv-accent);white-space:nowrap}
+.punch-v5 .new-punch-navigation a:last-child{color:var(--pv-accent);font-weight:900}
+.punch-v5 .new-punch-navigation svg{width:21px;flex:0 0 auto;color:var(--pv-accent)}
 .punch-v5 .new-punch-address,.punch-v5 .new-job-folder{min-height:52px}
 .punch-v5 .new-punch-action{min-height:58px}
 .punch-v5 .new-punch-side>section{min-width:0;min-height:170px;padding:17px}
@@ -25,4 +31,4 @@
 .punch-v5 .new-punch-footer{border-color:var(--pv-line);background:linear-gradient(135deg,#172019,#111613);padding:16px 18px}
 .punch-v5 .new-punch-footer button{min-height:44px;padding:8px 12px;border:1px solid color-mix(in srgb,var(--pv-accent) 45%,transparent);border-radius:10px}
 .punch-v5 .new-punch-footer p{max-width:430px;line-height:1.45}
-@media(max-width:580px){.punch-v5 .new-punch-side{grid-template-columns:1fr 1fr}.punch-v5 .new-punch-side>section{height:245px;min-height:0;overflow:hidden}.punch-v5 .new-punch-side>section:first-child>div{max-height:105px;overflow:auto}.punch-v5 .new-punch-footer{display:grid;gap:8px}.punch-v5 .new-punch-footer button{width:100%}.punch-v5 .new-punch-footer p{font-size:12px}}
+@media(max-width:580px){.punch-v5 .new-punch-navigation{grid-template-columns:1fr}.punch-v5 .new-punch-navigation a:last-child{justify-content:center}.punch-v5 .new-punch-side{grid-template-columns:1fr 1fr}.punch-v5 .new-punch-side>section{height:245px;min-height:0;overflow:hidden}.punch-v5 .new-punch-side>section:first-child>div{max-height:105px;overflow:auto}.punch-v5 .new-punch-footer{display:grid;gap:8px}.punch-v5 .new-punch-footer button{width:100%}.punch-v5 .new-punch-footer p{font-size:12px}}
