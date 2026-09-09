@@ -223,7 +223,7 @@ export default function Home() {
         window.location.hash = `field/${destination}`;
         window.scrollTo({top:0,behavior:'smooth'});
     };
-    return <main className={`app-shell ${isFieldRole ? 'field-mobile' : ''} role-${displayedRole.toLowerCase().replace('é', 'e')}`}>
+    return <main className={`app-shell ${isFieldRole ? 'field-mobile' : ''} ${fieldView==='hours'?'hours-active':''} role-${displayedRole.toLowerCase().replace('é', 'e')}`}>
     <aside className={`sidebar ${mobileNav ? 'open' : ''}`}>
       <div className="brand">
 <div className="brand-mark">
