@@ -10,6 +10,7 @@ import { AdminPortal } from './admin-portal';
 import { applyAppearance, getBranding, getUserAppearance, resolveLogo, type ForgeThemeId } from './forge-branding';
 import { FieldWorkspace, type FieldView } from './field-workspace';
 import { PunchPreview } from './punch-preview';
+import { ForgeMessages } from './forge-messages';
 import { MobileShellHeader } from './mobile-shell-header';
 import { useTimeData } from './use-time-data';
 import { changeTimeDemo } from '../lib/time-demo';
@@ -1211,33 +1212,7 @@ export default function Home() {
 <small>Délai demandé : 2 jours · Livraison au chantier</small>
 </div>
 </article>}
-          <article className="panel chat-card" id="messages">
-<div className="panel-head">
-<div>
-<h2>Discussion · JOB-214</h2>
-<p>{displayedRole === 'Chef' ? 'Fred, Simon et Ester' : 'Simon, Ester et Fred'}</p>
-</div>
-<span className="private-pill">PRIVÉE</span>
-</div>
-<div className="chat-body">
-<div>
-<b>ESTER</b>
-<p>J’ai reçu tes photos. Je les joins à la commande Breton.</p>
-<span>09:42</span>
-</div>
-<div className="mine">
-<b>{displayedRole === 'Chef' ? 'FRED' : role.toUpperCase()}</b>
-<p>Parfait. Il faut livrer directement au chantier dans 2 jours.</p>
-<span>09:44 · Lu</span>
-</div>
-<form onSubmit={(e) => e.preventDefault()}>
-<input placeholder="Écrire dans cette discussion…"/>
-<button aria-label="Envoyer">
-<Send />
-</button>
-</form>
-</div>
-</article>
+          {activeSession&&<ForgeMessages key={activeSession.companyId+activeSession.email} session={activeSession} jobs={timeData?.jobs||[]} onJob={number=>{setSelectedJob(number);navigateField('project')}}/>}
         </section>
         {isFieldRole && <section className="field-resources compact-resources">
 <button className="documentation-toggle" onClick={() => setDocumentationOpen(open => !open)}><FileText /><span><b>Documentation importante</b><small>Guides d’installation, GCR et Code du bâtiment</small></span><ChevronRight className={documentationOpen ? 'open' : ''} /></button>

@@ -193,6 +193,13 @@
 .job-shortcut-picker header{display:flex;align-items:center;justify-content:space-between;gap:8px}.job-shortcut-picker h2{font-size:18px;margin:0}.job-shortcut-picker p{font-size:13px}.job-shortcut-picker>div{overflow-y:auto;min-height:0}.job-shortcut-picker button{display:flex;align-items:center;gap:10px;min-height:44px;background:transparent;color:inherit;border:0}.job-shortcut-picker>div>button{width:100%;border-bottom:1px solid #314339;text-align:left}.job-shortcut-picker svg{width:20px;flex-shrink:0}.job-shortcut-picker>div>button svg:last-child{margin-left:auto}
 @media(max-width:760px){.demo-device-stage.device-mobile .workspace{padding-top:env(safe-area-inset-top,0px)!important}.demo-device-stage.device-mobile .mobile-bottom-nav{padding-bottom:max(14px,env(safe-area-inset-bottom,0px))!important}}
 
+/* One continuous background across the device, including the safe areas. */
+.demo-device-stage:not(.device-desktop) .workspace,
+.demo-device-stage:not(.device-desktop) .workspace>.shared-mobile-head,
+.demo-device-stage:not(.device-desktop) .workspace>.content,
+.demo-device-stage:not(.device-desktop) .mobile-bottom-nav{background:#0b100d!important}
+.projects-overview>header>h1{font-family:"Segoe UI Variable","Segoe UI",system-ui,sans-serif!important;font-weight:500!important;font-size:26px;line-height:1.2;letter-spacing:-.025em;text-shadow:none;-webkit-text-stroke:0}
+
 /* Shared mobile content window: match the validated Punch breathing room.
    Keep margins outside the scrolling surface so content never covers them. */
 .demo-device-stage.device-mobile{--field-content-inset:28px}
