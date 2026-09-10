@@ -72,5 +72,52 @@
 .demo-device-stage.device-desktop .workspace{width:min(1440px,calc((100dvh - 24px)*1.6),calc(100vw - var(--demo-rail) - 70px))!important;height:auto!important;aspect-ratio:16/10!important;margin:0 auto!important;border:8px solid #090a0a!important;border-radius:20px!important;box-shadow:0 0 0 2px #4f5853,0 28px 90px #000b!important}
 .demo-device-stage.device-desktop .sidebar{left:calc(var(--demo-rail) + 24px)!important;top:12px!important;bottom:12px!important;border-radius:18px 0 0 18px}
 
+/* One fixed screen contract for every field route. Long content has explicit pages. */
+.shared-mobile-head,.fixed-screen-pagination,.shell-notifications{display:none}
+.demo-device-stage:not(.device-desktop) .workspace{overflow:hidden!important;display:flex!important;flex-direction:column;background:#0b100d!important;color:#eef5f0}
+.demo-device-stage:not(.device-desktop) .workspace>.content{flex:1;min-height:0!important;height:auto!important;overflow:hidden!important;padding:10px 16px 0!important;margin:0 0 94px!important}
+.demo-device-stage:not(.device-desktop) .workspace:has(.fixed-screen-pagination:not([hidden]))>.content{margin-bottom:138px!important}
+.demo-device-stage:not(.device-desktop) .content .field-mobile-head{display:none!important}
+.demo-device-stage:not(.device-desktop) .workspace>.shared-mobile-head{display:flex!important;flex:0 0 64px;height:64px!important;margin:0!important;padding:0 18px!important;background:#0f1412;border-radius:0}
+.demo-device-stage:not(.device-desktop) .field-workspace:has(.field-greeting),.demo-device-stage:not(.device-desktop) .punch-redesign{height:auto!important;min-height:0!important;overflow:visible!important}
+.demo-device-stage:not(.device-desktop) .fixed-screen-pagination:not([hidden]){display:flex;position:absolute;z-index:45;left:16px;right:16px;bottom:94px;height:40px;align-items:center;justify-content:space-between;background:#0f1412;border:1px solid #334038;border-radius:10px}
+.fixed-screen-pagination button{display:flex;align-items:center;justify-content:center;gap:3px;min-height:38px;padding:0 8px;background:none;border:0;color:var(--accent);font-size:12px}
+.fixed-screen-pagination button:disabled{opacity:.35}.fixed-screen-pagination svg{width:16px}.fixed-screen-pagination span{color:var(--ink);font-size:12px}
+.demo-device-stage:not(.device-desktop) .shell-notifications{display:block;position:absolute;top:110px;right:12px;left:12px;z-index:99;background:#151d18;padding:18px;border:1px solid #334038;border-radius:14px;color:var(--ink)}
+.shell-notifications p{font-size:14px}.shell-notifications button{padding:8px 14px;border-radius:8px;background:var(--accent);color:#071006}
+.demo-device-stage.device-mobile .workspace{padding-top:40px!important}
+.demo-device-stage.device-mobile .workspace:before{position:absolute;top:0;margin:0;left:50%;transform:translateX(-50%)}
+.demo-device-stage.device-mobile .workspace:after{position:absolute;bottom:7px;margin:0;left:50%;transform:translateX(-50%)}
+.demo-device-stage:not(.device-desktop) .workspace>.content{background:#0b100d!important}
+.demo-device-stage.device-mobile .new-punch-layout{gap:8px!important}
+.demo-device-stage.device-mobile .new-punch-main{gap:7px!important}
+.demo-device-stage.device-mobile .new-punch-status{min-height:74px!important;padding:10px 13px!important}
+.demo-device-stage.device-mobile .new-punch-side>section{padding:10px!important;min-height:0!important}
+.demo-device-stage.device-mobile .new-punch-footer{margin-top:6px!important;padding:7px 10px!important}
+.demo-device-stage.device-mobile .new-punch-footer p{font-size:10px!important;line-height:1.3!important;margin:5px 0 0!important}
+.demo-device-stage.device-mobile .new-punch-footer button{min-height:30px!important}
+.demo-device-stage.device-mobile .new-punch-title{margin-bottom:8px!important}
+.demo-device-stage.device-mobile .punch-module{margin-bottom:0!important}
+.demo-device-stage.device-mobile .new-punch-title{height:28px!important}
+.demo-device-stage.device-mobile .new-punch-side>section{min-height:0!important}
+.demo-device-stage.device-mobile .new-punch-side>section>small{margin:2px 0!important}
+.demo-device-stage.device-mobile .new-punch-side>section>b{font-size:22px!important;margin:4px 0!important}
+.demo-device-stage.device-mobile .new-timeline p{margin:4px 0!important;padding:0!important;font-size:11px!important}
+.demo-device-stage.device-mobile .new-punch-footer{display:block!important;min-height:0!important}
+.demo-device-stage.device-mobile .new-punch-footer p{display:block!important}
+.demo-device-stage.device-mobile .new-punch-footer button{height:28px!important;padding:0!important;margin:0!important}
+.demo-device-stage.device-mobile .new-punch-footer p{padding:0!important;margin:2px 0 0!important}
+.demo-device-stage.device-mobile .new-punch-footer p svg{width:12px!important;height:12px!important;vertical-align:middle}
+.demo-device-stage.device-mobile .new-punch-side>section{padding:7px 10px!important}
+.demo-device-stage.device-mobile .new-punch-side>section>div{margin-top:4px!important}
+.demo-device-stage.device-mobile .new-punch-main{gap:4px!important}
+.demo-device-stage.device-mobile .new-punch-status{min-height:64px!important}
+.demo-device-stage.device-mobile .new-punch-status{padding:8px 12px!important}
+.demo-device-stage.device-mobile .new-punch-title{margin-bottom:4px!important}
+.demo-device-stage:is(.device-tablet-portrait,.device-tablet-landscape){--tablet-width:768px;--tablet-height:1024px}
+.demo-device-stage.device-tablet-landscape{--tablet-width:1024px;--tablet-height:768px}
+.demo-device-stage:is(.device-tablet-portrait,.device-tablet-landscape) .workspace{position:absolute!important;left:calc(50% + var(--demo-rail)/2 + 12px)!important;top:50%!important;width:var(--tablet-width)!important;height:var(--tablet-height)!important;aspect-ratio:auto!important;transform:translate(-50%,-50%) scale(var(--tablet-scale, .65));transform-origin:center!important;padding-top:20px!important}
+.demo-device-stage:is(.device-tablet-portrait,.device-tablet-landscape) .mobile-bottom-nav{width:calc(var(--tablet-width) - 26px)!important;bottom:calc((100dvh - var(--tablet-height)*var(--tablet-scale, .65))/2 + 13px*var(--tablet-scale, .65))!important;transform:translateX(-50%) scale(var(--tablet-scale, .65))!important;transform-origin:bottom center!important}
+
 /* On a physically small screen, Forge itself fills the screen; demo controls stay out of its header. */
 @media(max-width:760px){.demo-device-stage{--demo-rail:0px;padding:0!important}.demo-preview-controls{display:none}.demo-device-stage.device-mobile .workspace{position:relative!important;left:auto!important;top:auto!important;width:100vw!important;height:100dvh!important;transform:none!important;border:0!important;border-radius:0!important;padding:0!important}.demo-device-stage.device-mobile .workspace:before,.demo-device-stage.device-mobile .workspace:after{display:none}.demo-device-stage.device-mobile .mobile-bottom-nav{left:50%!important;width:100%!important;bottom:0!important;transform:translateX(-50%)!important;border-radius:0!important}}

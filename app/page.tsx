@@ -10,6 +10,7 @@ import { AdminPortal } from './admin-portal';
 import { applyAppearance, getBranding, getUserAppearance, resolveLogo, type ForgeThemeId } from './forge-branding';
 import { FieldWorkspace, type FieldView } from './field-workspace';
 import { PunchPreview } from './punch-preview';
+import { MobileShellHeader } from './mobile-shell-header';
 import { useTimeData } from './use-time-data';
 import { changeTimeDemo } from '../lib/time-demo';
 import { dateKey, duration, employeeId, punch, totals } from '../lib/time-domain';
@@ -312,6 +313,7 @@ export default function Home() {
     </aside>
     {mobileNav && <button className="nav-scrim" aria-label="Fermer" onClick={() => setMobileNav(false)}/>}
     <section className="workspace" id="dashboard">
+      {isFieldRole && <MobileShellHeader logoSrc={logoSrc} userName={activeSession!.userName} companyId={activeSession!.companyId} email={activeSession!.email} onSettings={()=>navigateField('settings')} routeKey={`${fieldView}:${workTarget}:${devicePreview}`}/>}
       <header className="topbar">
 <button className="menu-btn" onClick={() => setMobileNav(true)} aria-label="Ouvrir le menu">
 <Menu />
@@ -399,7 +401,7 @@ export default function Home() {
         else {
             setSelectedJob(value);
         } }}>
-<option value="JOB-214">★ SUGGÉRÉ · JOB-214 — Breton · 86 m</option>
+<option value="JOB-214">JOB-214 — Breton · 86 m</option>
 <option value="JOB-315">JOB-315 — Leduc</option>
 <option value="JOB-418">JOB-418 — Bélanger</option>{temporaryJobs.map((job) => <option key={job} value={job}>{job} — {temporaryJobNames[job] || 'Chantier temporaire'}{job !== 'TEMP-009' ? ' · Non approuvé' : ''}</option>)}{displayedRole === 'Chef' && <option value="CREATE_TEMP">＋ Créer un chantier temporaire</option>}</select>{displayedRole === 'Chef' && selectedJob.startsWith('TEMP-') && <button type="button" className="rename-temp-job" onClick={(e) => { e.preventDefault(); const name = window.prompt('Nouveau nom du chantier temporaire', temporaryJobNames[selectedJob] || 'Chantier temporaire'); if (name?.trim()) {
             setTemporaryJobNames((names) => ({ ...names, [selectedJob]: name.trim() }));
