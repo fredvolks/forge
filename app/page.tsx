@@ -72,9 +72,12 @@ export default function Home() {
     const punchStartedAt = activeSegment ? Date.parse(activeSegment.start_time) : null;
     const activeJob = timeData?.jobs.find(j=>j.id===activeSegment?.job_id)?.number || 'JOB-214';
     const ownSegments = timeData?.segments.filter(s=>activeSession&&s.employee_id===employeeId(activeSession))||[];
-    const timeTotals = timeData ? totals(ownSegments,timeData.settings) : null;
+    const [punchClock,setPunchClock] = useState(()=>Date.now());
+    useEffect(()=>{setPunchClock(Date.now());if(!punched)return;const interval=window.setInterval(()=>setPunchClock(Date.now()),1000);return()=>window.clearInterval(interval)},[punched]);
+    const timeTotals = timeData ? totals(ownSegments,timeData.settings,punchClock) : null;
     const todaySegments = timeData ? ownSegments.filter(s=>dateKey(s.start_time,timeData.settings.timezone)===dateKey(new Date(),timeData.settings.timezone)) : [];
-    const todayMinutes = todaySegments.reduce((n,s)=>n+(timeTotals?.byId[s.id]?.payable||0),0);
+    const todaySeconds = todaySegments.reduce((n,s)=>n+Math.max(0,Math.floor(((s.end_time?Date.parse(s.end_time):punchClock)-Date.parse(s.start_time))/1000)-(timeTotals?.byId[s.id]?.deduction||0)*60),0);
+    const todayPunchLabel = `${Math.floor(todaySeconds/3600)}:${String(Math.floor(todaySeconds/60)%60).padStart(2,'0')}:${String(todaySeconds%60).padStart(2,'0')}`;
     const togglePunch = async (action:'toggle'|'switch'='toggle') => {
       if(!activeSession||!timeData)return;
       try {const job=timeData.jobs.find(j=>j.number===selectedJob);if(!job)throw Error('Choisissez une Job assignée.');await changeTimeDemo(activeSession,d=>punch(d,activeSession,job.id,action));setToastText(action==='switch'?'Job changée':punched?'Punch terminé':'Punch démarré');}
@@ -197,7 +200,7 @@ export default function Home() {
     }>; const dynamic = loadDynamicCatalog(session.companyId); setDynamicCatalog(dynamic); setPresetSets(current => { const next = { ...current }; (['Matériaux', 'Outils', 'Pliage'] as const).forEach(category => { const names = [...products.filter(p => p.active && p.category === category).map(p => p.name), ...dynamic.filter(p => p.active && p.category === category).map(p => p.name)]; if (names.length)
         next[category] = [...new Set(names)]; }); return next; }); }; sync(); window.addEventListener('forge-catalog-updated', sync); return () => window.removeEventListener('forge-catalog-updated', sync); }, [session]);
     useEffect(() => { if(!session)return; const sync=()=>{const appearance=getUserAppearance(session.companyId,session.email,(session.theme as ForgeThemeId)||'forge');applyAppearance(appearance);setLogoSrc(resolveLogo(getBranding(session.companyId),document.documentElement.dataset.mode==='light'?'light':'dark'))};sync();window.addEventListener('forge-appearance-updated',sync);window.addEventListener('forge-branding-updated',sync);return()=>{window.removeEventListener('forge-appearance-updated',sync);window.removeEventListener('forge-branding-updated',sync)} }, [session]);
-    useEffect(() => { const sync=()=>{const hash=window.location.hash.replace('#field/','').split('/')[0];const fieldPages:FieldView[]=['home','projects','project','menu','profile','hours','absences','emergency','documents','incidents','documentation','settings'];if(fieldPages.includes(hash as FieldView))setFieldView(hash as FieldView)};sync();window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync)}, []);
+    useEffect(() => { const sync=()=>{const hash=window.location.hash.replace('#field/','').split('/')[0];const fieldPages:FieldView[]=['home','projects','project','project-sections','project-info','project-plans','project-photos','project-architect','project-special','menu','profile','hours','absences','emergency','documents','incidents','documentation','settings'];if(fieldPages.includes(hash as FieldView))setFieldView(hash as FieldView)};sync();window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync)}, []);
     if (!accessReady)
         return <div className="forge-loading">FORGE</div>;
     if (!session)
@@ -369,7 +372,7 @@ export default function Home() {
 </div>
 </div>
         {(displayedRole === 'Employé' || displayedRole === 'Chef') && <section className="punch-module" id="punch">
-          <PunchPreview activeJob={activeJob} todayLabel={duration(todayMinutes)} todaySegments={todaySegments.map(s=>({id:s.id,job:timeData?.jobs.find(j=>j.id===s.job_id)?.number||s.job_id,start:s.start_time,end:s.end_time}))} onSwitch={()=>void togglePunch('switch')} role={displayedRole} punched={punched} selectedJob={selectedJob} startedAt={punchStartedAt} onJob={setSelectedJob} onOpenJob={()=>navigateField('project')} onHours={()=>navigateField('hours')} onToggle={()=>void togglePunch()} logoSrc={logoSrc} userName={activeSession!.userName} companyId={activeSession!.companyId} email={activeSession!.email} onSettings={()=>navigateField('settings')}/>
+          <PunchPreview activeJob={activeJob} todayLabel={todayPunchLabel} todaySegments={todaySegments.map(s=>({id:s.id,job:timeData?.jobs.find(j=>j.id===s.job_id)?.number||s.job_id,start:s.start_time,end:s.end_time}))} onSwitch={()=>void togglePunch('switch')} role={displayedRole} punched={punched} selectedJob={selectedJob} startedAt={punchStartedAt} onJob={setSelectedJob} onOpenJob={()=>navigateField('project')} onHours={()=>navigateField('hours')} onToggle={()=>void togglePunch()} logoSrc={logoSrc} userName={activeSession!.userName} companyId={activeSession!.companyId} email={activeSession!.email} onSettings={()=>navigateField('settings')}/>
           {false && switchingJob && <div className="job-switch-card">
 <button className="switch-back" onClick={() => { setSelectedJob(activeJob); setJobSwitchPending(false); }} aria-label="Annuler le changement de job">
 <ArrowLeft />

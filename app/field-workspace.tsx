@@ -6,8 +6,9 @@ import { MyHours } from './my-hours';
 import { TimeNotifications } from './time-admin';
 import { PersonalSettings } from './forge-suite';
 import { ProjectsOverview, JobHero, type FieldJob } from './project-overview';
+import { JobShortcuts } from './job-shortcuts';
 
-export type FieldView='home'|'projects'|'project'|'project-info'|'project-plans'|'project-photos'|'project-architect'|'project-special'|'menu'|'profile'|'hours'|'absences'|'emergency'|'documents'|'incidents'|'documentation'|'settings';
+export type FieldView='home'|'projects'|'project'|'project-sections'|'project-info'|'project-plans'|'project-photos'|'project-architect'|'project-special'|'menu'|'profile'|'hours'|'absences'|'emergency'|'documents'|'incidents'|'documentation'|'settings';
 type Navigate=(view:FieldView|'punch'|'orders'|'messages'|'purchases')=>void;
 export type FieldPunchState={punched:boolean;selectedJob:string;activeJob:string;startedAt:number|null;onToggle:()=>void;onChangeJob:(jobId:string)=>void};
 type Absence={absence_request_id:string;company_id:string;employee_id:string;type:string;start_date:string;end_date:string;full_day:boolean;note:string;status:'pending'|'reported'|'approved'|'rejected'|'cancelled';created_at:string};
@@ -35,7 +36,8 @@ export function FieldWorkspace({view,session,role,navigate,punch,logoSrc,jobs=[]
   <header className="field-mobile-head"><img className="field-company-logo" src={logoSrc} alt={session.companyName}/><div><button aria-label="Notifications"><Bell/><i>3</i></button><button className="field-account-avatar" onClick={()=>navigate('settings')} aria-label="Ouvrir les paramètres du compte">{profilePhoto?<img src={profilePhoto} alt="Photo de profil"/>:<span>{session.userName.slice(0,2).toUpperCase()}</span>}</button></div></header>
   {view==='home'&&<HomeView session={session} role={role} navigate={navigate} request={setDialog} punch={punch}/>}
   {view==='projects'&&<ProjectsOverview jobs={allowedJobs} activeJob={punch.activeJob} onOpen={job=>{setOpenedJob(job.id);navigate('project')}}/>}
-  {view==='project'&&dossierJob&&<><JobHero job={dossierJob} onBack={()=>navigate('projects')}/>{dossierJob.number==='JOB-214'?<ProjectView navigate={navigate} incidents={incidents}/>:<p className="job-empty-note">Consultez les informations de cette Job ci-dessus. Aucun document de démonstration n’est disponible pour ce dossier.</p>}</>}
+  {view==='project'&&dossierJob&&<><JobHero job={dossierJob} onBack={()=>navigate('projects')}/><JobShortcuts key={dossierJob.id+session.email} storageKey={key(session.companyId,`job-shortcuts:${session.email}:${dossierJob.id}`)} onNavigate={dest=>navigate(dossierJob.number==='JOB-214'?dest:'project-sections')}/><button className="job-all-sections" onClick={()=>navigate('project-sections')}>Informations et autres sections <ChevronRight/></button></>}
+  {view==='project-sections'&&dossierJob&&<><button className="field-back" onClick={()=>navigate('project')}><ArrowLeft/> Retour au résumé de {dossierJob.number}</button>{dossierJob.number==='JOB-214'?<ProjectView navigate={navigate} incidents={incidents}/>:<p className="job-empty-note">Aucun document de démonstration n’est disponible pour ce dossier.</p>}</>}
   {view==='project-info'&&<JobInfoView navigate={navigate}/>}
   {view==='project-plans'&&<JobPlansView navigate={navigate}/>}
   {view==='project-photos'&&<JobPhotosView navigate={navigate}/>}
