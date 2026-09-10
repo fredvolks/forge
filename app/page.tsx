@@ -367,7 +367,7 @@ export default function Home() {
 </div>
 </div>
         {(displayedRole === 'Employé' || displayedRole === 'Chef') && <section className="punch-module" id="punch">
-          <PunchPreview activeJob={activeJob} todayLabel={duration(todayMinutes)} todaySegments={todaySegments.map(s=>({id:s.id,job:timeData?.jobs.find(j=>j.id===s.job_id)?.number||s.job_id,start:s.start_time,end:s.end_time}))} onSwitch={()=>void togglePunch('switch')} role={displayedRole} punched={punched} selectedJob={selectedJob} startedAt={punchStartedAt} onJob={setSelectedJob} onOpenJob={()=>navigateField('project')} onHours={()=>navigateField('hours')} onToggle={()=>void togglePunch()}/>
+          <PunchPreview activeJob={activeJob} todayLabel={duration(todayMinutes)} todaySegments={todaySegments.map(s=>({id:s.id,job:timeData?.jobs.find(j=>j.id===s.job_id)?.number||s.job_id,start:s.start_time,end:s.end_time}))} onSwitch={()=>void togglePunch('switch')} role={displayedRole} punched={punched} selectedJob={selectedJob} startedAt={punchStartedAt} onJob={setSelectedJob} onOpenJob={()=>navigateField('project')} onHours={()=>navigateField('hours')} onToggle={()=>void togglePunch()} logoSrc={logoSrc} userName={activeSession!.userName} companyId={activeSession!.companyId} email={activeSession!.email} onSettings={()=>navigateField('settings')}/>
           {false && switchingJob && <div className="job-switch-card">
 <button className="switch-back" onClick={() => { setSelectedJob(activeJob); setJobSwitchPending(false); }} aria-label="Annuler le changement de job">
 <ArrowLeft />

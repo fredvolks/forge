@@ -1,20 +1,21 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { ArrowRight, Check, ChevronRight, Clipboard, Clock3, Folder, MapPin, Navigation, X } from 'lucide-react';
+import { ArrowRight, Bell, Check, ChevronRight, Clipboard, Clock3, Folder, MapPin, Navigation, X } from 'lucide-react';
 
 const jobs:Record<string,{name:string;address:string}>={
  'JOB-214':{name:'Breton',address:'1280, rue Industrielle, Québec'},'JOB-315':{name:'Leduc',address:'480, boulevard Leduc, Québec'},'JOB-418':{name:'Bélanger',address:'72, rue Bélanger, Lévis'}
 };
 const progressItems=[['Élévation droite',75],['Élévation arrière',25],['Élévation gauche',75],['Façade',100]] as const;
 
-export function PunchPreview({role,punched,selectedJob,activeJob,startedAt,onJob,onToggle,onOpenJob,onHours,onSwitch,todayLabel,todaySegments}:{activeJob:string;onSwitch:()=>void;todayLabel:string;todaySegments:{id:string;job:string;start:string;end:string|null}[];role:'Chef'|'Employé';punched:boolean;selectedJob:string;startedAt:number|null;onJob:(v:string)=>void;onToggle:()=>void;onOpenJob:()=>void;onHours:()=>void}){
- const [now,setNow]=useState(0);const [reportOpen,setReportOpen]=useState(false);const [navigationOpen,setNavigationOpen]=useState(false);const [copied,setCopied]=useState(false);const [progress,setProgress]=useState<Record<string,number>>(()=>Object.fromEntries(progressItems));
+export function PunchPreview({role,punched,selectedJob,activeJob,startedAt,onJob,onToggle,onOpenJob,onHours,onSwitch,todayLabel,todaySegments,logoSrc,userName,companyId,email,onSettings}:{activeJob:string;onSwitch:()=>void;todayLabel:string;todaySegments:{id:string;job:string;start:string;end:string|null}[];role:'Chef'|'Employé';punched:boolean;selectedJob:string;startedAt:number|null;onJob:(v:string)=>void;onToggle:()=>void;onOpenJob:()=>void;onHours:()=>void;logoSrc:string;userName:string;companyId:string;email:string;onSettings:()=>void}){
+ const photoKey=`forge:${companyId}:profile-photo:${email}`;const [now,setNow]=useState(0);const [reportOpen,setReportOpen]=useState(false);const [navigationOpen,setNavigationOpen]=useState(false);const [copied,setCopied]=useState(false);const [profilePhoto,setProfilePhoto]=useState(()=>typeof window==='undefined'?'':localStorage.getItem(photoKey)||'');const [progress,setProgress]=useState<Record<string,number>>(()=>Object.fromEntries(progressItems));
  useEffect(()=>{if(!punched)return;const id=window.setInterval(()=>setNow(Date.now()),1000);return()=>window.clearInterval(id)},[punched]);
+ useEffect(()=>{const sync=()=>setProfilePhoto(localStorage.getItem(photoKey)||'');window.addEventListener('forge-profile-updated',sync);return()=>window.removeEventListener('forge-profile-updated',sync)},[photoKey]);
  const elapsed=startedAt?Math.max(0,now-startedAt):0;const total=Math.floor(elapsed/1000);const timer=`${Math.floor(total/3600)} h ${String(Math.floor(total/60)%60).padStart(2,'0')} min ${String(total%60).padStart(2,'0')} s`;const job=jobs[selectedJob]||{name:'Chantier',address:'Adresse à confirmer'};
  const mapsUrl=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.address)}`;const wazeUrl=`https://www.waze.com/ul?q=${encodeURIComponent(job.address)}&navigate=yes`;
  const switching=punched&&selectedJob!==activeJob;const clock=(value:string)=>new Date(value).toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).replace(' h ',':');const uniqueJobs=[...new Set(todaySegments.map(s=>s.job))];const visibleSegments=todaySegments.slice(-3);
  const punch=()=>{if(switching)onSwitch();else if(role==='Chef'&&punched)setReportOpen(true);else onToggle()};
- return <div className="punch-redesign punch-v5">
+ return <div className="punch-redesign punch-v5"><header className="field-mobile-head punch-mobile-head"><img className="field-company-logo" src={logoSrc} alt="Logo de la compagnie"/><div><button aria-label="Notifications"><Bell/><i>3</i></button><button className="field-account-avatar" onClick={onSettings} aria-label="Ouvrir les paramètres du compte">{profilePhoto?<img src={profilePhoto} alt="Photo de profil"/>:<span>{userName.slice(0,2).toUpperCase()}</span>}</button></div></header>
   <header className="new-punch-title"><h1>PUNCH</h1>{role==='Chef'&&<span>CHEF D’ÉQUIPE</span>}</header>
   <div className="new-punch-layout"><div className="new-punch-main">
    <section className={`new-punch-status ${punched?'active':''}`}><div><i/><span>{punched?'EN COURS':'PRÊT À COMMENCER'}</span></div>{punched?<><h2>{activeJob} — {jobs[activeJob]?.name||'Chantier'}</h2><p>Depuis {new Date(startedAt||now).toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'})} · Temps actuel : {timer}</p>{switching&&<small>Le segment {activeJob} sera fermé et {selectedJob} commencera au prochain Punch In.</small>}</>:<p>Vous n’êtes pas pointé.<br/>Sélectionnez un job puis pointez.</p>}</section>
