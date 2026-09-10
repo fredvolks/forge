@@ -15,17 +15,20 @@ const employeeId=(session:ForgeSession)=>`employee:${session.companyId}:${sessio
 const key=(companyId:string,type:string)=>`forge:${companyId}:${type}`;
 const read=<T,>(storageKey:string,fallback:T):T=>{if(typeof window==='undefined')return fallback;try{return JSON.parse(localStorage.getItem(storageKey)||'null')||fallback}catch{return fallback}};
 
-export function FieldWorkspace({view,session,role,navigate,punch}:{view:FieldView;session:ForgeSession;role:'Chef'|'Employé';navigate:Navigate;punch:FieldPunchState}){
+export function FieldWorkspace({view,session,role,navigate,punch,logoSrc}:{view:FieldView;session:ForgeSession;role:'Chef'|'Employé';navigate:Navigate;punch:FieldPunchState;logoSrc:string}){
  const [absences,setAbslify]=useState<Absence[]>(()=>read(key(session.companyId,'absence-requests'),[{absence_request_id:'ABS-2026-014',company_id:session.companyId,employee_id:employeeId(session),type:'Vacances',start_date:'2026-09-21',end_date:'2026-09-25',full_day:true,note:'',status:'approved',created_at:'2026-08-28T14:00:00Z'}]));
  const [incidents,setIncidents]=useState<Incident[]>(()=>read(key(session.companyId,'incidents'),[]));
  const [dialog,setDialog]=useState<'leave'|'sick'|'incident'|null>(null);
+ const profilePhotoKey=key(session.companyId,`profile-photo:${session.email}`);
+ const [profilePhoto,setProfilePhoto]=useState(()=>typeof window==='undefined'?'':localStorage.getItem(profilePhotoKey)||'');
+ useEffect(()=>{const sync=()=>setProfilePhoto(localStorage.getItem(profilePhotoKey)||'');window.addEventListener('forge-profile-updated',sync);return()=>window.removeEventListener('forge-profile-updated',sync)},[profilePhotoKey]);
  const saveAbsences=(next:Absence[])=>{setAbslify(next);localStorage.setItem(key(session.companyId,'absence-requests'),JSON.stringify(next));window.dispatchEvent(new Event('forge-absences-updated'))};
  const saveIncidents=(next:Incident[])=>{setIncidents(next);localStorage.setItem(key(session.companyId,'incidents'),JSON.stringify(next));window.dispatchEvent(new Event('forge-incidents-updated'))};
  const submitAbsence=(e:React.FormEvent<HTMLFormElement>,sick=false)=>{e.preventDefault();const f=new FormData(e.currentTarget);const item:Absence={absence_request_id:`ABS-${Date.now()}`,company_id:session.companyId,employee_id:employeeId(session),type:sick?'Maladie':String(f.get('type')||'Vacances'),start_date:String(f.get('start')),end_date:String(f.get('end')||f.get('start')),full_day:true,note:String(f.get('note')||''),status:sick?'reported':'pending',created_at:new Date().toISOString()};saveAbsences([item,...absences]);writeEvent(session,'absence_request',item.absence_request_id,sick?'absence_reported':'absence_submitted');setDialog(null)};
  const submitIncident=(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();const f=new FormData(e.currentTarget);const item:Incident={incident_id:`INC-${Date.now()}`,company_id:session.companyId,job_id:String(f.get('job')),reported_by_user_id:session.email,type:String(f.get('type')),severity:String(f.get('severity')),incident_at:String(f.get('date')),location:String(f.get('location')),description:String(f.get('description')),status:'submitted'};saveIncidents([item,...incidents]);writeEvent(session,'incident',item.incident_id,'incident_submitted');setDialog(null)};
  if(view==='settings')return <div className="field-workspace"><Back navigate={navigate}/><PersonalSettings session={session}/></div>;
  return <section className="field-workspace">
-  <header className="field-mobile-head"><b>FORGE</b><div><button aria-label="Notifications"><Bell/><i>3</i></button><span>{session.userName.slice(0,2).toUpperCase()}</span><small>{session.userName}<em>{role}</em></small></div></header>
+  <header className="field-mobile-head"><img className="field-company-logo" src={logoSrc} alt={session.companyName}/><div><button aria-label="Notifications"><Bell/><i>3</i></button><button className="field-account-avatar" onClick={()=>navigate('settings')} aria-label="Ouvrir les paramètres du compte">{profilePhoto?<img src={profilePhoto} alt="Photo de profil"/>:<span>{session.userName.slice(0,2).toUpperCase()}</span>}</button></div></header>
   {view==='home'&&<HomeView session={session} role={role} navigate={navigate} request={setDialog} punch={punch}/>}
   {view==='projects'&&<ProjectsView navigate={navigate}/>}
   {view==='project'&&<ProjectView navigate={navigate} incidents={incidents}/>}

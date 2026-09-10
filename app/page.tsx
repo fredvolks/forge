@@ -351,7 +351,7 @@ export default function Home() {
 </div>
 </header>
       <div className={`content ${fieldView !== 'work' ? 'field-page-active' : `work-focus work-${workTarget}`}`}>
-        {fieldView !== 'work' && <FieldWorkspace view={fieldView} session={activeSession!} role={role as 'Chef'|'Employé'} navigate={navigateField} punch={{punched,selectedJob,activeJob,startedAt:punchStartedAt,onToggle:()=>void togglePunch(),onChangeJob:setSelectedJob}}/>}
+        {fieldView !== 'work' && <FieldWorkspace view={fieldView} session={activeSession!} role={role as 'Chef'|'Employé'} navigate={navigateField} logoSrc={logoSrc} punch={{punched,selectedJob,activeJob,startedAt:punchStartedAt,onToggle:()=>void togglePunch(),onChangeJob:setSelectedJob}}/>}
         <div className="welcome">
 <div>
 <p>FORGE · LES REVÊTEMENTS MIR · VUE {role.toUpperCase()}</p>

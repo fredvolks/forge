@@ -394,7 +394,8 @@ return <div className="suite-page">
 </div>
 </div>}
 
-export function PersonalSettings({session}:{session:ForgeSession}){const initial=()=>getUserAppearance(session.companyId,session.email,(session.theme as ForgeThemeId)||'forge');const [appearance,setAppearance]=useState(initial),[saved,setSaved]=useState(initial),[branding,setBranding]=useState<CompanyBranding>(()=>getBranding(session.companyId)),[brandError,setBrandError]=useState(''),[processing,setProcessing]=useState(false);
+export function PersonalSettings({session}:{session:ForgeSession}){const initial=()=>getUserAppearance(session.companyId,session.email,(session.theme as ForgeThemeId)||'forge');const photoKey='forge:'+session.companyId+':profile-photo:'+session.email;const [appearance,setAppearance]=useState(initial),[saved,setSaved]=useState(initial),[branding,setBranding]=useState<CompanyBranding>(()=>getBranding(session.companyId)),[brandError,setBrandError]=useState(''),[processing,setProcessing]=useState(false),[profilePhoto,setProfilePhoto]=useState(()=>typeof window==='undefined'?'':localStorage.getItem(photoKey)||'');
+const uploadProfilePhoto=(file?:File)=>{if(!file)return;const reader=new FileReader();reader.onload=()=>{const value=String(reader.result||'');localStorage.setItem(photoKey,value);setProfilePhoto(value);window.dispatchEvent(new Event('forge-profile-updated'))};reader.readAsDataURL(file)};
 const preview=(theme:ForgeThemeId)=>{const next={...appearance,theme};setAppearance(next);applyAppearance(next)};
 const apply=()=>{const next={...appearance,updatedAt:new Date().toISOString()};setSaved(next);setAppearance(next);saveUserAppearance(session.companyId,session.email,next);applyAppearance(next)};
 const upload=async(file?:File)=>{if(!file)return;setBrandError('');setProcessing(true);try{setBranding(await processCompanyLogo(file,session.companyId))}catch(error){setBrandError(error instanceof Error?error.message:'Impossible de préparer ce logo.')}finally{setProcessing(false)}};
@@ -402,6 +403,7 @@ const updateBrand=(changes:Partial<CompanyBranding>,action:string)=>setBranding(
 const effectiveMode=(document.documentElement.dataset.mode==='light'?'light':'dark') as 'light'|'dark';
 return <div className="suite-page settings-page">
 <Head eyebrow="PARAMÈTRES PERSONNELS" title="Apparence" text="Ces choix appartiennent uniquement à votre compte."/>
+<section className="account-profile-setting"><div className="account-photo-preview">{profilePhoto?<img src={profilePhoto} alt="Photo de profil"/>:<span>{session.userName.slice(0,2).toUpperCase()}</span>}</div><div><span>COMPTE UTILISATEUR</span><h2>Photo ou initiales</h2><p>Cette image apparaît dans l’en-tête mobile. Sans photo, Forge affiche vos initiales.</p></div><label><Upload/> Choisir une photo<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>uploadProfilePhoto(e.target.files?.[0])}/></label>{profilePhoto&&<button onClick={()=>{localStorage.removeItem(photoKey);setProfilePhoto('');window.dispatchEvent(new Event('forge-profile-updated'))}}>Retirer</button>}</section>
 <div className="mode-picker">
 <span>Mode</span>{([['light','Clair'],['dark','Sombre'],['system','Système']] as [ForgeMode,string][]).map(([value,label])=>
 <button className={appearance.mode===value?'active':''} onClick={()=>{const next={...appearance,mode:value};setAppearance(next);applyAppearance(next)}} key={value}>{label}</button>)}</div>
