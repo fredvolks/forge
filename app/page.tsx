@@ -58,6 +58,7 @@ const payrollRows = [
 ];
 export default function Home() {
     const [role, setRole] = useState<Role>('Boss');
+    const [devicePreview,setDevicePreview]=useState<'mobile'|'tablet-landscape'|'tablet-portrait'|'desktop'>('mobile');
     const [fieldView, setFieldView] = useState<FieldView | 'work'>('home');
     const [workTarget, setWorkTarget] = useState<'punch'|'orders'|'messages'|'purchases'>('punch');
     const [session, setSession] = useState<ForgeSession | null>(null);
@@ -212,6 +213,7 @@ export default function Home() {
     const activeDynamicProduct = dynamicCatalog.find(product => product.active && product.category === orderCategory && product.name === selectedPreset);
     const switchingJob = punched && selectedJob !== activeJob;
     const navigateField = (destination:FieldView|'punch'|'orders'|'messages'|'purchases') => {
+        document.querySelector<HTMLElement>('.workspace')?.scrollTo({top:0,behavior:'smooth'});
         if (['punch','orders','messages','purchases'].includes(destination)) {
             setWorkTarget(destination as 'punch'|'orders'|'messages'|'purchases');
             setFieldView('work');
@@ -223,7 +225,7 @@ export default function Home() {
         window.location.hash = `field/${destination}`;
         window.scrollTo({top:0,behavior:'smooth'});
     };
-    return <main className={`app-shell ${isFieldRole ? 'field-mobile' : ''} role-${displayedRole.toLowerCase().replace('é', 'e')}`}>
+    return <main className={`app-shell ${isFieldRole ? 'field-mobile' : ''} device-${devicePreview} ${fieldView==='hours'?'hours-active':''} role-${displayedRole.toLowerCase().replace('é', 'e')}`}>
     <aside className={`sidebar ${mobileNav ? 'open' : ''}`}>
       <div className="brand">
 <div className="brand-mark">
@@ -311,6 +313,7 @@ export default function Home() {
 <option>Employé</option>
 </select>
 </label>
+{isFieldRole&&<label className="device-switch"><span>Aperçu appareil</span><select aria-label="Format d’aperçu" value={devicePreview} onChange={e=>setDevicePreview(e.target.value as 'mobile'|'tablet-landscape'|'tablet-portrait'|'desktop')}><option value="mobile">Mobile · 390 × 844</option><option value="tablet-portrait">iPad portrait · 768 × 1024</option><option value="tablet-landscape">iPad paysage · 1024 × 768</option><option value="desktop">Desktop · 1440 × 900</option></select></label>}
 <span className="live">
 <i /> Atelier en activité</span>
 <button aria-label="Notifications" className="icon-btn">
@@ -347,8 +350,8 @@ export default function Home() {
 </div>
 </div>
         {(displayedRole === 'Employé' || displayedRole === 'Chef') && <section className="punch-module" id="punch">
-          <PunchPreview todayLabel={duration(todayMinutes)} todaySegments={todaySegments.map(s=>({id:s.id,job:timeData?.jobs.find(j=>j.id===s.job_id)?.number||s.job_id,start:s.start_time,end:s.end_time}))} onSwitch={()=>void togglePunch('switch')} role={displayedRole} punched={punched} selectedJob={selectedJob} startedAt={punchStartedAt} onJob={setSelectedJob} onOpenJob={()=>navigateField('project')} onHours={()=>navigateField('hours')} onToggle={()=>void togglePunch()}/>
-          {switchingJob && <div className="job-switch-card">
+          <PunchPreview activeJob={activeJob} todayLabel={duration(todayMinutes)} todaySegments={todaySegments.map(s=>({id:s.id,job:timeData?.jobs.find(j=>j.id===s.job_id)?.number||s.job_id,start:s.start_time,end:s.end_time}))} onSwitch={()=>void togglePunch('switch')} role={displayedRole} punched={punched} selectedJob={selectedJob} startedAt={punchStartedAt} onJob={setSelectedJob} onOpenJob={()=>navigateField('project')} onHours={()=>navigateField('hours')} onToggle={()=>void togglePunch()}/>
+          {false && switchingJob && <div className="job-switch-card">
 <button className="switch-back" onClick={() => { setSelectedJob(activeJob); setJobSwitchPending(false); }} aria-label="Annuler le changement de job">
 <ArrowLeft />
 </button>
