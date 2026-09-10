@@ -353,7 +353,7 @@ export default function Home() {
 </div>
 </header>
       <div className={`content ${fieldView !== 'work' ? 'field-page-active' : `work-focus work-${workTarget}`}`}>
-        {fieldView !== 'work' && <FieldWorkspace view={fieldView} session={activeSession!} role={role as 'Chef'|'Employé'} navigate={navigateField} logoSrc={logoSrc} punch={{punched,selectedJob,activeJob,startedAt:punchStartedAt,onToggle:()=>void togglePunch(),onChangeJob:setSelectedJob}}/>}
+        {fieldView !== 'work' && <FieldWorkspace jobs={timeData?.jobs||[]} view={fieldView} session={activeSession!} role={role as 'Chef'|'Employé'} navigate={navigateField} logoSrc={logoSrc} punch={{punched,selectedJob,activeJob,startedAt:punchStartedAt,onToggle:()=>void togglePunch(),onChangeJob:setSelectedJob}}/>}
         <div className="welcome">
 <div>
 <p>FORGE · LES REVÊTEMENTS MIR · VUE {role.toUpperCase()}</p>
@@ -1676,7 +1676,7 @@ export default function Home() {
 </div>}
     {isFieldRole && <nav className="mobile-bottom-nav" aria-label="Navigation mobile">
 <button className={fieldView==='home'?'active':''} onClick={()=>navigateField('home')}><LayoutDashboard/><span>Accueil</span></button>
-<button className={fieldView==='projects'||fieldView==='project'?'active':''} onClick={()=>navigateField('projects')}><Folder/><span>Projets</span></button>
+<button className={fieldView==='projects'||fieldView.startsWith('project')?'active':''} onClick={()=>navigateField('projects')}><Folder/><span>Projets</span></button>
 <button className="punch-nav" onClick={()=>navigateField('punch')}><Clock3/><span>Punch</span></button>
 <button onClick={()=>navigateField('messages')}><MessageSquare/><span>Messages</span><i /></button>
 <button className={fieldView==='menu'?'active':''} onClick={()=>navigateField('menu')}><Menu/><span>Menu</span></button>
