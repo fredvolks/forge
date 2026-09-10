@@ -22,6 +22,7 @@ export function MobileShellHeader({logoSrc,userName,companyId,email,onSettings,r
   content.scrollTop=0;setPage(0);setNotifications(false);
   const measure=()=>{
    if(!header.current?.getClientRects().length)return;
+   if(header.current.closest('.device-mobile')){setPages(1);setPage(0);content.scrollTop=0;return;}
    const step=Math.max(1,content.clientHeight-48);
    const pager=header.current.parentElement?.querySelector<HTMLElement>('.fixed-screen-pagination');
    const unpagedHeight=content.clientHeight+(pager&&!pager.hidden?44:0);
