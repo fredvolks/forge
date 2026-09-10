@@ -11,6 +11,7 @@ import { applyAppearance, getBranding, getUserAppearance, resolveLogo, type Forg
 import { FieldWorkspace, type FieldView } from './field-workspace';
 import { PunchPreview } from './punch-preview';
 import { ForgeMessages } from './forge-messages';
+import { MyOrders } from './my-orders';
 import { MobileShellHeader } from './mobile-shell-header';
 import { useTimeData } from './use-time-data';
 import { changeTimeDemo } from '../lib/time-demo';
@@ -117,6 +118,7 @@ export default function Home() {
         photos: string[];
     }>>([]);
     const [orderPhotos, setOrderPhotos] = useState<string[]>([]);
+    const [orderJob,setOrderJob]=useState('');
     const [draggedPreset, setDraggedPreset] = useState<string | null>(null);
     const [presetSets, setPresetSets] = useState<Record<'Matériaux' | 'Outils' | 'Pliage', string[]>>({
         Outils: ['Gun à revêtement', 'Gun à charpente', 'Gun à finition', 'Scie circulaire', 'Scie sauteuse', 'OLSA — grosseur manuelle', 'Scie à onglet', 'Patte d’échafaud', 'Vérin', 'Batterie FlexVolt', 'Batterie non FlexVolt', 'Hose à air'],
@@ -152,8 +154,10 @@ export default function Home() {
     const performance = bidPrice ? (profit / bidPrice) * 100 : 0;
     function submitRequest(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        if (!orderCart.length || !session)
+        if (!orderCart.length || !activeSession)
             return;
+        const chosenJob=timeData?.jobs.find(j=>j.number===orderJob&&j.company_id===activeSession.companyId&&j.members.includes(activeSession.email));
+        if(!chosenJob){setToastText('Choisissez un chantier assigné.');setToast(true);return;}
         const key = `forge:${session.companyId}:orders`;
         const existing = JSON.parse(localStorage.getItem(key) || '[]');
         const catalog = JSON.parse(localStorage.getItem(`forge:${session.companyId}:catalog`) || '[]') as Array<{
@@ -162,20 +166,21 @@ export default function Home() {
         }>;
         const dynamic = loadDynamicCatalog(session.companyId);
         const jobNames: Record<string, string> = { 'JOB-214': 'Breton', 'JOB-315': 'Leduc', 'JOB-418': 'Bélanger' };
-        const next = { id: `BC-2026-${String(Date.now()).slice(-4)}`, companyId: session.companyId, date: new Date().toISOString().slice(0, 10), job: `${selectedJob} · ${jobNames[selectedJob] || temporaryJobNames[selectedJob] || 'Chantier temporaire'}`, requester: session.userName, items: orderCart.map(item => {
+        const next = { id: `BC-${crypto.randomUUID()}`, companyId: activeSession.companyId, job_id:chosenJob.id, requested_by_user_id:activeSession.email, date: new Date().toISOString().slice(0, 10), job: `${chosenJob.number} · ${chosenJob.name}`, requester: activeSession.userName, items: orderCart.map(item => {
                 const product = catalog.find(p => p.name === item.item);
                 const dynamicProduct = dynamic.find(p => p.name === item.item);
                 const source = dynamicProduct?.source || product?.source || 'Inventaire MIR';
                 const unit = item.detail.match(/Unité:\s*([^·]+)/)?.[1]?.trim() || (item.detail.includes('boîte') ? 'boîtes' : item.detail.includes('morceau') ? 'morceaux' : dynamicProduct?.units[0] || 'morceaux');
                 const qty = Number(item.detail.match(/Quantité:\s*(\d+)/)?.[1] || item.detail.match(/Quantité\s+(\d+)/)?.[1] || item.detail.match(/×\s*(\d+)/)?.[1] || 2);
                 return { name: item.item, qty, unit, detail: item.detail, source: source === 'Fournisseur' ? 'Fournisseur' : 'Inventaire MIR', supplier: source === 'Fournisseur' ? (dynamicProduct?.supplier || 'Acier Breton') : undefined };
-            }), status: 'Reçue', history: [`Créée par ${session.userName} · ${new Date().toLocaleString('fr-CA')}`] };
+            }), status: 'Reçue', history: [`Créée par ${activeSession.userName} · ${new Date().toLocaleString('fr-CA')}`] };
         localStorage.setItem(key, JSON.stringify([next, ...existing]));
         window.dispatchEvent(new Event('forge-orders-updated'));
         setModal(false);
         setOrderCart([]);
         setPendingOrders((n) => n + 1);
-        setToastText('Commande envoyée dans le centre administratif');
+        setWorkTarget('orders');setFieldView('work');window.location.hash='orders';
+        setToastText('Commande enregistrée dans Mes commandes · aperçu local');
         setToast(true);
         window.setTimeout(() => setToast(false), 3200);
     }
@@ -357,7 +362,8 @@ export default function Home() {
 </div>
 </header>
       <div className={`content ${fieldView !== 'work' ? 'field-page-active' : `work-focus work-${workTarget}`}`}>
-        {fieldView !== 'work' && <FieldWorkspace jobs={timeData?.jobs||[]} view={fieldView} session={activeSession!} role={role as 'Chef'|'Employé'} navigate={navigateField} logoSrc={logoSrc} punch={{punched,selectedJob,activeJob,startedAt:punchStartedAt,onToggle:()=>void togglePunch(),onChangeJob:setSelectedJob}}/>}
+        {fieldView==='work'&&workTarget==='orders'&&<MyOrders session={activeSession!} onNew={()=>{if(!orderCart.length)setOrderJob(timeData?.jobs.find(j=>j.members.includes(activeSession!.email))?.number||'');setModal(true)}}/>}
+        {fieldView !== 'work' && <FieldWorkspace jobs={timeData?.jobs||[]} view={fieldView} session={activeSession!} role={role as 'Chef'|'Employé'} navigate={navigateField} logoSrc={logoSrc} onNewOrder={job=>{if(orderCart.length&&orderJob!==job.number){if(!window.confirm('Changer de chantier videra la commande actuelle. Continuer?'))return;setOrderCart([]);setOrderPhotos([]);}setOrderJob(job.number);navigateField('orders');setModal(true)}} punch={{punched,selectedJob,activeJob,startedAt:punchStartedAt,onToggle:()=>void togglePunch(),onChangeJob:setSelectedJob}}/>}
         <div className="welcome">
 <div>
 <p>FORGE · LES REVÊTEMENTS MIR · VUE {role.toUpperCase()}</p>
@@ -1388,10 +1394,9 @@ export default function Home() {
 </button>
 </div>
       <div className="form-row">
-<label>No de job<select required defaultValue="JOB-214">
-<option>JOB-214 — Breton</option>
-<option>JOB-315 — Leduc</option>
-<option>JOB-418 — Bélanger</option>
+<label>Projet / chantier<select required value={orderJob} onChange={e=>{if(orderCart.length&&e.target.value!==orderJob){if(!window.confirm('Changer de chantier videra la commande actuelle. Continuer?'))return;setOrderCart([]);setOrderPhotos([]);}setOrderJob(e.target.value)}}>
+<option value="">Choisir un chantier</option>
+{timeData?.jobs.filter(j=>j.company_id===activeSession!.companyId&&j.members.includes(activeSession!.email)).map(j=><option key={j.id} value={j.number}>{j.number} — {j.name}</option>)}
 </select>
 </label>
 <label>Catégorie<select value={orderCategory} onChange={(e) => { const category = e.target.value as 'Matériaux' | 'Outils' | 'Pliage'; setOrderCategory(category); setSelectedPreset(category === 'Outils' ? 'Gun à revêtement' : category === 'Pliage' ? 'Fascia' : 'Lame de Skill'); }}>

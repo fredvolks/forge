@@ -193,6 +193,15 @@
 .job-shortcut-picker header{display:flex;align-items:center;justify-content:space-between;gap:8px}.job-shortcut-picker h2{font-size:18px;margin:0}.job-shortcut-picker p{font-size:13px}.job-shortcut-picker>div{overflow-y:auto;min-height:0}.job-shortcut-picker button{display:flex;align-items:center;gap:10px;min-height:44px;background:transparent;color:inherit;border:0}.job-shortcut-picker>div>button{width:100%;border-bottom:1px solid #314339;text-align:left}.job-shortcut-picker svg{width:20px;flex-shrink:0}.job-shortcut-picker>div>button svg:last-child{margin-left:auto}
 @media(max-width:760px){.demo-device-stage.device-mobile .workspace{padding-top:env(safe-area-inset-top,0px)!important}.demo-device-stage.device-mobile .mobile-bottom-nav{padding-bottom:max(14px,env(safe-area-inset-bottom,0px))!important}}
 
+/* Shortcut picker stays inside the usable device area, above the bottom navigation. */
+.demo-device-stage .job-shortcut-backdrop{inset:0;align-items:center;padding:12px;z-index:150;background:#030907cc;backdrop-filter:blur(5px)}
+.demo-device-stage .job-shortcut-picker{max-height:100%;width:100%;max-width:480px;margin:auto;padding:18px;border:1px solid #35473b;border-radius:22px;background:linear-gradient(150deg,#1b2821,#0e1712);color:#edf5ef;box-shadow:0 20px 60px #0008;font-family:"Segoe UI",system-ui,sans-serif}
+.demo-device-stage .job-shortcut-picker header{flex-shrink:0;padding-bottom:4px}.demo-device-stage .job-shortcut-picker h2{font-size:19px;font-weight:600;letter-spacing:-.025em}.demo-device-stage .job-shortcut-picker header button{width:36px;min-height:36px;justify-content:center;border-radius:50%;background:#ffffff08;border:1px solid #ffffff12}
+.demo-device-stage .job-shortcut-picker>p{color:#a9bbb0;font-size:12px;line-height:1.5;margin:8px 0 16px}
+.demo-device-stage .job-shortcut-picker>div{display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow-y:auto;padding:2px;scrollbar-width:thin}
+.demo-device-stage .job-shortcut-picker>div>button{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:7px;min-height:76px;padding:11px;border:1px solid #33463a;border-radius:12px;background:#18271e;color:#e5eee8;font-size:12px;line-height:1.25;font-weight:500}
+.demo-device-stage .job-shortcut-picker>div>button>svg:first-child{color:var(--accent);width:22px;height:22px}.demo-device-stage .job-shortcut-picker>div>button>svg:last-child{display:none}.demo-device-stage .job-shortcut-picker>div>button:hover{border-color:var(--accent);background:#263a22}.demo-device-stage .job-shortcut-picker button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
 /* One continuous background across the device, including the safe areas. */
 .demo-device-stage:not(.device-desktop) .workspace,
 .demo-device-stage:not(.device-desktop) .workspace>.shared-mobile-head,
@@ -206,5 +215,20 @@
 .demo-device-stage.device-mobile .workspace>.content:not(.work-punch){margin-top:var(--field-content-inset)!important;margin-bottom:calc(53px + var(--field-content-inset))!important;padding-top:0!important;padding-bottom:0!important}
 .demo-device-stage.device-mobile .field-view-project .job-premium-hero{margin-top:0;margin-bottom:0}
 
+/* All page surfaces and dialogs are bounded between the persistent header and nav. */
+.demo-device-stage:not(.device-desktop) .workspace>.shared-mobile-head{position:relative;z-index:160;flex-shrink:0!important}
+.demo-device-stage:not(.device-desktop) .workspace>.content{position:relative;isolation:isolate;min-width:0;overscroll-behavior:contain}
+.demo-device-stage:not(.device-desktop) .workspace>.content:not(.work-punch):not(.work-messages):not(:has(.field-view-project)){overflow-y:auto!important;overflow-x:hidden!important}
+.demo-device-stage:not(.device-desktop) .field-view-project{position:relative;min-height:0;overflow:hidden}
+.demo-device-stage .job-shortcut-picker{box-sizing:border-box;overflow:hidden}
+@media(max-width:760px){
+ .demo-device-stage.device-mobile .workspace>.content.work-punch{margin-bottom:calc(70px + env(safe-area-inset-bottom,0px))!important}
+ .demo-device-stage.device-mobile .workspace>.content:not(.work-punch){margin-bottom:calc(70px + env(safe-area-inset-bottom,0px) + var(--field-content-inset))!important}
+}
+
 /* On a physically small screen, Forge itself fills the screen; demo controls stay out of its header. */
+/* Chat alone uses the entire space between the shared header and bottom nav. */
+.demo-device-stage.device-mobile .workspace>.content.work-messages{margin-top:0!important;margin-bottom:53px!important;padding:0!important}
+.demo-device-stage.device-mobile #messages .fm-conversation{border-radius:0;border-inline:0}
+@media(max-width:760px){.demo-device-stage.device-mobile .workspace>.content.work-messages{margin-bottom:calc(70px + env(safe-area-inset-bottom,0px))!important}}
 @media(max-width:760px){.demo-device-stage{--demo-rail:0px;padding:0!important}.demo-preview-controls{display:none}.demo-device-stage.device-mobile .workspace{position:relative!important;left:auto!important;top:auto!important;width:100vw!important;height:100dvh!important;transform:none!important;border:0!important;border-radius:0!important;padding:env(safe-area-inset-top,0px) 0 0!important}.demo-device-stage.device-mobile .workspace:before,.demo-device-stage.device-mobile .workspace:after{display:none}.demo-device-stage.device-mobile .mobile-bottom-nav{left:50%!important;width:100%!important;bottom:0!important;transform:translateX(-50%)!important;border-radius:0!important}}
