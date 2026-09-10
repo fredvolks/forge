@@ -225,7 +225,25 @@ export default function Home() {
         window.location.hash = `field/${destination}`;
         window.scrollTo({top:0,behavior:'smooth'});
     };
-    return <main className={`app-shell ${isFieldRole ? 'field-mobile' : ''} device-${devicePreview} ${fieldView==='hours'?'hours-active':''} role-${displayedRole.toLowerCase().replace('é', 'e')}`}>
+    return <main className={`app-shell ${isFieldRole ? 'field-mobile demo-device-stage' : ''} device-${devicePreview} ${fieldView==='hours'?'hours-active':''} role-${displayedRole.toLowerCase().replace('é', 'e')}`}>
+    {isFieldRole && <aside className="demo-preview-controls" aria-label="Contrôles de l’aperçu Démo">
+      <div className="demo-control-group">
+        <span>Rôle</span>
+        <div className="demo-role-buttons">
+          {(['Boss','Adjointe','Chef','Employé'] as Role[]).map((item) => <button key={item} className={role===item?'active':''} onClick={()=>setRole(item)}>{item==='Chef'?'Chef d’équipe':item}</button>)}
+        </div>
+      </div>
+      <div className="demo-control-group">
+        <span>Appareil</span>
+        <div className="demo-device-buttons">
+          <button className={devicePreview==='mobile'?'active':''} onClick={()=>setDevicePreview('mobile')}><b>Mobile</b><small>390 × 844</small></button>
+          <button className={devicePreview==='tablet-portrait'?'active':''} onClick={()=>setDevicePreview('tablet-portrait')}><b>iPad portrait</b><small>768 × 1024</small></button>
+          <button className={devicePreview==='tablet-landscape'?'active':''} onClick={()=>setDevicePreview('tablet-landscape')}><b>iPad paysage</b><small>1024 × 768</small></button>
+          <button className={devicePreview==='desktop'?'active':''} onClick={()=>setDevicePreview('desktop')}><b>Desktop</b><small>1440 × 900</small></button>
+        </div>
+      </div>
+      <p>Les contrôles restent hors de l’écran de l’appareil.</p>
+    </aside>}
     <aside className={`sidebar ${mobileNav ? 'open' : ''}`}>
       <div className="brand">
 <div className="brand-mark">
@@ -304,7 +322,7 @@ export default function Home() {
 <kbd>⌘ K</kbd>
 </div>
 <div className="top-actions">
-<label className="role-switch">
+{!isFieldRole&&<label className="role-switch">
 <span>Vue</span>
 <select value={role} onChange={(e) => setRole(e.target.value as Role)}>
 <option>Boss</option>
@@ -312,8 +330,7 @@ export default function Home() {
 <option>Chef</option>
 <option>Employé</option>
 </select>
-</label>
-{isFieldRole&&<label className="device-switch"><span>Aperçu appareil</span><select aria-label="Format d’aperçu" value={devicePreview} onChange={e=>setDevicePreview(e.target.value as 'mobile'|'tablet-landscape'|'tablet-portrait'|'desktop')}><option value="mobile">Mobile · 390 × 844</option><option value="tablet-portrait">iPad portrait · 768 × 1024</option><option value="tablet-landscape">iPad paysage · 1024 × 768</option><option value="desktop">Desktop · 1440 × 900</option></select></label>}
+</label>}
 <span className="live">
 <i /> Atelier en activité</span>
 <button aria-label="Notifications" className="icon-btn">

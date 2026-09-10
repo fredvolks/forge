@@ -1,0 +1,40 @@
+/* The demo chrome lives outside the emulated device so the app receives the full viewport. */
+.demo-device-stage{--demo-rail:250px;position:relative;height:100dvh!important;min-height:0!important;padding:12px 18px 12px calc(var(--demo-rail) + 24px)!important;overflow:hidden!important;background:radial-gradient(circle at 70% 18%,#18251b 0,transparent 35%),#050706!important}
+.demo-preview-controls{position:fixed;z-index:100;left:18px;top:50%;transform:translateY(-50%);width:220px;padding:16px;border:1px solid #34413a;border-radius:18px;background:#101512f2;color:#eef5f0;box-shadow:0 22px 70px #0009;backdrop-filter:blur(18px)}
+.demo-control-group+ .demo-control-group{margin-top:18px;padding-top:17px;border-top:1px solid #2d3832}
+.demo-control-group>span{display:block;margin-bottom:9px;color:#95a19a;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.demo-role-buttons,.demo-device-buttons{display:grid;gap:7px}
+.demo-role-buttons{grid-template-columns:1fr 1fr}
+.demo-preview-controls button{min-height:38px;border:1px solid #35423a;border-radius:9px;background:#171e1a;color:#dbe4de;font-size:11px;font-weight:800;text-align:left;padding:8px 10px}
+.demo-preview-controls button:hover{border-color:#7da83b}
+.demo-preview-controls button.active{border-color:var(--accent);background:#293721;color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.demo-device-buttons button{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.demo-device-buttons b,.demo-device-buttons small{display:block}.demo-device-buttons small{color:#7f8c84;font-size:8px}.demo-device-buttons .active small{color:#b8caad}
+.demo-preview-controls>p{margin:14px 0 0;color:#78857d;font-size:9px;line-height:1.45}
+
+/* Device viewport: fill the chosen ratio and keep scrolling touch-enabled but visually clean. */
+.demo-device-stage .workspace{position:relative!important;margin:0 auto!important;min-height:0!important;overflow-x:hidden!important;overflow-y:auto!important;scrollbar-width:none;-ms-overflow-style:none}
+.demo-device-stage .workspace::-webkit-scrollbar,.demo-device-stage *::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
+.demo-device-stage .mobile-bottom-nav{position:absolute!important;left:calc(50% + var(--demo-rail)/2 + 12px)!important;bottom:12px!important;top:auto!important}
+
+/* Realistic phone shell, including bezel, notch, speaker and home indicator. */
+.demo-device-stage.device-mobile{--phone-scale:.76;--phone-nav-bottom:34px}
+.demo-device-stage.device-mobile .workspace{position:absolute!important;left:calc(50% + var(--demo-rail)/2 + 12px)!important;top:50%!important;width:390px!important;height:844px!important;aspect-ratio:auto!important;transform:translate(-50%,-50%) scale(var(--phone-scale));transform-origin:center!important;border:9px solid #050505!important;border-radius:50px!important;box-shadow:0 0 0 2px #66706d,0 28px 90px #000c!important;background-clip:padding-box!important;padding-top:23px!important;padding-bottom:16px!important}
+.demo-device-stage.device-mobile .workspace:before{content:"";position:sticky;z-index:90;display:block;top:-23px;width:128px;height:27px;margin:-23px auto -4px;border-radius:0 0 17px 17px;background:#050505;box-shadow:0 1px 0 #111}
+.demo-device-stage.device-mobile .workspace:after{content:"";position:sticky;z-index:91;display:block;bottom:-16px;width:118px;height:5px;margin:-5px auto -11px;border-radius:9px;background:#dce1de}
+.demo-device-stage.device-mobile .mobile-bottom-nav{left:calc(50% + var(--demo-rail)/2 + 12px)!important;width:372px!important;bottom:var(--phone-nav-bottom)!important;transform:translateX(-50%) scale(var(--phone-scale))!important;transform-origin:bottom center!important;border-radius:0 0 40px 40px!important;padding-bottom:14px!important}
+@media(min-height:760px){.demo-device-stage.device-mobile{--phone-scale:.86;--phone-nav-bottom:25px}}
+@media(min-height:860px){.demo-device-stage.device-mobile{--phone-scale:.96;--phone-nav-bottom:18px}}
+@media(max-height:620px){.demo-device-stage.device-mobile{--phone-scale:.66;--phone-nav-bottom:28px}}
+
+.demo-device-stage.device-tablet-portrait .workspace{width:min(768px,calc((100dvh - 24px)*.75),calc(100vw - var(--demo-rail) - 70px))!important;height:auto!important;aspect-ratio:3/4!important;border:13px solid #090a0a!important;border-radius:36px!important;box-shadow:0 0 0 2px #59615e,0 28px 90px #000b!important}
+.demo-device-stage.device-tablet-landscape .workspace{width:min(1024px,calc((100dvh - 24px)*1.333333),calc(100vw - var(--demo-rail) - 70px))!important;height:auto!important;aspect-ratio:4/3!important;border:13px solid #090a0a!important;border-radius:36px!important;box-shadow:0 0 0 2px #59615e,0 28px 90px #000b!important}
+.demo-device-stage.device-tablet-portrait .mobile-bottom-nav{width:min(742px,calc((100dvh - 24px)*.75 - 26px),calc(100vw - var(--demo-rail) - 96px))!important;bottom:25px!important;border-radius:0 0 22px 22px!important}
+.demo-device-stage.device-tablet-landscape .mobile-bottom-nav{width:min(998px,calc((100dvh - 24px)*1.333333 - 26px),calc(100vw - var(--demo-rail) - 96px))!important;bottom:25px!important;border-radius:0 0 22px 22px!important}
+
+.demo-device-stage.device-desktop{width:auto!important;max-width:none!important;margin:0!important;height:100dvh!important;aspect-ratio:auto!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+.demo-device-stage.device-desktop .workspace{width:min(1440px,calc((100dvh - 24px)*1.6),calc(100vw - var(--demo-rail) - 70px))!important;height:auto!important;aspect-ratio:16/10!important;margin:0 auto!important;border:8px solid #090a0a!important;border-radius:20px!important;box-shadow:0 0 0 2px #4f5853,0 28px 90px #000b!important}
+.demo-device-stage.device-desktop .sidebar{left:calc(var(--demo-rail) + 24px)!important;top:12px!important;bottom:12px!important;border-radius:18px 0 0 18px}
+
+/* On a physically small screen, Forge itself fills the screen; demo controls stay out of its header. */
+@media(max-width:760px){.demo-device-stage{--demo-rail:0px;padding:0!important}.demo-preview-controls{display:none}.demo-device-stage.device-mobile .workspace{position:relative!important;left:auto!important;top:auto!important;width:100vw!important;height:100dvh!important;transform:none!important;border:0!important;border-radius:0!important;padding:0!important}.demo-device-stage.device-mobile .workspace:before,.demo-device-stage.device-mobile .workspace:after{display:none}.demo-device-stage.device-mobile .mobile-bottom-nav{left:50%!important;width:100%!important;bottom:0!important;transform:translateX(-50%)!important;border-radius:0!important}}
