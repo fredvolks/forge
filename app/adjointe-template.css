@@ -1,0 +1,183 @@
+/* Adjointe-only design system, based on the approved operations reference. */
+.admin-portal.adjointe-template .admin-brand small{width:100%;text-align:center;justify-self:center}
+.oa-jobs .oa-job-chef{flex-basis:100%;font-size:12px;color:var(--forge-muted,#b8bcb3)}
+/* Approved sidebar is shared across every Adjointe route; only content scrolls. */
+@media(min-width:701px){
+ .admin-portal.adjointe-template.adjointe-template{grid-template-columns:200px minmax(0,1fr)}
+ .admin-portal.adjointe-template.adjointe-template .admin-sidebar nav button{font-size:14px;justify-content:flex-start;padding:0 12px}
+ .admin-portal.adjointe-template.adjointe-template .admin-brand{padding:0 15px 24px}
+ .admin-portal.adjointe-template.adjointe-template .admin-brand>div{display:contents}
+ .admin-portal.adjointe-template.adjointe-template .admin-user>div{display:block}
+}
+.admin-portal.adjointe-template .admin-alert{width:52px;height:52px;flex-shrink:0;margin-left:auto;display:grid;place-items:center}
+.admin-portal.adjointe-template .admin-alert svg{width:30px;height:30px}
+.admin-portal.adjointe-template .admin-alert b{width:23px;height:23px;font-size:14px;top:-4px;right:-5px;background:var(--accent,#a8e64b);color:#101510}
+.admin-portal.adjointe-template .admin-user>button{width:46px;height:46px;display:grid;place-items:center;flex-shrink:0;border:1px solid #555d4d}
+.admin-portal.adjointe-template .admin-user>button svg{width:26px;height:26px}
+.admin-portal.adjointe-template .admin-brand>.admin-company-logo{grid-column:1/-1;width:160px!important;height:60px!important;max-width:100%;display:block}
+.admin-portal.adjointe-template .admin-company-logo img{width:100%!important;height:100%!important;object-fit:contain}
+.oa-demo-notifications{position:absolute;right:20px;top:66px;width:410px;max-width:calc(100% - 40px);z-index:100;background:var(--forge-surface,#202426);border:1px solid #496137;border-radius:5px;box-shadow:0 8px 25px #0008;padding:15px;color:var(--forge-text,#eee)}
+.oa-demo-notifications header{display:flex;justify-content:space-between;align-items:center;font-size:17px}
+.oa-demo-notifications header button{font-size:26px;width:36px;height:36px;color:var(--forge-text,#eee)}
+.oa-demo-notifications article{display:flex;gap:12px;padding:15px 0;border-top:1px solid #373c32}
+.oa-demo-notifications article i{width:8px;height:8px;background:var(--accent,#a8e64b);border-radius:50%;margin-top:5px;flex-shrink:0}
+.oa-demo-notifications article b{font-size:15px}.oa-demo-notifications p{font-size:14px;margin:6px 0}.oa-demo-notifications small,.oa-demo-notifications footer{font-size:12px;color:var(--forge-muted,#b8bcb3)}
+@media(min-width:701px){
+ .admin-portal.adjointe-template{height:100dvh;min-height:0;overflow:hidden;grid-template-columns:200px minmax(0,1fr)}
+ .admin-portal.adjointe-template .admin-page{height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+ .admin-portal.adjointe-template .admin-topbar{flex:0 0 62px;height:62px}
+ .admin-portal.adjointe-template .admin-content{flex:1;min-height:0;overflow:auto}
+ .admin-portal.adjointe-template .admin-sidebar{height:100%;min-height:0;overflow:auto}
+ .admin-portal.adjointe-template .admin-sidebar nav button{font-size:14px;justify-content:flex-start;padding:0 12px}
+ .admin-portal.adjointe-template .admin-brand>div{display:contents}
+ .admin-portal.adjointe-template .admin-user>div{display:block}
+}
+.oa-jobs progress{display:block;width:100%;height:5px;accent-color:#6caa58}
+@media(min-width:701px){html:has(.adjointe-template.adjointe-home),body:has(.adjointe-template.adjointe-home){overflow:hidden;height:100%;background:var(--forge-bg,#141719)}}
+@media(min-width:701px){
+ .admin-portal.adjointe-template.adjointe-home{grid-template-columns:200px minmax(0,1fr)}
+ .admin-portal.adjointe-template.adjointe-home .oa-kpis{grid-template-columns:repeat(8,minmax(0,1fr))}
+ .admin-portal.adjointe-template.adjointe-home .admin-sidebar nav button{font-size:14px;justify-content:flex-start;padding:0 12px}
+ .admin-portal.adjointe-template.adjointe-home .admin-brand>div{display:contents}
+ .admin-portal.adjointe-template.adjointe-home .admin-user>div{display:block}
+ .admin-portal.adjointe-template.adjointe-home .oa-records,
+ .admin-portal.adjointe-template.adjointe-home .oa-table-wrap,
+ .admin-portal.adjointe-template.adjointe-home .oa-modules article{scrollbar-width:none}
+ .admin-portal.adjointe-template.adjointe-home .oa-modules h3{font-size:13px}
+ .admin-portal.adjointe-template.adjointe-home .oa-jobs small{display:none}
+}
+@media(min-width:701px){
+ .admin-portal.adjointe-template.adjointe-home{height:100dvh;min-height:0;overflow:hidden}
+ .admin-portal.adjointe-template.adjointe-home .admin-page{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden}
+ .admin-portal.adjointe-template.adjointe-home .admin-topbar{flex:0 0 62px;height:62px}
+ .admin-portal.adjointe-template.adjointe-home .admin-content{flex:1;min-height:0;overflow:hidden}
+ .admin-portal.adjointe-template.adjointe-home .oa-dashboard{height:100%;min-height:0;grid-template-rows:minmax(80px,.7fr) minmax(0,2.5fr) minmax(120px,1fr);gap:8px}
+ .admin-portal.adjointe-template.adjointe-home .oa-middle{min-height:0}
+ .admin-portal.adjointe-template.adjointe-home .oa-panel{padding:8px;overflow:hidden}
+ .admin-portal.adjointe-template.adjointe-home .oa-modules>div{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .admin-portal.adjointe-template.adjointe-home .oa-modules article{overflow:auto;scrollbar-width:thin}
+ .admin-portal.adjointe-template.adjointe-home .admin-sidebar{height:100%;min-height:0;overflow:auto}
+}
+@media(min-width:701px) and (max-height:800px){
+ .admin-portal.adjointe-template.adjointe-home .oa-dashboard{grid-template-rows:115px minmax(0,1fr) 235px}
+ .admin-portal.adjointe-template.adjointe-home .oa-kpi{padding:6px;gap:3px}
+ .admin-portal.adjointe-template.adjointe-home .oa-kpi small{display:none}
+ .admin-portal.adjointe-template.adjointe-home .oa-task{padding:5px 0}
+ .admin-portal.adjointe-template.adjointe-home .oa-approval{padding:5px 0}
+ .admin-portal.adjointe-template.adjointe-home .oa-modules h3{margin-bottom:4px}
+ .admin-portal.adjointe-template.adjointe-home .oa-jobs .oa-records>button{padding:5px 0}
+ .admin-portal.adjointe-template.adjointe-home .oa-recent th,.admin-portal.adjointe-template.adjointe-home .oa-recent td{padding:2px 6px}
+ .admin-portal.adjointe-template.adjointe-home .oa-link{padding-top:4px}
+}
+.admin-portal.adjointe-template{--forge-bg:#141719;--forge-sidebar:#101315;--forge-surface:#202426;--forge-surface-2:#293326;--forge-font:Arial,"Segoe UI",sans-serif}
+.admin-portal.adjointe-template{--accent:#a8e64b;--forge-card:#202426;--forge-border:#3a3d36;--forge-text:#f0f0ec;--forge-muted:#a8aba8;background:var(--forge-bg,#141719);color:var(--forge-text,#f0f0ec);grid-template-columns:clamp(190px,14vw,235px) minmax(0,1fr);font-family:Arial,"Segoe UI",sans-serif;font-size:14px}
+.adjointe-template *{box-sizing:border-box}
+.admin-portal.adjointe-template .admin-sidebar{background:var(--forge-sidebar,#101315);padding:20px 11px;border-color:#2d302d}
+.admin-portal.adjointe-template .admin-brand{padding:0 15px 24px;flex-wrap:wrap;gap:10px}
+.admin-portal.adjointe-template .admin-brand b{font-size:26px;letter-spacing:1px}
+.admin-portal.adjointe-template .admin-brand small{font-size:15px;color:var(--accent,#a8e64b);letter-spacing:0;margin-top:14px}
+.admin-portal.adjointe-template .admin-sidebar nav{gap:5px}
+.admin-portal.adjointe-template .admin-sidebar nav button{height:44px;padding:0 18px;font-size:14px;font-weight:500;color:var(--forge-text,#edeeeb);border-radius:3px;gap:16px}
+.admin-portal.adjointe-template .admin-sidebar nav button svg{width:21px;height:21px}
+.admin-portal.adjointe-template .admin-sidebar nav button.active{background:#293326;border:1px solid #496137;color:#e8f1e1}
+.admin-portal.adjointe-template .admin-sidebar nav button:hover{background:#242722}
+.admin-portal.adjointe-template .admin-user{border:1px solid #3a3d36;border-radius:5px;padding:13px 9px;margin-top:auto}
+.admin-portal.adjointe-template .admin-user>span,.oa-profile>span{border:1px solid #83b53d;background:transparent;border-radius:50%;color:var(--accent,#a8e64b);width:40px;height:40px;display:grid;place-items:center;font-size:20px}
+.admin-portal.adjointe-template .admin-user b{font-size:14px}.admin-portal.adjointe-template .admin-user small{font-size:12px}
+.admin-portal.adjointe-template .admin-topbar{height:72px;padding:10px 22px;gap:18px;background:var(--forge-bg,#141719);border:0;position:relative}
+.oa-page-heading{margin-right:auto;min-width:0}.oa-page-heading h1{font-size:27px;line-height:1.15;margin:0;font-weight:700}.oa-page-heading p{font-size:15px;color:var(--forge-muted,#c5c7c3);margin:4px 0 0}
+.adjointe-template .admin-breadcrumbs{display:none}
+.oa-global-search{display:flex;align-items:center;gap:10px;width:30%;border:1px solid #393d37;border-radius:5px;padding:9px 12px;color:#afb2ae}
+.oa-global-search input{background:transparent;border:0;color:var(--forge-text,#eee);width:100%;min-width:0;font-size:14px;outline:none}
+.oa-profile{display:flex;align-items:center;gap:10px;color:var(--forge-text,#eee);font-size:14px;white-space:nowrap}
+.admin-portal.adjointe-template .admin-content{padding:8px 22px 18px;max-width:none;margin:0}
+.adjointe-template .oa-dashboard{display:grid;grid-template-rows:minmax(105px,.8fr) minmax(310px,3fr) minmax(145px,1.25fr);gap:12px;height:calc(100dvh - 98px);min-height:570px}
+.oa-kpis{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px}
+.oa-kpi{display:grid;grid-template-columns:40px 1fr;grid-template-rows:auto 1fr auto;gap:5px 10px;text-align:left;padding:14px 12px;background:var(--forge-surface,#202426);border:1px solid #3a3d36;border-radius:5px;color:var(--forge-text,#eee);min-width:0}
+.oa-kpi:disabled{opacity:1;cursor:default}.oa-kpi i{border:1px solid #83b53d;border-radius:50%;color:var(--accent,#a8e64b);display:grid;place-items:center;width:39px;height:39px;grid-row:1/3}
+.oa-kpi span{font-size:14px;line-height:1.25}.oa-kpi b{font-size:28px;font-weight:500;align-self:center}.oa-kpi small{grid-column:2;font-size:12px;color:var(--forge-muted,#aaa)}
+.oa-middle{display:grid;grid-template-columns:1.07fr 1fr;gap:16px;min-height:0}
+.oa-left,.oa-right{display:grid;gap:10px;min-height:0}.oa-left{grid-template-rows:1.45fr 1fr}.oa-right{grid-template-rows:1fr 1.3fr}
+.oa-right-bottom{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-height:0}
+.oa-panel{background:var(--forge-surface,#202426);border:1px solid #414035;border-radius:5px;padding:11px 16px;min-width:0;min-height:0;display:flex;flex-direction:column}
+.oa-panel h2{font-size:15px;line-height:1.2;font-weight:600;margin:0;padding-bottom:8px;border-bottom:1px solid #373b34;flex-shrink:0}
+.oa-records{min-height:0;overflow:auto;flex:1;scrollbar-width:thin}
+.oa-task{display:grid;grid-template-columns:18px minmax(0,1fr) 90px 90px;gap:9px;align-items:center;width:100%;text-align:left;padding:9px 0;border-bottom:1px solid #30352f;font-size:13px;color:var(--forge-text,#eee)}
+.oa-task small{font-size:12px;color:var(--forge-muted,#bbb)}.oa-task>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oa-status,.oa-danger{font-size:12px;font-style:normal;border:1px solid #648a35;border-radius:3px;padding:2px 7px;white-space:nowrap;color:var(--accent,#a8e64b);text-align:center}.oa-danger{color:#e2655c;border-color:#923a33}
+.oa-link{color:var(--accent,#a8e64b);display:flex;align-items:center;gap:6px;font-size:13px;padding-top:8px;margin-top:auto;width:max-content;max-width:100%;flex-shrink:0}
+.oa-modules>div{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;flex:1;min-height:0}
+.oa-modules article{border:1px solid #42443c;border-radius:4px;padding:10px;display:flex;flex-direction:column;min-width:0;margin-top:7px}
+.oa-modules h3{font-size:14px;display:flex;gap:8px;align-items:center;margin:0 0 9px}.oa-modules h3 svg{color:var(--accent,#a8e64b);flex-shrink:0}.oa-modules p{font-size:12px;margin:2px 0;color:var(--forge-muted,#ccc)}
+.oa-approval{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #30352f;font-size:13px}
+.oa-approval>span{flex:1;min-width:0}.oa-approval>button{border:1px solid #648a35;color:var(--accent,#a8e64b);border-radius:3px;font-size:12px;padding:4px 12px}
+.oa-approval>.oa-gold{background:var(--accent,#a8e64b);color:#171910}
+.oa-finance>div{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid #30352f;flex:1;font-size:13px}.oa-finance>small{font-size:12px;color:var(--forge-muted,#aaa);margin-top:8px}
+.oa-jobs .oa-records>button{display:flex;flex-wrap:wrap;gap:6px 12px;width:100%;text-align:left;padding:10px 0;border-bottom:1px solid #30352f;color:var(--forge-text,#eee);font-size:13px}.oa-jobs small{width:100%;font-size:12px;color:var(--forge-muted,#aaa)}
+.oa-recent .oa-link{margin-left:auto}.oa-table-wrap{overflow:auto;min-height:0;flex:1}.oa-recent table{width:100%;border-collapse:collapse;font-size:13px;text-align:left}
+.oa-recent th,.oa-recent td{padding:4px 7px;border-bottom:1px solid #343831;font-weight:400;white-space:nowrap}.oa-recent th{font-weight:600;color:var(--forge-muted,#ddd)}.oa-recent td button{color:inherit}.oa-empty{font-size:14px;color:#aeb1ac;padding:12px 0}
+/* Shared work surfaces: all existing modules inherit the same compact controls. */
+.admin-portal.adjointe-template :is(.portal-title h1,.job-page-head h1){font-size:25px;letter-spacing:0}
+.admin-portal.adjointe-template :is(.portal-title p,.job-page-head p){font-size:14px}
+.admin-portal.adjointe-template :is(.portal-title>span,.job-page-head>div>span){font-size:12px;letter-spacing:.5px}
+.admin-portal.adjointe-template :is(button,input,select,textarea){border-radius:4px;font-size:14px}
+.admin-portal.adjointe-template :is(input,select,textarea){background:var(--forge-surface,#181c1e);color:var(--forge-text,#eee);border-color:#41463e}
+.admin-portal.adjointe-template :is(table){font-size:14px;border-collapse:collapse}
+.admin-portal.adjointe-template :is(th,td){padding:7px 10px;border-color:#363d34}
+.admin-portal.adjointe-template :is(.command-hub-grid,.report-hub,.administration-grid){gap:7px;margin-top:14px}
+.admin-portal.adjointe-template :is(.command-hub-grid>button,.report-hub>button,.administration-grid>button){min-height:55px;padding:10px;border-radius:4px;background:var(--forge-surface,#202426);border-color:#414035}
+.admin-portal.adjointe-template :is(.command-hub-grid b,.report-hub b,.administration-grid b){font-size:14px}
+.admin-portal.adjointe-template :is(.command-hub-grid small,.report-hub small,.administration-grid small){font-size:12px}
+.admin-portal.adjointe-template .portal-job-list{gap:0;border:1px solid #414035;border-radius:4px}
+.admin-portal.adjointe-template .portal-job-list>button{min-height:52px;border:0;border-bottom:1px solid #363b33;border-radius:0;background:var(--forge-surface,#202426);grid-template-columns:95px minmax(150px,1fr) 140px 20px}
+.admin-portal.adjointe-template .portal-job-list>button>div b{font-size:14px}.admin-portal.adjointe-template .portal-job-list>button>div small{font-size:12px}
+.admin-portal.adjointe-template :is(.job-tabs button,.job-status-tabs button,.portal-back){font-size:13px}
+.adjointe-template button:focus-visible,.adjointe-template input:focus-visible{outline:2px solid #a8e64b;outline-offset:2px}
+.oa-secondary{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid #383d34;padding-bottom:10px;margin-bottom:14px}
+.oa-secondary button{padding:7px 12px;border:1px solid #3d4238;color:var(--accent,#a8e64b);background:var(--forge-surface,#202426)}
+.adjointe-home .oa-secondary{display:none}.oa-unconnected p{font-size:14px;color:#b8bcb5}
+.admin-portal.adjointe-template .portal-page>.portal-title,.admin-portal.adjointe-template .forge-command-center>.fcc-heading{display:none}
+.admin-portal.adjointe-template .forge-command-center{border:1px solid #414035;border-radius:5px;background:var(--forge-surface,#202426);margin-top:10px}
+.admin-portal.adjointe-template :is(.dynamic-catalog,.legacy-catalog,.fcc-cards,.fcc-report,.fcc-toolbar,.fcc-metrics,.fcc-drawer,.article-builder,.job-section-card,.job-chat-page,.job-history-page){background:var(--forge-surface,#202426);color:var(--forge-text,#eee);border-color:#414035;border-radius:5px}
+.admin-portal.adjointe-template :is(.dynamic-product-list>article,.inventory-line,.field-card,.fcc-order-row){border-radius:3px;background:var(--forge-surface,#1b1f21);border-color:#363e33}
+.admin-portal.adjointe-template :is(.dynamic-product-list b,.dynamic-product-list strong,.inventory-line b,.fcc-order-row b,.catalog-manager-head h3){font-size:14px;color:var(--forge-text,#eee)}
+.admin-portal.adjointe-template :is(.dynamic-product-list small,.dynamic-product-list span,.inventory-line small,.catalog-manager-head p,.fcc-section-title p){font-size:12px;color:var(--forge-muted,#aeb3a9)}
+.admin-portal.adjointe-template .admin-brand{display:grid;grid-template-columns:36px 1fr;align-items:start}
+.admin-portal.adjointe-template .admin-brand>div{display:contents}
+.admin-portal.adjointe-template .admin-brand b{grid-column:2;grid-row:1}
+.admin-portal.adjointe-template .admin-brand small{grid-column:1/-1;grid-row:2;margin-top:6px}
+.admin-portal.adjointe-template .admin-brand>.admin-company-logo{width:36px;height:36px;background:transparent}
+@media(min-width:1800px){.oa-task{padding:12px 0}.oa-recent th,.oa-recent td{padding:6px 8px}}
+@media(max-width:1400px){.oa-kpi{grid-template-columns:28px 1fr;padding:10px 7px;gap:5px}.oa-kpi i{width:28px;height:28px}.oa-kpi i svg{width:17px}.oa-kpi span{font-size:12px}.oa-kpi b{font-size:24px}.oa-modules article{padding:6px}.oa-modules h3{font-size:12px;gap:4px}.oa-task{grid-template-columns:17px minmax(0,1fr) 75px}.oa-task small{display:none}.oa-panel{padding:10px}.oa-approval>button{padding:4px 7px}.oa-global-search{width:24%}}
+@media(max-width:1100px){.admin-portal.adjointe-template{grid-template-columns:68px minmax(0,1fr)}.admin-portal.adjointe-template .admin-brand>div,.admin-portal.adjointe-template .admin-user>div{display:none}.admin-portal.adjointe-template .admin-sidebar nav button{font-size:0;padding:0;justify-content:center}.admin-portal.adjointe-template .admin-brand{padding:0 0 20px}.oa-kpis{grid-template-columns:repeat(4,1fr)}.adjointe-template .oa-dashboard{height:auto;min-height:0;grid-template-rows:auto auto auto}.oa-middle{min-height:460px}.oa-kpi span{font-size:14px}.oa-global-search{display:none}.oa-modules>div{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.admin-portal.adjointe-template{display:block}.admin-portal.adjointe-template .admin-sidebar{position:relative;height:auto;padding:8px}.admin-portal.adjointe-template .admin-sidebar nav{display:flex;overflow:auto}.admin-portal.adjointe-template .admin-sidebar nav button{font-size:12px;flex-shrink:0;gap:6px;padding:0 10px}.admin-portal.adjointe-template .admin-brand,.admin-portal.adjointe-template .admin-user{display:none}.admin-portal.adjointe-template .admin-topbar{padding:10px;height:auto;position:relative}.oa-page-heading h1{font-size:22px}.oa-page-heading p{font-size:12px}.oa-profile{display:none}.admin-portal.adjointe-template .admin-content{padding:10px}.oa-middle{display:flex;flex-direction:column}.oa-left,.oa-right{display:contents}.oa-tasks{order:1}.oa-approvals{order:2}.oa-right-bottom{order:3}.oa-modules{order:4}.oa-panel{min-height:150px}.oa-kpis{grid-template-columns:repeat(2,1fr)}.oa-kpi{min-height:90px}.oa-records{max-height:240px}.oa-modules>div{grid-template-columns:repeat(2,1fr)}}
+.admin-portal.adjointe-template .admin-brand small{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.025em;line-height:1.4}
+.admin-portal.adjointe-template.adjointe-template .admin-brand{grid-template-columns:minmax(0,1fr);justify-items:center;width:100%;box-sizing:border-box}
+.admin-portal.adjointe-template .admin-brand>.admin-company-logo{justify-self:center;margin-inline:auto;max-width:100%;min-width:0}
+.admin-portal.adjointe-template .admin-company-logo img{display:block;object-position:center}
+.admin-portal.adjointe-template .admin-brand small{display:block;grid-column:1;text-align:center;width:100%;margin-inline:auto}
+/* Keep the shared desktop shell inside the viewport; long content scrolls inside. */
+@media(min-width:701px){html:has(.admin-portal.adjointe-template),body:has(.admin-portal.adjointe-template){height:100%;overflow:hidden}.admin-portal.adjointe-template{margin-inline:auto;box-sizing:border-box}.admin-portal.adjointe-template .admin-content{box-sizing:border-box;overflow-x:hidden}.admin-portal.adjointe-template .admin-content>.teams-hours{width:100%;max-width:1400px;margin-inline:auto;padding-top:8px;padding-bottom:8px}}
+.admin-brand .company-logo-edit{display:block;width:100%;height:100%;padding:0;background:transparent;border:0;border-radius:6px;cursor:pointer}.admin-brand .company-logo-edit:hover{outline:1px solid var(--accent,#b0ef49);outline-offset:4px}.admin-brand .company-logo-edit:focus-visible{outline:2px solid var(--accent,#b0ef49);outline-offset:4px}.admin-brand .company-logo-edit:disabled{cursor:wait;opacity:.6}
+.forge-sidebar-account{margin-top:auto;padding:20px 10px 12px;display:flex;flex-direction:column;gap:12px;font-family:'Segoe UI',sans-serif}.forge-sidebar-account button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;padding:4px;color:var(--forge-text,#edf3ef);text-align:left;cursor:pointer}.fsa-avatar{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#137c2e;color:#edffe9;font-size:12px;font-weight:600;flex-shrink:0}.fsa-profile b{display:block;font-size:14px;font-weight:600}.fsa-profile small{display:block;font-size:12px;color:var(--forge-muted,#a2b0a8);margin-top:3px}.forge-sidebar-account .fsa-mode{font-size:14px}.fsa-mode>span{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--forge-surface,#20282a);flex-shrink:0}.forge-sidebar-account button:focus-visible{outline:2px solid var(--accent,#b0ef49);outline-offset:3px;border-radius:6px}@media(max-width:700px){.forge-sidebar-account{display:none}}
+/* Theme palette must override the desktop template's local dark defaults. */
+html[data-mode="light"] .admin-portal.adjointe-template{
+ --forge-bg:#f2f5f3;--forge-sidebar:#fff;--forge-surface:#fff;--forge-surface-2:#e7efe8;--forge-card:#fff;--forge-border:#cbd6ce;--forge-text:#1e3026;--forge-muted:#53665b;--accent:#34751e;
+ color-scheme:light;background:var(--forge-bg);color:var(--forge-text)
+}
+html[data-mode="dark"] .admin-portal.adjointe-template{color-scheme:dark}
+html[data-mode="light"] .admin-portal.adjointe-template :is(.admin-sidebar,.admin-topbar,.admin-page,.admin-content){background:var(--forge-bg);color:var(--forge-text);border-color:var(--forge-border)}
+html[data-mode="light"] .admin-portal.adjointe-template .admin-sidebar{background:var(--forge-sidebar)}
+html[data-mode="light"] .admin-portal.adjointe-template .admin-sidebar nav button{color:var(--forge-text)}
+html[data-mode="light"] .admin-portal.adjointe-template .admin-sidebar nav button:is(.active,:hover){background:#e6efdf;border-color:#a5c48e;color:#285918}
+html[data-mode="light"] .admin-portal.adjointe-template :is(input,select,textarea){background:#fff;color:var(--forge-text);border-color:var(--forge-border)}
+html[data-mode="light"] .admin-portal.adjointe-template :is(input,textarea)::placeholder{color:#607368;opacity:1}
+html[data-mode="light"] .admin-portal.adjointe-template :is(.jobs-heading>button,.jobs-resultbar button[aria-pressed=true],.th-heading button,.oa-gold){background:#a8e64b;color:#17250c}
+html[data-mode="light"] .admin-portal.adjointe-template .jobs-kpis button:disabled{opacity:1;color:#607368}
+html[data-mode="light"] .admin-portal.adjointe-template .jobs-kpis button:disabled strong{color:#607368}
+html[data-mode="light"] .admin-portal.adjointe-template :is(.oa-panel,.oa-kpi,.oa-modules article,.oa-task,.oa-approval,.oa-finance>div,.oa-recent th,.oa-recent td){border-color:var(--forge-border)}
+html[data-mode="light"] .admin-portal.adjointe-template :is(.oa-page-heading p,.oa-kpi small,.oa-task small,.oa-modules p,.oa-finance>small,.oa-jobs small,.oa-empty,.oa-unconnected p){color:var(--forge-muted)}
+html[data-mode="light"] .admin-portal.adjointe-template .oa-status{color:#34751e;border-color:#6a924e}
+html[data-mode="light"] .admin-portal.adjointe-template .oa-danger{color:#a52e24}
+html[data-mode="light"] .admin-portal.adjointe-template .th-watch-panel .th-alert svg{color:#946600}
+html[data-mode="light"] .admin-portal.adjointe-template .admin-alert{color:var(--forge-text);background:var(--forge-surface);border-color:var(--forge-border)}

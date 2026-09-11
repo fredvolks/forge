@@ -22,6 +22,7 @@
 .demo-device-stage:not(.device-desktop) .field-mobile-head{height:72px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);margin:0 -16px 18px;padding:0 16px;background:#0f1412}
 .field-mobile-head .field-company-logo{display:block;width:108px;height:38px;object-fit:contain;object-position:left center}
 .field-mobile-head>div{display:flex;align-items:center;gap:11px}
+.demo-device-stage.device-mobile .workspace>.shared-mobile-head>:is(.field-company-logo,div){transform:translateY(-3px)}
 .field-mobile-head>div>button{position:relative;width:40px;height:40px;border:1px solid #334038;border-radius:11px;background:#171e1a;color:var(--ink);display:grid;place-items:center;padding:0}
 .field-mobile-head>div>button>svg{width:20px}
 .field-mobile-head>div>button>i{position:absolute;top:-5px;right:-4px;width:17px;height:17px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#071006;font-size:9px;font-style:normal;font-weight:950}

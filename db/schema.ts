@@ -1,4 +1,5 @@
 export const schemaStatements = [
+  // Additive identity schema is installed by migration 0006, after users exists.
   `CREATE TABLE IF NOT EXISTS companies (id TEXT PRIMARY KEY, name TEXT NOT NULL, created_at TEXT NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, company_id TEXT NOT NULL, email TEXT NOT NULL, name TEXT NOT NULL, role TEXT NOT NULL CHECK(role IN ('boss','adjointe','chef','employe')), active INTEGER NOT NULL DEFAULT 1, FOREIGN KEY(company_id) REFERENCES companies(id))`,
   `CREATE UNIQUE INDEX IF NOT EXISTS idx_users_company_email ON users(company_id, email)`,
@@ -51,4 +52,10 @@ export const schemaStatements = [
   `CREATE TABLE IF NOT EXISTS company_home_creation_layout_items (id TEXT PRIMARY KEY, layout_id TEXT NOT NULL, shortcut_key TEXT NOT NULL, position INTEGER NOT NULL CHECK(position BETWEEN 1 AND 8), created_at TEXT NOT NULL, FOREIGN KEY(layout_id) REFERENCES company_home_creation_layouts(id))`,
   `CREATE TABLE IF NOT EXISTS weather_snapshots (id TEXT PRIMARY KEY, company_id TEXT NOT NULL, job_id TEXT, location_label TEXT NOT NULL, latitude REAL, longitude REAL, temperature REAL NOT NULL, condition TEXT NOT NULL, rain_probability REAL, wind_speed REAL, weather_alert TEXT, observed_at TEXT NOT NULL, expires_at TEXT, FOREIGN KEY(job_id) REFERENCES jobs(id))`,
   `CREATE TABLE IF NOT EXISTS job_progress_reports (id TEXT PRIMARY KEY, company_id TEXT NOT NULL, job_id TEXT NOT NULL, chef_employee_id TEXT NOT NULL, punch_segment_id TEXT, report_date TEXT NOT NULL, summary TEXT, progress_percent REAL, work_completed TEXT, material_missing TEXT, blockers TEXT, potential_extra TEXT, needs_for_tomorrow TEXT, note TEXT, submitted_at TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, FOREIGN KEY(job_id) REFERENCES jobs(id), FOREIGN KEY(chef_employee_id) REFERENCES employees(id), FOREIGN KEY(punch_segment_id) REFERENCES punch_segments(id))`
+] as const;
+
+export const identitySchemaStatements = [
+ `CREATE UNIQUE INDEX IF NOT EXISTS idx_users_tenant_id ON users(company_id,id)`,
+ `CREATE TABLE user_identities (provider TEXT NOT NULL CHECK(provider='supabase'), issuer TEXT NOT NULL, subject TEXT NOT NULL, company_id TEXT NOT NULL, user_id TEXT NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY(provider,issuer,subject), FOREIGN KEY(company_id,user_id) REFERENCES users(company_id,id))`,
+ `CREATE INDEX idx_user_identities_user ON user_identities(company_id,user_id)`
 ] as const;

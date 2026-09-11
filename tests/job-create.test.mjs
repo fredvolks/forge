@@ -1,0 +1,11 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import ts from 'typescript';
+const source=ts.transpileModule(readFileSync(new URL('../lib/time-domain.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+const {saveJob}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+const actor={companyId:'mir-demo',email:'ester',userName:'Ester',role:'Adjointe'};
+const fixture=()=>({company_id:'mir-demo',employees:[{id:'e',company_id:'mir-demo',user_id:'ester',name:'Ester',role:'Adjointe'}],jobs:[],audit:[]});
+const job={id:'one',company_id:'mir-demo',number:'JOB-TEST',name:'Chantier test',members:['ester'],estimated_hours:10};
+test('one ID is created, updated and audited',()=>{const d=fixture();saveJob(d,actor,job);assert.equal(d.jobs[0].id,'one');saveJob(d,actor,{...d.jobs[0],name:'Modifié'});assert.equal(d.jobs.length,1);assert.equal(d.audit[1].before.name,'Chantier test');assert.equal(d.jobs[0].version,2);assert.throws(()=>saveJob(d,actor,job));});
+test('duplicate numbers, foreign actors and invalid dates refused',()=>{const d=fixture();saveJob(d,actor,job);assert.throws(()=>saveJob(d,actor,{...job,id:'other'}));assert.throws(()=>saveJob(d,{...actor,companyId:'foreign'},job));assert.throws(()=>saveJob(fixture(),actor,{...job,planned_start:'2026-10-10',planned_delivery:'2026-10-01'}));});

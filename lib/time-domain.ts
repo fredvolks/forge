@@ -1,4 +1,5 @@
 // Shared domain for the demo adapter and the future authenticated repository.
+import type {EmployeeProfile} from './employee-profile';
 // Durations are minutes; segment timestamps are ISO instants. No UI owns a copy.
 export type Actor = { companyId:string; email:string; userName:string; role:'Boss'|'Adjointe'|'Chef'|'Employé' };
 export type Segment = { id:string; company_id:string; employee_id:string; job_id:string; shift_id:string; start_time:string; end_time:string|null; source:string; gps_context?:string; created_at:string; updated_at:string; version:number };
@@ -6,7 +7,24 @@ export type Proposal = { job_id:string; start_time:string; end_time:string };
 export type Correction = { id:string; company_id:string; employee_id:string; original_segment_id:string|null; original:Segment|null; proposed:Proposal; reason:string; note:string; requested_by_user_id:string; requested_at:string; status:'pending'|'approved'|'rejected'; reviewed_by_user_id?:string; reviewed_at?:string; reviewer_note?:string; resulting_segment_id?:string };
 export type Submission = { id:string; company_id:string; employee_id:string; week:string; status:'submitted'|'approved'|'rejected'; submitted_at:string; submitted_by_user_id:string; reviewed_at?:string; reviewed_by_user_id?:string };
 export type Settings = { timezone:string; weekStartsOn:number; minimum:number; maximum:number; deduction:number };
-export type TimeData = { company_id:string; revision:number; settings:Settings; jobs:{id:string; company_id:string; number:string; name:string; members:string[]}[]; employees:{id:string; company_id:string; user_id:string; name:string; role:Actor['role']}[]; segments:Segment[]; corrections:Correction[]; submissions:Submission[]; audit:{id:string; company_id:string; actor_id:string; action:string; entity_id:string; before:unknown; after:unknown; reason:string; created_at:string}[]; notifications:{id:string; company_id:string; recipient_user_id:string; source_type:string; source_id:string; employee_id:string; original_segment_id:string|null; job_id:string|null; title:string; deep_link:string; read_at:string|null; created_at:string}[] };
+export type Team={id:string;company_id:string;name:string;lead_id:string|null;job_id:string|null;member_ids:string[]};
+export type JobRecord={id:string;company_id:string;number:string;name:string;members:string[];cover_photo?:string;cover_photo_name?:string;cover_photo_crop?:{x:number;y:number;zoom:number};address?:string;unit?:string;city?:string;province?:string;postal_code?:string;client?:string;contractor?:string;phone?:string;project_type?:string;description?:string;site_instructions?:string;status?:string;estimated_hours?:number;planned_start?:string;planned_end?:string;planned_delivery?:string;planning_notes?:string;lead_id?:string;team_id?:string;version?:number};
+export type TimeData = { company_id:string; revision:number; settings:Settings; teams?:Team[]; jobs:JobRecord[]; employees:{id:string; company_id:string; user_id:string; name:string; role:Actor['role'];phone?:string;trade?:string;status?:'active'|'inactive';employee_number?:string;profile?:EmployeeProfile;profile_version?:number}[]; segments:Segment[]; corrections:Correction[]; submissions:Submission[]; audit:{id:string; company_id:string; actor_id:string; action:string; entity_id:string; before:unknown; after:unknown; reason:string; created_at:string}[]; notifications:{id:string; company_id:string; recipient_user_id:string; source_type:string; source_id:string; employee_id:string; original_segment_id:string|null; job_id:string|null; title:string; deep_link:string; read_at:string|null; created_at:string}[] };
+export function saveJob(d:TimeData,a:Actor,input:JobRecord){
+ authorize(d,a,true);if(input.company_id!==a.companyId)throw Error('Compagnie invalide.');
+ if(!input.number.trim()||!input.name.trim())throw Error('Numéro et nom obligatoires.');
+ if(d.jobs.some(j=>j.id!==input.id&&j.number.toLowerCase()===input.number.trim().toLowerCase()))throw Error('Ce numéro de Job existe déjà.');
+ if(input.members.some(m=>!d.employees.some(e=>e.user_id===m&&m&&e.company_id===a.companyId)))throw Error('Membre inaccessible.');
+ if(input.lead_id&&!d.employees.some(e=>e.id===input.lead_id&&e.role==='Chef'&&input.members.includes(e.user_id)))throw Error('Choisissez un chef membre de cette Job.');
+ if(input.team_id&&!(d.teams||[]).some(t=>t.id===input.team_id&&t.company_id===a.companyId))throw Error('Équipe inaccessible.');
+ if(input.estimated_hours!==undefined&&(!Number.isFinite(input.estimated_hours)||input.estimated_hours<0))throw Error('Estimation invalide.');
+ if(input.planned_start&&input.planned_delivery&&input.planned_delivery<input.planned_start)throw Error('La livraison doit suivre le début prévu.');
+ if(input.planned_start&&input.planned_end&&input.planned_end<input.planned_start)throw Error('L’échéance doit suivre le début prévu.');
+ const existing=d.jobs.find(j=>j.id===input.id);if(existing&&(existing.version||0)!==(input.version||0))throw Error('La Job a changé. Ouvrez-la à nouveau.');
+ const before=existing?structuredClone(existing):null;const value={...input,number:input.number.trim(),name:input.name.trim(),version:(existing?.version||0)+1};
+ if(existing)Object.assign(existing,value);else d.jobs.push(value);
+ audit(d,a,existing?'job_updated':'job_created',input.id,before,value);
+}
 export const employeeId=(a:Actor)=>`employee:${a.companyId}:${a.email}`;
 export const canReview=(a:Pick<Actor,'role'>|undefined)=>a?.role==='Boss'||a?.role==='Adjointe';
 export const duration=(minutes:number)=>`${Math.floor(minutes/60)} h ${String(Math.round(minutes%60)).padStart(2,'0')}`;
@@ -46,3 +64,36 @@ export function submitWeek(d:TimeData,a:Actor,week:string){authorize(d,a);if(wee
 export function reviewWeek(d:TimeData,a:Actor,id:string,decision:'approved'|'rejected'){authorize(d,a,true);const s=d.submissions.find(s=>s.id===id&&s.company_id===a.companyId);if(!s||s.status!=='submitted'||s.submitted_by_user_id===a.email)throw Error('Semaine non admissible.');if(weekStatus(d,s.employee_id,s.week)==='Modification en attente')throw Error('Traitez les corrections avant la semaine.');const old=structuredClone(s);s.status=decision;s.reviewed_at=new Date().toISOString();s.reviewed_by_user_id=a.email;audit(d,a,`week_${decision}`,id,old,s);notify(d,a,s,decision==='approved'?'Semaine approuvée':'Semaine refusée',[s.submitted_by_user_id]);}
 export function punch(d:TimeData,a:Actor,jobId:string,action:'toggle'|'switch',now=new Date().toISOString()){authorize(d,a);const job=d.jobs.find(j=>j.id===jobId&&j.company_id===a.companyId&&j.members.includes(a.email));if(!job)throw Error('Job non assignée.');const active=d.segments.find(s=>s.employee_id===employeeId(a)&&!s.end_time);if(action==='switch'&&active?.job_id===jobId)return;if(active){if(Date.parse(now)<=Date.parse(active.start_time))throw Error('Veuillez attendre avant de terminer ce segment.');const old=structuredClone(active);active.end_time=now;active.updated_at=now;active.version++;audit(d,a,'punch_out',active.id,old,active);}if(!active||action==='switch'){const s:Segment={id:crypto.randomUUID(),company_id:a.companyId,employee_id:employeeId(a),job_id:jobId,shift_id:active?.shift_id||crypto.randomUUID(),start_time:now,end_time:null,source:'punch',created_at:now,updated_at:now,version:1};d.segments.push(s);audit(d,a,'punch_in',s.id,null,s);}}
 export function updateSettings(d:TimeData,a:Actor,s:Settings){authorize(d,a,true);if(!Number.isInteger(s.weekStartsOn)||s.weekStartsOn<0||s.weekStartsOn>6||![s.minimum,s.maximum,s.deduction].every(Number.isInteger)||s.minimum<0||s.maximum<s.minimum||s.deduction<0||s.deduction>s.minimum)throw Error('Paramètres de déduction invalides.');new Intl.DateTimeFormat('fr-CA',{timeZone:s.timezone});const old=d.settings;d.settings=s;audit(d,a,'time_settings_updated',d.company_id,old,s);}
+export function adminCorrectSegment(d:TimeData,a:Actor,id:string,version:number,p:Proposal,reason:string,note:string){
+ authorize(d,a,true);const s=d.segments.find(s=>s.id===id&&s.company_id===a.companyId);
+ if(!s||s.version!==version)throw Error('Ce Punch a changé. Ouvrez-le à nouveau.');
+ if(!reason.trim())throw Error('La raison est obligatoire.');
+ if(d.corrections.some(c=>c.original_segment_id===id&&c.status==='pending'))throw Error('Traitez d’abord la demande de correction en attente.');
+ validateProposal(d,s.employee_id,p,id);const before=structuredClone(s);
+ Object.assign(s,p,{version:s.version+1,updated_at:new Date().toISOString()});
+ audit(d,a,'administrative_correction',id,before,s,reason.trim()+(note.trim()?' — '+note.trim():''));
+ for(const w of new Set([before.start_time,p.start_time].map(t=>weekOf(dateKey(t,d.settings.timezone),d.settings.weekStartsOn)))){
+  const submission=d.submissions.find(x=>x.employee_id===s.employee_id&&x.week===w);
+  if(submission&&submission.status!=='submitted'){const old=structuredClone(submission);submission.status='submitted';delete submission.reviewed_at;delete submission.reviewed_by_user_id;audit(d,a,'week_reopened',submission.id,old,submission,reason);}
+ }
+}
+export function saveTeam(d:TimeData,a:Actor,input:Omit<Team,'company_id'>){
+ authorize(d,a,true);
+ if(!input.name.trim())throw Error('Le nom est obligatoire.');
+ const members=[...new Set(input.member_ids)];
+ if(!members.length||members.some(id=>!d.employees.some(e=>e.id===id&&e.company_id===a.companyId)))throw Error('Choisissez des membres de la compagnie.');
+ if(input.lead_id&&(!members.includes(input.lead_id)||!d.employees.some(e=>e.id===input.lead_id&&e.role==='Chef')))throw Error('Le chef doit faire partie de l’équipe et avoir le rôle Chef.');
+ if(input.job_id&&!d.jobs.some(j=>j.id===input.job_id&&j.company_id===a.companyId))throw Error('Job inaccessible.');
+ const teams=d.teams??=[];const existing=teams.find(t=>t.id===input.id);
+ if(existing&&existing.company_id!==a.companyId)throw Error('Équipe inaccessible.');
+ const before=existing?structuredClone(existing):null;
+ const value={...input,name:input.name.trim(),company_id:a.companyId,member_ids:members};
+ if(existing)Object.assign(existing,value);else teams.push(value);
+ if(input.job_id){const job=d.jobs.find(j=>j.id===input.job_id)!;const old=structuredClone(job);job.members=[...new Set([...job.members,...members.map(id=>d.employees.find(e=>e.id===id)!.user_id).filter(Boolean)])];audit(d,a,'job_members_assigned',job.id,old,job);}
+ audit(d,a,'team_saved',input.id,before,value);
+}
+export function createDemoEmployee(d:TimeData,a:Actor,input:{name:string;phone:string;role:'Chef'|'Employé'}){
+ authorize(d,a,true);if(!input.name.trim())throw Error('Le nom est obligatoire.');
+ const e={id:crypto.randomUUID(),company_id:a.companyId,user_id:'',name:input.name.trim(),phone:input.phone.trim(),role:input.role,status:'active' as const};
+ d.employees.push(e);audit(d,a,'employee_created',e.id,null,e);return e.id;
+}

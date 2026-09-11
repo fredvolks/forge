@@ -1,8 +1,12 @@
-# Forge email recovery — prepared, not activated
+# Forge email recovery — configured locally, not activated end-to-end
 
-The owner confirmed no Supabase project exists yet. No real email or password
-change has been tested. Demo sign-in remains separate and unchanged. This is not
-a completed production authentication integration.
+The owner supplied the Supabase project URL and publishable key on September 10,
+2026. They are stored in the ignored local `.dev.vars` file. A read-only request
+to the provider's settings endpoint succeeded and confirmed email authentication
+is enabled. The running preview still returns 503 for `/api/auth/config` and needs
+to reload its runtime configuration. No real email or password change has been
+tested. Demo sign-in remains separate and unchanged. This is not a completed
+production authentication integration.
 
 ## Required configuration
 

@@ -1,5 +1,5 @@
-.content.work-orders>.my-orders{display:block!important;width:100%;min-width:0;color:var(--forge-text,var(--ink));padding:0 12px 12px}
-.demo-device-stage .workspace>.content.work-orders>:not(.my-orders){display:none!important}
+.content.work-orders>.my-orders{display:block!important;width:100%;min-width:0;min-height:100%;color:var(--forge-text,var(--ink));background:var(--forge-bg);padding:12px;--line:var(--forge-border)}
+.demo-device-stage .workspace>.content.work-orders>:not(.my-orders):not(.new-order-page):not(.order-detail-overlay){display:none!important}
 .content.work-orders{overflow-y:auto!important;overflow-x:hidden!important}
 .my-orders header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
 .my-orders h1{font-size:24px;font-weight:600;margin:0}.my-orders h2{font-size:15px;margin:20px 0 12px}

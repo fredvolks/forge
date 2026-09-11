@@ -4,6 +4,7 @@ import { TimeNotifications } from './time-admin';
 
 import { useMemo, useState } from 'react';
 
+import {ExpenseNotices} from './expense-workspace';
 import { Bell, CalendarDays, Check, ChevronRight, Clock3, Download, FileText, Filter, Image, MessageSquare, PackageCheck, Plus, Receipt, RefreshCcw, Search, Settings, Trash2, Truck, Upload, Users, X } from 'lucide-react';
 
 import type { ForgeSession } from './forge-access';
@@ -131,7 +132,7 @@ return <aside className="notice-center">
 <X/>
 </button>
 </header>
-<nav>{['Toutes','À traiter','Commandes','Dépenses','Punchs','Jobs'].map(v=>
+<ExpenseNotices actor={actor} go={route=>{go(route);close()}}/><nav>{['Toutes','À traiter','Commandes','Dépenses','Punchs','Jobs'].map(v=>
 <button className={filter===v?'active':''} onClick={()=>setFilter(v)} key={v}>{v}</button>)}</nav>
 <button className="mark-all" onClick={()=>setItems(items.map(n=>({...n,unread:false})))}>
 <Check/> Tout marquer comme lu</button>
@@ -256,31 +257,7 @@ return <div className="suite-page">
 </button>)}</div>
 </div>}
 
-const expenses=[['DEP-2026-0048','Fred G.','JOB-214','Canac',184.37,'À vérifier','À rembourser'],['DEP-2026-0047','Alex P.','JOB-315','BMR',93.10,'Approuvée','À rembourser'],['DEP-2026-0041','Fred G.','JOB-214','Canac',84.32,'Approuvée','Remboursé'],['DEP-2026-0039','Marco T.','JOB-315','Essence',150,'Approuvée','Carte compagnie']];
-
-export function PurchasesPage(){const [filter,setFilter]=useState('Toutes');
-const rows=expenses.filter(e=>filter==='Toutes'||e[5]===filter||e[6]===filter);
-return <div className="suite-page">
-<Head eyebrow="ACHATS & REMBOURSEMENTS" title="Dépenses et factures" text="La facture originale, la validation et le remboursement restent séparés." action={<button className="suite-primary" onClick={()=>saveCsv('forge-achats.csv',['expense_number','date','employee','job_number','supplier','total','validation_status','reimbursement_status'],rows.map(e=>[e[0],'2026-09-02',e[1],e[2],e[3],e[4],e[5],e[6]]))}>
-<Download/> Exporter CSV</button>}/>
-<div className="suite-metrics">{[[Receipt,'À vérifier',expenses.filter(e=>e[5]==='À vérifier').length],[Clock3,'À rembourser',expenses.filter(e=>e[6]==='À rembourser').length],[Check,'Approuvées',expenses.filter(e=>e[5]==='Approuvée').length],[PackageCheck,'Remboursé ce mois','4 820 $']].map(([Icon,l,v])=>
-<article key={String(l)} onClick={()=>setFilter(String(l).replace('Approuvées','Approuvée'))}>
-{(() => { const MetricIcon=Icon as React.ElementType; return <MetricIcon/> })()}
-<span>{String(l)}</span>
-<b>{String(v)}</b>
-</article>)}</div>
-<div className="expense-list">{rows.map(e=>
-<button key={String(e[0])}>
-<Receipt/>
-<span>
-<b>{String(e[0])} · {String(e[3])}</b>
-<small>{String(e[1])} · {String(e[2])} · Facture originale disponible</small>
-</span>
-<strong>{Number(e[4]).toLocaleString('fr-CA',{style:'currency',currency:'CAD'})}</strong>
-<em>{String(e[5])} · {String(e[6])}</em>
-<ChevronRight/>
-</button>)}</div>
-</div>}
+export {ExpenseWorkspace as PurchasesPage} from './expense-workspace';
 
 export function EmployeeRecords(){const [status,setStatus]=useState('Tous');
 const staff=[['Fred','Messely','Charpentier-menuisier','Compagnon','Institutionnel et commercial','Chef d’équipe','Actif'],['Alex','Parent','Charpentier-menuisier','Apprenti période 2','Résidentiel léger','Employé','Actif'],['Marco','Tremblay','Poseur de revêtements souples','Compagnon','Résidentiel lourd','Chef d’équipe','Blessé'],['Patrick','Dubé','Charpentier-menuisier','Apprenti période 3','Industriel','Employé','Mise à pied']];

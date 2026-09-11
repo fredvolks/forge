@@ -1,0 +1,20 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import ts from 'typescript';
+const compile=p=>ts.transpileModule(readFileSync(new URL(p,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+const domain='data:text/javascript;base64,'+Buffer.from(compile('../lib/time-domain.ts')).toString('base64');
+const source=compile('../lib/workforce-examples.ts').replace("'./time-domain'",JSON.stringify(domain));
+const {addWorkforceExamples}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+test('fictional workforce fixtures populate all views once without overwriting existing entries',()=>{
+ const actor={companyId:'mir-demo',email:'ester',role:'Adjointe',userName:'Ester'};
+ const d={company_id:'mir-demo',settings:{timezone:'America/Toronto',weekStartsOn:1,minimum:330,maximum:480,deduction:15},employees:[{id:'ester',company_id:'mir-demo',user_id:'ester',role:'Adjointe',name:'Ester'}],jobs:[0,1,2].map(i=>({id:'j'+i,company_id:'mir-demo',number:'JOB-'+i,name:'Job',members:['ester']})),segments:[],corrections:[],submissions:[],notifications:[],audit:[]};
+ addWorkforceExamples(d,actor,new Date('2026-09-10T18:00:00Z'));
+ assert.equal(d.employees.length,10);assert.equal(d.teams.length,3);
+ assert.equal(d.segments.filter(s=>!s.end_time).length,7);
+ assert.equal(d.corrections.filter(c=>c.status==='pending').length,2);
+ assert.equal(d.corrections.filter(c=>c.status==='approved').length,1);
+ assert.equal(d.corrections.filter(c=>c.status==='rejected').length,1);
+ const before=JSON.stringify(d);addWorkforceExamples(d,actor);assert.equal(JSON.stringify(d),before);
+ assert.throws(()=>addWorkforceExamples(d,{...actor,companyId:'foreign'}));
+});

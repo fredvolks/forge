@@ -1,19 +1,24 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, ArrowLeft, Bell, Box, CalendarDays, Check, ChevronRight, ClipboardCheck, Clock3, Download, Factory, FileText, Folder, HardHat, LayoutDashboard, Camera, CreditCard, Mail, MapPin, Menu, MessageSquare, PackageCheck, Paperclip, Play, Plus, ReceiptText, Search, Send, Settings, ShieldCheck, Navigation, ShoppingCart, Square, Trash2, Users, X, Zap, } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { OrderSelectOverlay } from './order-select-overlay';
+import { AlertTriangle, ArrowLeft, Bell, Box, CalendarDays, Check, ChevronRight, ClipboardCheck, Clock3, Download, Factory, Flag, FileText, Folder, HardHat, LayoutDashboard, Camera, CreditCard, Mail, MapPin, Menu, MessageSquare, PackageCheck, Paperclip, Play, Plus, ReceiptText, Search, Send, Settings, ShieldCheck, Navigation, ShoppingCart, Square, Trash2, Users, X, Zap, } from 'lucide-react';
 import { EmptyCompany, ForgeAccess, type ForgeSession } from './forge-access';
 import { CommandCenter } from './command-center';
 import { loadDynamicCatalog, ProfilePreview, type DynamicProduct } from './catalog-builder';
+import {configuredGeometry} from '../lib/folding-domain';
+import {FoldingDrawing} from './folding-settings';
 import { AdjointeDesk } from './adjointe-desk';
 import { SimulationPanel } from './simulation-panel';
 import { AdminPortal } from './admin-portal';
 import { applyAppearance, getBranding, getUserAppearance, resolveLogo, type ForgeThemeId } from './forge-branding';
 import { FieldWorkspace, type FieldView } from './field-workspace';
 import { PunchPreview } from './punch-preview';
-import { ForgeMessages } from './forge-messages';
+import { ForgeMessages,MessageUnreadBadge } from './forge-messages';
 import { MyOrders } from './my-orders';
+import { OrderShortcuts } from './order-shortcuts';
 import { MobileShellHeader } from './mobile-shell-header';
 import { useTimeData } from './use-time-data';
+import {ExpenseWorkspace} from './expense-workspace';
 import { changeTimeDemo } from '../lib/time-demo';
 import { dateKey, duration, employeeId, punch, totals } from '../lib/time-domain';
 type Role = 'Boss' | 'Adjointe' | 'Chef' | 'Employé';
@@ -109,17 +114,62 @@ export default function Home() {
     const [jobDossierOpen, setJobDossierOpen] = useState(false);
     const [extraFormOpen, setExtraFormOpen] = useState(false);
     const [orderCategory, setOrderCategory] = useState<'Matériaux' | 'Outils' | 'Pliage'>('Matériaux');
+    const [orderShortcutCategory,setOrderShortcutCategory]=useState<'Matériaux' | 'Outils' | 'Pliage'>('Matériaux');
     const [selectedPreset, setSelectedPreset] = useState('Lame de Skill');
     const [orderCart, setOrderCart] = useState<Array<{
-        id: number;
+        id: string;
+        quantity: number;
         category: string;
         item: string;
         detail: string;
         photos: string[];
+        foldingSnapshot?: {productId:string;versionId:string;versionNumber:number;geometry:import('../lib/folding-domain').FoldingGeometry;values:Record<string,string|boolean>};
     }>>([]);
+    const [orderSearch,setOrderSearch]=useState('');
+    const [orderQuantityInput,setOrderQuantityInput]=useState('1');
+    const orderQuantity=Number(orderQuantityInput);
+    const [orderCartOpen,setOrderCartOpen]=useState(false);
+    const [orderConfigOpen,setOrderConfigOpen]=useState(false);
+    const [orderDelivery,setOrderDelivery]=useState('Livraison dans 2j');
+    const [orderDeliveryMessage,setOrderDeliveryMessage]=useState('');
+    const [orderPriority,setOrderPriority]=useState('');
+    useEffect(()=>{
+        const closeOutside=(event:PointerEvent)=>{
+            if(!(event.target instanceof Node))return;
+            document.querySelectorAll<HTMLDetailsElement>('.new-order-page .order-options details[open], .new-order-page details.order-attachments[open]').forEach(panel=>{
+                if(!panel.contains(event.target as Node))panel.open=false;
+            });
+        };
+        const closeWithEscape=(event:KeyboardEvent)=>{
+            if(event.key!=='Escape')return;
+            document.querySelectorAll<HTMLDetailsElement>('.new-order-page .order-options details[open], .new-order-page details.order-attachments[open]').forEach(panel=>{
+                panel.open=false;
+                panel.querySelector<HTMLElement>('summary')?.focus();
+            });
+        };
+        document.addEventListener('pointerdown',closeOutside);
+        document.addEventListener('keydown',closeWithEscape);
+        return()=>{document.removeEventListener('pointerdown',closeOutside);document.removeEventListener('keydown',closeWithEscape)};
+    },[]);
+    const [orderNote,setOrderNote]=useState('');
+    const [orderSubmitting,setOrderSubmitting]=useState(false);
     const [orderPhotos, setOrderPhotos] = useState<string[]>([]);
+    const [orderPhotoBusy,setOrderPhotoBusy]=useState(false);
+    async function addOrderPhotos(files:FileList|null) {
+        if(!files?.length)return;
+        if(orderPhotos.length+files.length>4){setToastText('Maximum 4 photos par article.');setToast(true);return;}
+        setOrderPhotoBusy(true);
+        try {
+            const photos=await Promise.all(Array.from(files).map(file=>new Promise<string>((resolve,reject)=>{
+                if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>1024*1024){reject(new Error('Utilisez une photo JPG, PNG ou WebP de moins de 1 Mo dans cet aperçu local.'));return;}
+                const reader=new FileReader();reader.onload=()=>typeof reader.result==='string'?resolve(reader.result):reject(new Error('Photo illisible.'));reader.onerror=()=>reject(new Error('Photo illisible.'));reader.readAsDataURL(file);
+            })));
+            setOrderPhotos(current=>[...current,...photos]);
+        } catch(error){setToastText(error instanceof Error?error.message:'Photo illisible.');setToast(true);}
+        finally{setOrderPhotoBusy(false);}
+    }
     const [orderJob,setOrderJob]=useState('');
-    const [draggedPreset, setDraggedPreset] = useState<string | null>(null);
+    
     const [presetSets, setPresetSets] = useState<Record<'Matériaux' | 'Outils' | 'Pliage', string[]>>({
         Outils: ['Gun à revêtement', 'Gun à charpente', 'Gun à finition', 'Scie circulaire', 'Scie sauteuse', 'OLSA — grosseur manuelle', 'Scie à onglet', 'Patte d’échafaud', 'Vérin', 'Batterie FlexVolt', 'Batterie non FlexVolt', 'Hose à air'],
         Pliage: ['Fascia', 'Chaise', 'Colonne', 'T transition soffite/revêtement', 'L 1½″ fenêtre', 'Moulure anti-rongeur', 'Moulure de départ', 'Capage porte de garage', 'Beam', 'Autre pliage custom'],
@@ -136,6 +186,19 @@ export default function Home() {
     const [itemUnit, setItemUnit] = useState('morceau');
     const [dynamicCatalog, setDynamicCatalog] = useState<DynamicProduct[]>([]);
     const [dynamicValues, setDynamicValues] = useState<Record<string, string | boolean>>({});
+    const restoringOrderDraft=useRef(false);
+    useEffect(()=>{
+        if(restoringOrderDraft.current){restoringOrderDraft.current=false;return;}
+        setOrderQuantityInput('1');
+        setColumnQty(1);
+        setLengthQty1(1);
+        setLengthQty2(1);
+        const product=dynamicCatalog.find(item=>item.active&&item.category===orderCategory&&item.name===selectedPreset);
+        setItemColor(product?.colors[0]||'Noir');
+        setItemUnit(product?.units[0]||'morceau');
+        setCustomColor('');
+        setDynamicValues(Object.fromEntries((product?.fields||[]).filter(field=>field.type==='Quantité').map(field=>[field.id,'1'])));
+    },[selectedPreset,orderCategory,dynamicCatalog]);
     const [basketItems, setBasketItems] = useState([
         { id: 1, chef: 'Fred G.', job: 'JOB-214', name: 'Lames Olfa 1″', qty: '2 boîtes', loaded: false },
         { id: 2, chef: 'Fred G.', job: 'JOB-214', name: 'Tape rouge', qty: '6 rouleaux', loaded: false },
@@ -146,6 +209,23 @@ export default function Home() {
     const [filter, setFilter] = useState('Tous');
     const [query, setQuery] = useState('');
     const [modal, setModal] = useState(false);
+    const [orderDraftStarted,setOrderDraftStarted]=useState(false);
+    const [parkedDrafts,setParkedDrafts]=useState<Array<{id:string;data:ReturnType<typeof captureOrderDraft>}>>([]);
+    function captureOrderDraft(){return {orderCart,orderJob,orderCategory,orderShortcutCategory,selectedPreset,orderQuantityInput,orderDelivery,orderDeliveryMessage,orderPriority,orderNote,orderPhotos,length1,length2,lengthQty1,lengthQty2,beamDoubleFold,columnQty,itemColor,customColor,itemUnit,dynamicValues};}
+    function parkCurrentDraft(){if(orderDraftStarted||orderCart.length)setParkedDrafts(items=>[...items,{id:crypto.randomUUID(),data:captureOrderDraft()}]);}
+    function resetOrderDraft(){setOrderCart([]);setOrderJob('');setOrderNote('');setOrderDeliveryMessage('');setOrderDelivery('Livraison dans 2j');setOrderPriority('');setOrderPhotos([]);setSelectedPreset('');setOrderQuantityInput('1');setDynamicValues({});setCustomColor('');setItemColor('Noir');setItemUnit('morceau');setLength1('120');setLength2('');setLengthQty1(1);setLengthQty2(1);setColumnQty(1);setBeamDoubleFold(false);setOrderSearch('');setOrderCartOpen(false);setOrderConfigOpen(false);setOrderDraftStarted(false);}
+    function resumeOrderDraft(id:string){
+        if(id!=='current'){
+            const draft=parkedDrafts.find(item=>item.id===id);if(!draft)return;
+            const previous=(orderDraftStarted||orderCart.length)?{id:crypto.randomUUID(),data:captureOrderDraft()}:null;
+            setParkedDrafts(items=>[...items.filter(item=>item.id!==id),...(previous?[previous]:[])]);
+            const d=draft.data;
+            restoringOrderDraft.current=selectedPreset!==d.selectedPreset||orderCategory!==d.orderCategory;
+            setOrderCart(d.orderCart);setOrderJob(d.orderJob);setOrderCategory(d.orderCategory);setOrderShortcutCategory(d.orderShortcutCategory);setSelectedPreset(d.selectedPreset);setOrderQuantityInput(d.orderQuantityInput);setOrderDelivery(d.orderDelivery);setOrderDeliveryMessage(d.orderDeliveryMessage);setOrderPriority(d.orderPriority);setOrderNote(d.orderNote);setOrderPhotos(d.orderPhotos);setLength1(d.length1);setLength2(d.length2);setLengthQty1(d.lengthQty1);setLengthQty2(d.lengthQty2);setBeamDoubleFold(d.beamDoubleFold);setColumnQty(d.columnQty);setItemColor(d.itemColor);setCustomColor(d.customColor);setItemUnit(d.itemUnit);setDynamicValues(d.dynamicValues);
+        }
+        setOrderDraftStarted(true);setOrderSearch('');setOrderCartOpen(false);setOrderConfigOpen(false);setModal(true);
+    }
+    useEffect(()=>{if(modal&&fieldView==='work'&&workTarget==='orders')setOrderDraftStarted(true)},[modal,fieldView,workTarget]);
     const [toast, setToast] = useState(false);
     const [mobileNav, setMobileNav] = useState(false);
     const visibleOrders = useMemo(() => orders.filter((o) => !clearedJobs.includes(o.job) && o.access.includes(role) && (filter === 'Tous' || o.stage === filter) && `${o.id} ${o.job} ${o.client} ${o.title}`.toLowerCase().includes(query.toLowerCase())), [clearedJobs, filter, query, role]);
@@ -154,28 +234,33 @@ export default function Home() {
     const performance = bidPrice ? (profit / bidPrice) * 100 : 0;
     function submitRequest(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        if (!orderCart.length || !activeSession)
+        if (orderSubmitting || !orderCart.length || !activeSession)
             return;
-        const chosenJob=timeData?.jobs.find(j=>j.number===orderJob&&j.company_id===activeSession.companyId&&j.members.includes(activeSession.email));
+        const chosenJob=timeData?.jobs.find(j=>j.id===orderJob&&j.company_id===activeSession.companyId&&j.members.includes(activeSession.email));
         if(!chosenJob){setToastText('Choisissez un chantier assigné.');setToast(true);return;}
-        const key = `forge:${session.companyId}:orders`;
+        if(orderCart.some(item=>!Number.isFinite(item.quantity)||item.quantity<1)){setToastText('Vérifiez les quantités.');setToast(true);return;}
+        setOrderSubmitting(true);
+        try {
+        const key = `forge:${activeSession.companyId}:orders`;
         const existing = JSON.parse(localStorage.getItem(key) || '[]');
-        const catalog = JSON.parse(localStorage.getItem(`forge:${session.companyId}:catalog`) || '[]') as Array<{
+        const catalog = JSON.parse(localStorage.getItem(`forge:${activeSession!.companyId}:catalog`) || '[]') as Array<{
             name: string;
             source: string;
         }>;
-        const dynamic = loadDynamicCatalog(session.companyId);
-        const jobNames: Record<string, string> = { 'JOB-214': 'Breton', 'JOB-315': 'Leduc', 'JOB-418': 'Bélanger' };
+        const dynamic = loadDynamicCatalog(activeSession.companyId);
         const next = { id: `BC-${crypto.randomUUID()}`, companyId: activeSession.companyId, job_id:chosenJob.id, requested_by_user_id:activeSession.email, date: new Date().toISOString().slice(0, 10), job: `${chosenJob.number} · ${chosenJob.name}`, requester: activeSession.userName, items: orderCart.map(item => {
                 const product = catalog.find(p => p.name === item.item);
                 const dynamicProduct = dynamic.find(p => p.name === item.item);
                 const source = dynamicProduct?.source || product?.source || 'Inventaire MIR';
                 const unit = item.detail.match(/Unité:\s*([^·]+)/)?.[1]?.trim() || (item.detail.includes('boîte') ? 'boîtes' : item.detail.includes('morceau') ? 'morceaux' : dynamicProduct?.units[0] || 'morceaux');
-                const qty = Number(item.detail.match(/Quantité:\s*(\d+)/)?.[1] || item.detail.match(/Quantité\s+(\d+)/)?.[1] || item.detail.match(/×\s*(\d+)/)?.[1] || 2);
-                return { name: item.item, qty, unit, detail: item.detail, source: source === 'Fournisseur' ? 'Fournisseur' : 'Inventaire MIR', supplier: source === 'Fournisseur' ? (dynamicProduct?.supplier || 'Acier Breton') : undefined };
-            }), status: 'Reçue', history: [`Créée par ${activeSession.userName} · ${new Date().toLocaleString('fr-CA')}`] };
+                return { order_line_id: item.id, photos:item.photos, foldingSnapshot:item.foldingSnapshot, name: item.item, qty:item.quantity, unit, detail: item.detail, source: source === 'Fournisseur' ? 'Fournisseur' : 'Inventaire MIR', supplier: source === 'Fournisseur' ? (dynamicProduct?.supplier || 'Acier Breton') : undefined };
+            }), priority:orderCart.some(item=>item.detail.includes('Priorité: Urgente'))?'Urgente':orderCart.some(item=>item.detail.includes('Priorité: Normale'))?'Normale':'', delivery_location:[orderDelivery,orderDeliveryMessage.trim()].filter(Boolean).join(' — '), notes:orderNote, status: 'Reçue', history: [`Créée par ${activeSession.userName} · ${new Date().toLocaleString('fr-CA')}`] };
         localStorage.setItem(key, JSON.stringify([next, ...existing]));
         window.dispatchEvent(new Event('forge-orders-updated'));
+        setOrderDeliveryMessage('');
+        setOrderDraftStarted(false);
+        setOrderCartOpen(false);
+        setOrderConfigOpen(false);
         setModal(false);
         setOrderCart([]);
         setPendingOrders((n) => n + 1);
@@ -183,6 +268,7 @@ export default function Home() {
         setToastText('Commande enregistrée dans Mes commandes · aperçu local');
         setToast(true);
         window.setTimeout(() => setToast(false), 3200);
+        } catch {setToastText('Enregistrement impossible. Votre panier est conservé.');setToast(true);} finally {setOrderSubmitting(false);}
     }
     function submitPurchase(e: React.FormEvent<HTMLFormElement>) { e.preventDefault(); setToastText('Achat confirmé'); setToast(true); window.setTimeout(() => setToast(false), 3200); }
 
@@ -206,7 +292,7 @@ export default function Home() {
     }>; const dynamic = loadDynamicCatalog(session.companyId); setDynamicCatalog(dynamic); setPresetSets(current => { const next = { ...current }; (['Matériaux', 'Outils', 'Pliage'] as const).forEach(category => { const names = [...products.filter(p => p.active && p.category === category).map(p => p.name), ...dynamic.filter(p => p.active && p.category === category).map(p => p.name)]; if (names.length)
         next[category] = [...new Set(names)]; }); return next; }); }; sync(); window.addEventListener('forge-catalog-updated', sync); return () => window.removeEventListener('forge-catalog-updated', sync); }, [session]);
     useEffect(() => { if(!session)return; const sync=()=>{const appearance=getUserAppearance(session.companyId,session.email,(session.theme as ForgeThemeId)||'forge');applyAppearance(appearance);setLogoSrc(resolveLogo(getBranding(session.companyId),document.documentElement.dataset.mode==='light'?'light':'dark'))};sync();window.addEventListener('forge-appearance-updated',sync);window.addEventListener('forge-branding-updated',sync);return()=>{window.removeEventListener('forge-appearance-updated',sync);window.removeEventListener('forge-branding-updated',sync)} }, [session]);
-    useEffect(() => { const sync=()=>{const hash=window.location.hash.replace('#field/','').split('/')[0];const fieldPages:FieldView[]=['home','projects','project','project-sections','project-info','project-plans','project-photos','project-architect','project-special','menu','profile','hours','absences','emergency','documents','incidents','documentation','settings'];if(fieldPages.includes(hash as FieldView))setFieldView(hash as FieldView)};sync();window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync)}, []);
+    useEffect(() => { const sync=()=>{if(window.location.hash==='#orders'){setWorkTarget('orders');setFieldView('work');return;}const hash=window.location.hash.replace('#field/','').split('/')[0];const fieldPages:FieldView[]=['home','projects','project','project-sections','project-info','project-plans','project-photos','project-architect','project-special','menu','profile','hours','absences','emergency','documents','incidents','documentation','settings'];if(fieldPages.includes(hash as FieldView))setFieldView(hash as FieldView)};sync();window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync)}, []);
     if (!accessReady)
         return <div className="forge-loading">FORGE</div>;
     if (!session)
@@ -221,10 +307,18 @@ export default function Home() {
     const displayedRole: Role = session.role;
     const quickItems = presetSets[orderCategory];
     const activeDynamicProduct = dynamicCatalog.find(product => product.active && product.category === orderCategory && product.name === selectedPreset);
+    const hasQuickColor = Boolean(activeDynamicProduct?.colors.length || orderCategory === 'Pliage' || ['J soffite', 'Boîte de soffite'].includes(selectedPreset));
+    const quickField = !hasQuickColor ? activeDynamicProduct?.fields.find(field => field.filledBy === 'terrain' && ['Dimension', 'Mesure', 'Longueur', 'Liste de choix', 'Texte', 'Nombre'].includes(field.type)) : undefined;
+    const extraQuickFields = (activeDynamicProduct?.fields || []).filter(field => field.filledBy === 'terrain' && field.id !== quickField?.id && ['Dimension', 'Mesure', 'Longueur', 'Liste de choix', 'Texte', 'Nombre'].includes(field.type)).slice(0, 2);
     const switchingJob = punched && selectedJob !== activeJob;
     const navigateField = (destination:FieldView|'punch'|'orders'|'messages'|'purchases') => {
         document.querySelector<HTMLElement>('.workspace')?.scrollTo({top:0,behavior:'smooth'});
         if (['punch','orders','messages','purchases'].includes(destination)) {
+            if (destination === 'orders') {
+                setModal(false);
+                setOrderCartOpen(false);
+                setOrderConfigOpen(false);
+            }
             setWorkTarget(destination as 'punch'|'orders'|'messages'|'purchases');
             setFieldView('work');
             window.location.hash = destination;
@@ -236,6 +330,7 @@ export default function Home() {
         window.scrollTo({top:0,behavior:'smooth'});
     };
     return <main className={`app-shell ${isFieldRole ? 'field-mobile demo-device-stage' : ''} device-${devicePreview} ${fieldView==='hours'?'hours-active':''} role-${displayedRole.toLowerCase().replace('é', 'e')}`}>
+    <OrderSelectOverlay/>
     {isFieldRole && <aside className="demo-preview-controls" aria-label="Contrôles de l’aperçu Démo">
       <div className="demo-control-group">
         <span>Rôle</span>
@@ -362,8 +457,182 @@ export default function Home() {
 </div>
 </header>
       <div className={`content ${fieldView !== 'work' ? 'field-page-active' : `work-focus work-${workTarget}`}`}>
-        {fieldView==='work'&&workTarget==='orders'&&<MyOrders session={activeSession!} onNew={()=>{if(!orderCart.length)setOrderJob(timeData?.jobs.find(j=>j.members.includes(activeSession!.email))?.number||'');setModal(true)}}/>}
-        {fieldView !== 'work' && <FieldWorkspace jobs={timeData?.jobs||[]} view={fieldView} session={activeSession!} role={role as 'Chef'|'Employé'} navigate={navigateField} logoSrc={logoSrc} onNewOrder={job=>{if(orderCart.length&&orderJob!==job.number){if(!window.confirm('Changer de chantier videra la commande actuelle. Continuer?'))return;setOrderCart([]);setOrderPhotos([]);}setOrderJob(job.number);navigateField('orders');setModal(true)}} punch={{punched,selectedJob,activeJob,startedAt:punchStartedAt,onToggle:()=>void togglePunch(),onChangeJob:setSelectedJob}}/>}
+        {fieldView==='work'&&workTarget==='orders'&&!modal&&<MyOrders session={activeSession!} drafts={[...(orderDraftStarted||orderCart.length?[{id:'current',count:orderCart.length,job:timeData?.jobs.find(j=>j.id===orderJob)?.number||orderJob}]:[]),...parkedDrafts.map(d=>({id:d.id,count:d.data.orderCart.length,job:timeData?.jobs.find(j=>j.id===d.data.orderJob)?.number||d.data.orderJob}))]} onResume={resumeOrderDraft} onDeleteDraft={id=>{if(id==='current')resetOrderDraft();else setParkedDrafts(items=>items.filter(d=>d.id!==id))}} onNew={()=>{parkCurrentDraft();resetOrderDraft();setOrderJob(timeData?.jobs.find(j=>j.members.includes(activeSession!.email))?.id||'');setOrderDraftStarted(true);setModal(true)}}/>}
+    {modal && fieldView === 'work' && workTarget === 'orders' && <section className="new-order-page"><form className="modal order-modal" onSubmit={submitRequest}>
+      <div className="modal-head order-hero">
+<div>
+<span>COMMANDE MULTI-ARTICLES</span>
+<h2>Nouvelle commande</h2>
+<p>Ajoutez les articles dont vous avez besoin.</p>
+</div>
+<button type="button" onClick={() => setModal(false)} aria-label="Retour à mes commandes">
+<X />
+</button>
+</div>
+      <div className="new-order-layout"><div className="new-order-main"><div className="form-row">
+<label>Projet / chantier<select required value={orderJob} onChange={e=>{if(orderCart.length&&e.target.value!==orderJob){if(!window.confirm('Changer de chantier videra la commande actuelle. Continuer?'))return;setOrderCart([]);setOrderPhotos([]);}setOrderJob(e.target.value)}}>
+<option value="">Choisir un chantier</option>
+{timeData?.jobs.filter(j=>j.company_id===activeSession!.companyId&&j.members.includes(activeSession!.email)).map(j=><option key={j.id} value={j.id}>{j.number} — {j.name}</option>)}
+</select>
+</label>
+</div>
+<label className="order-article-search"><Search/><input value={orderSearch} onChange={e=>setOrderSearch(e.target.value)} placeholder="Rechercher un article, un code ou une référence…" aria-label="Rechercher un article"/></label>
+<div className="order-section-label">CATÉGORIES</div>
+<div className="order-category-pills">{Object.keys(presetSets).map(category=><button type="button" key={category} aria-pressed={orderShortcutCategory===category} onClick={()=>{setOrderShortcutCategory(category as typeof orderCategory);setOrderCategory(category as typeof orderCategory);setSelectedPreset(presetSets[category as typeof orderCategory][0]||'');setDynamicValues({})}}>{category}</button>)}</div>
+<OrderShortcuts category={orderShortcutCategory} onCloseSearch={()=>setOrderSearch('')} query={orderSearch} selected={selectedPreset} preferenceKey={`forge:${session.companyId}:${session.email}:order-favorites`} items={Object.entries(presetSets).flatMap(([category,names])=>names.map(name=>({category,name,search:`${name} ${category}`}))).concat(dynamicCatalog.filter(p=>p.active&&p.companyId===session.companyId).map(p=>({category:p.category,name:p.name,search:`${p.name} ${p.id} ${p.description} ${p.subcategory} ${p.supplier}`}))).filter((item,index,all)=>all.findLastIndex(other=>other.name===item.name&&other.category===item.category)===index)} onSelect={item=>{setOrderCategory(item.category as typeof orderCategory);setSelectedPreset(item.name);setDynamicValues({});setOrderSearch('')}}/>
+<section className="order-item-card"><div className="order-selected-title"><div><span>ARTICLE SÉLECTIONNÉ</span><b>{selectedPreset||'Choisissez un article'}</b></div><button type="button" onClick={()=>setSelectedPreset('')} aria-label="Retirer l’article sélectionné"><X/></button></div>
+      {(orderCategory==='Pliage'||activeDynamicProduct?.fields.some(field=>field.filledBy==='terrain'&&field.id!==quickField?.id&&!extraQuickFields.some(quick=>quick.id===field.id)))&&<button className="order-configure" type="button" aria-label="Autres options de l’article" title="Autres options" aria-expanded={orderConfigOpen} onClick={()=>setOrderConfigOpen(true)}><Settings/></button>}
+      <div className={`order-configuration ${orderConfigOpen?'open':''}`}><button className="order-config-done" type="button" onClick={()=>setOrderConfigOpen(false)}>Terminé <Check/></button>
+      {orderCategory === 'Pliage' && <div className="folding-options">
+<label>Couleur<select data-order-option="Couleur" value={itemColor} onChange={e=>setItemColor(e.target.value)}>
+<option>Noir</option>
+<option>Blanc</option>
+</select>
+</label>
+<label className="simon-confirm">
+<input data-order-option="Confirmé avec Simon" type="checkbox" required/>
+<span>
+<b>Confirmer avec Simon</b>
+<small>Dimensions et couleur vérifiées avant l’envoi</small>
+</span>
+</label>
+</div>}
+      {orderCategory === 'Pliage' && selectedPreset === 'Colonne' && <div className="garage-folding technical-profile column-profile">
+<div className="garage-diagram">
+<img src="/profil-colonne.svg" alt="Profil technique Colonne avec mesure A sur le dessus et B sur le côté droit"/>
+</div>
+<div className="garage-fields">
+<span>PRESET PLIAGE · COLONNE</span>
+<h3>Mesures et quantité</h3>
+<div className="profile-measures column-measures">{['A', 'B'].map((measure) => <label key={measure}>
+<b>{measure}</b>
+<input data-order-option={`Mesure ${measure}`} required placeholder="Mesure"/>
+</label>)}</div>
+<label className="column-qty">Quantité<input required type="number" min="1" value={columnQty} onChange={(e) => setColumnQty(Number(e.target.value))}/>
+</label>
+<div className="column-confirmed">
+<Check />
+<span>Noir ou blanc · À confirmer avec Simon ci-dessus</span>
+</div>
+</div>
+</div>}
+      {orderCategory === 'Pliage' && !activeDynamicProduct && (selectedPreset === 'Capage porte de garage' || selectedPreset === 'Beam') && <div className="garage-folding technical-profile">
+<div className="garage-diagram">
+<img src={selectedPreset === 'Beam' ? '/profil-beam.svg' : '/profil-porte-garage.svg'} alt={selectedPreset === 'Beam' ? 'Profil technique Beam avec cinq segments identifiés' : 'Profil technique de capage de porte de garage avec trois segments identifiés'}/>
+</div>
+<div className="garage-fields">
+<span>PRESET CUSTOM · {selectedPreset.toUpperCase()}</span>
+<h3>Mesures du profil</h3>
+<div className="profile-measures">{(selectedPreset === 'Beam' ? ['A', 'B', 'C', 'D', 'E'] : ['A', 'B', 'C']).map((measure) => <label key={measure}>
+<b>{measure}</b>
+<input data-order-option={`Mesure ${measure}`} required placeholder="Mesure"/>
+</label>)}</div>{selectedPreset === 'Beam' && <div className="beam-double-folds">
+<label className={beamDoubleFold ? 'checked' : ''}>
+<input type="checkbox" checked={beamDoubleFold} onChange={(e) => setBeamDoubleFold(e.target.checked)}/>
+<b>A–E</b>
+<small>Plié double</small>
+</label>
+</div>}<div className={selectedPreset === 'Beam' ? 'beam-length-row' : 'profile-lengths paired-lengths'}>
+<label>Longueur<input required value={length1} onChange={(e) => setLength1(e.target.value)} placeholder="Inscrire la longueur"/>
+</label>
+<label>Quantité<input required type="number" min="1" value={lengthQty1} onChange={(e) => setLengthQty1(Number(e.target.value))}/>
+</label>{selectedPreset !== 'Beam' && <>
+<label>Longueur 2 <small>optionnelle</small>
+<input value={length2} onChange={(e) => setLength2(e.target.value)} placeholder="Inscrire la longueur"/>
+</label>
+<label>Quantité longueur 2<input type="number" min="1" value={lengthQty2} onChange={(e) => setLengthQty2(Number(e.target.value))}/>
+</label>
+</>}</div>
+</div>
+</div>}
+      {activeDynamicProduct && <div className="dynamic-order-form">
+<div className="dynamic-profile-view">
+{activeDynamicProduct.folding?.versions.length ? <FoldingDrawing geometry={activeDynamicProduct.folding.versions.at(-1)!.geometry}/> : <ProfilePreview product={activeDynamicProduct}/>}
+</div>
+<div className="dynamic-order-fields">
+<span>ARTICLE DU CATALOGUE · {activeDynamicProduct.name.toUpperCase()}</span>
+<h3>Mesures et données</h3>
+<div>{activeDynamicProduct.fields.filter(field => field.filledBy === 'terrain' && field.id !== quickField?.id).map(field => <label key={field.id}>{field.name}{field.type === 'Oui/Non' ? <input type="checkbox" checked={Boolean(dynamicValues[field.id])} onChange={e => setDynamicValues(v => ({ ...v, [field.id]: e.target.checked }))}/> : <input required={field.required} value={String(dynamicValues[field.id] ?? field.defaultValue)} onChange={e => setDynamicValues(v => ({ ...v, [field.id]: e.target.value }))} placeholder={field.type}/>}<small>{field.unit}</small>
+</label>)}</div>{activeDynamicProduct.colors.length > 0 && <label>Couleur<select value={itemColor} onChange={e => setItemColor(e.target.value)}>{activeDynamicProduct.colors.map(color => <option key={color}>{color}</option>)}</select>
+</label>}{itemColor === 'Autre' && <label>Couleur personnalisée<input value={customColor} onChange={e => setCustomColor(e.target.value)} required/>
+</label>}{activeDynamicProduct.units.length > 1 && <label>Unité<select value={itemUnit} onChange={e => setItemUnit(e.target.value)}>{activeDynamicProduct.units.map(unit => <option key={unit}>{unit}</option>)}</select>
+</label>}</div>
+</div>}
+      {!activeDynamicProduct && !(orderCategory === 'Pliage' && (selectedPreset === 'Capage porte de garage' || selectedPreset === 'Beam' || selectedPreset === 'Colonne')) && <div className="item-line">
+<label>Article<input required readOnly value={selectedPreset}/>
+</label>
+<label>Quantité<div className="order-qty"><button type="button" aria-label="Diminuer la quantité" disabled={orderQuantity<=1} onClick={()=>setOrderQuantityInput(String(Math.max(1,orderQuantity-1)))}>−</button><input required aria-label="Quantité" type="number" inputMode="numeric" min="1" step="1" value={orderQuantityInput} onChange={e=>setOrderQuantityInput(e.target.value.replace(/^0+(?=\d)/,''))}/><button type="button" aria-label="Augmenter la quantité" onClick={()=>setOrderQuantityInput(String(Math.max(1,orderQuantity+1)))}>+</button></div>
+</label>
+
+</div>}
+      {orderCategory === 'Matériaux' && ['J soffite', 'Boîte de soffite'].includes(selectedPreset) && <div className="soffit-options">
+<label>Couleur<select value={itemColor} onChange={e => setItemColor(e.target.value)}>
+<option>Noir</option>
+<option>Blanc</option>
+<option>Autre</option>
+</select>
+</label>{itemColor === 'Autre' && <label>Couleur personnalisée<input value={customColor} onChange={e => setCustomColor(e.target.value)} placeholder="Inscrire la couleur" required/>
+</label>}<label>Unité<select value={itemUnit} onChange={e => setItemUnit(e.target.value)}>
+<option value="morceau">Morceau</option>
+<option value="boîte">Boîte</option>
+</select>
+</label>
+</div>}
+
+</div><div className="order-quick-options"><details className="order-attachments"><summary aria-label="Joindre une photo ou une note"><Paperclip/></summary><div className="order-attachment-menu"><button className="order-attachment-close" type="button" onClick={e=>{const panel=e.currentTarget.closest('details');if(panel){panel.open=false;panel.querySelector<HTMLElement>('summary')?.focus()}}}>Fermer <X/></button><div className="mobile-photo-actions">
+<label>
+<input type="file" accept="image/*" capture="environment" disabled={orderPhotoBusy} onChange={e=>{void addOrderPhotos(e.target.files);e.target.value=''}}/>
+<Camera />
+<span>
+<b>Prendre une photo</b>
+<small>{orderPhotos.length ? `${orderPhotos.length} photo jointe` : 'Chantier ou matériel'}</small>
+</span>
+</label>
+<label>
+<input type="file" accept="image/*" multiple disabled={orderPhotoBusy} onChange={e=>{void addOrderPhotos(e.target.files);e.target.value=''}}/>
+<Paperclip />
+<span>
+<b>Ajouter une photo</b>
+<small>{orderPhotos.length ? `${orderPhotos.length} photo${orderPhotos.length > 1 ? 's' : ''} sélectionnée${orderPhotos.length > 1 ? 's' : ''}` : 'Galerie de photos'}</small>
+</span>
+</label>
+</div><label className="order-attachment-note">Note<textarea value={orderNote} onChange={e=>setOrderNote(e.target.value)} placeholder="Couleur, dimensions, détails importants…"/></label></div></details>
+{hasQuickColor ? <label className="order-quick-color">{itemColor==='Autre'?<span className="order-inline-color"><input autoFocus aria-label="Préciser la couleur" placeholder="Écrire la couleur" required value={customColor} onChange={e=>setCustomColor(e.target.value)}/><button type="button" aria-label="Revenir aux couleurs proposées" title="Changer de couleur" onClick={()=>{setItemColor(activeDynamicProduct?.colors.find(color=>color!=='Autre')||'Noir');setCustomColor('')}}><ChevronRight/></button></span>:<select aria-label="Couleur de l’article" title="Couleur" value={itemColor} onChange={e=>setItemColor(e.target.value)}>{(activeDynamicProduct?.colors.length?activeDynamicProduct.colors:orderCategory==='Pliage'?['Noir','Blanc']:['Noir','Blanc','Autre']).map(color=><option key={color}>{color}</option>)}</select>}</label> : quickField ? <label className="order-quick-color">{quickField.type === 'Liste de choix' ? <select aria-label={quickField.name} title={quickField.name} required={quickField.required} value={String(dynamicValues[quickField.id] ?? quickField.defaultValue)} onChange={e=>setDynamicValues(v=>({...v,[quickField.id]:e.target.value}))}><option value="">{quickField.name}</option>{quickField.options.map(option=><option key={option}>{option}</option>)}</select> : <input aria-label={quickField.name} title={quickField.name} placeholder={quickField.name} required={quickField.required} value={String(dynamicValues[quickField.id] ?? quickField.defaultValue)} onChange={e=>setDynamicValues(v=>({...v,[quickField.id]:e.target.value}))}/>}</label> : orderCategory === 'Outils' && selectedPreset.includes('OLSA') ? <label className="order-quick-color"><input key={selectedPreset} data-order-option="Grosseur OLSA" aria-label="Grosseur OLSA" title="Grosseur OLSA" required placeholder="Grosseur"/></label> : null}
+{selectedPreset&&<label className="order-quick-unit"><select aria-label="Unité de l’article" title="Unité" value={itemUnit} onChange={e=>setItemUnit(e.target.value)}>{Array.from(new Set([...(activeDynamicProduct?.units||[]),'morceau','boîte','pi²','pi lin.','paquet','rouleau','mètre','litre'])).map(unit=><option key={unit} value={unit}>{unit==='morceau'?'mcx':unit}</option>)}</select></label>}
+{extraQuickFields.map((field,index)=><label className="order-quick-color order-quick-extra" key={field.id} style={{gridColumn:index+2,gridRow:2}}>{field.type==='Liste de choix'?<select aria-label={field.name} title={field.name} required={field.required} value={String(dynamicValues[field.id]??field.defaultValue)} onChange={e=>setDynamicValues(v=>({...v,[field.id]:e.target.value}))}><option value="">{field.name}</option>{field.options.map(option=><option key={option}>{option}</option>)}</select>:<input aria-label={field.name} title={field.name} placeholder={field.name} required={field.required} value={String(dynamicValues[field.id]??field.defaultValue)} onChange={e=>setDynamicValues(v=>({...v,[field.id]:e.target.value}))}/>}</label>)}
+</div>
+{orderPhotos.length>0&&<div className="order-photo-thumbs">{orderPhotos.map((photo,index)=><figure key={index}><img src={photo} alt={`Photo jointe ${index+1}`}/><button type="button" aria-label={`Retirer la photo ${index+1}`} onClick={()=>setOrderPhotos(photos=>photos.filter((_,i)=>i!==index))}><X/></button></figure>)}</div>}
+</section>
+<div className="order-options">
+<details><summary><Flag/><b>{orderPriority ? `Priorité · ${orderPriority}` : 'Priorité'}</b><ChevronRight/></summary><label>Priorité (facultative)<select value={orderPriority} onChange={e=>setOrderPriority(e.target.value)}><option value="">Aucune priorité</option><option>Normale</option><option>Urgente</option></select></label></details>
+</div>
+</div><aside id="order-basket" aria-label="Ma commande" className={`new-order-cart ${orderCartOpen?'open':''}`}><div className="order-basket-heading"><h3>Ma commande</h3><button type="button" onClick={()=>setOrderCartOpen(false)} aria-label="Fermer le panier"><X/></button></div>{!orderCart.length&&<p className="order-cart-empty">Ajoutez votre premier article.</p>}
+      {orderCart.length > 0 && <div className="order-cart-preview">
+<div className="cart-preview-head">
+<div>
+<span>MA COMMANDE</span>
+<h3>{orderCart.length} article{orderCart.length > 1 ? 's' : ''}</h3>
+</div>
+<button type="button" className="order-clear" onClick={()=>{if(window.confirm('Vider les articles de cette commande?'))setOrderCart([])}}>Vider tout</button>
+</div>{orderCart.map((item) => <div className="cart-preview-item" key={item.id}>
+<span>{item.category.slice(0, 3).toUpperCase()}</span>
+<div>
+<b>{item.item}</b>
+<div className="order-cart-quantity"><button type="button" aria-label={`Diminuer la quantité de ${item.item}`} disabled={item.quantity<=1} onClick={()=>setOrderCart(items=>items.map(i=>i.id===item.id?{...i,quantity:i.quantity-1,detail:i.detail.replace(/Quantité:?\s*\d+/i,`Quantité ${i.quantity-1}`)}:i))}>−</button><span>{item.quantity}</span><button type="button" aria-label={`Augmenter la quantité de ${item.item}`} onClick={()=>setOrderCart(items=>items.map(i=>i.id===item.id?{...i,quantity:i.quantity+1,detail:i.detail.replace(/Quantité:?\s*\d+/i,`Quantité ${i.quantity+1}`)}:i))}>+</button></div><small>{[...item.detail.split(' · ').filter(part=>!/^Quantité:?\s*\d+(?:[.,]\d+)?$/i.test(part.trim())), ...(item.photos.length ? [`${item.photos.length} photo${item.photos.length > 1 ? 's' : ''} jointe${item.photos.length > 1 ? 's' : ''}`] : [])].filter(Boolean).join(' · ')}</small>
+</div>
+<button type="button" onClick={() => setOrderCart((items) => items.filter((i) => i.id !== item.id))} aria-label={`Retirer ${item.item}`}>
+<Trash2 />
+</button>
+</div>)}<small className="cart-help">Change de catégorie ci-dessus pour ajouter d’autres types d’articles à la même commande.</small>
+</div>}
+      <label className="order-cart-delivery"><span><CalendarDays/> Livraison souhaitée</span><select aria-label="Livraison souhaitée" value={orderDelivery} onChange={e=>setOrderDelivery(e.target.value)}><option>Livraison rush</option><option>Livraison dans 2j</option><option>Livraison dans 3j</option><option>Non urgent</option></select></label>
+      <label className="order-cart-delivery">Message pour la livraison<textarea rows={2} maxLength={1000} value={orderDeliveryMessage} onChange={e=>setOrderDeliveryMessage(e.target.value)} placeholder="Lieu précis, heure, consignes…" style={{minHeight:64,resize:'vertical'}}/></label>
+      <button formNoValidate className="submit" type="submit" disabled={!orderCart.length||orderSubmitting}>
+<Send /> {orderCart.length ? `Envoyer la commande · ${orderCart.length} item${orderCart.length > 1 ? 's' : ''}` : 'Ajoute un item avant d’envoyer'}</button>
+</aside></div><div className="order-mobile-bar"><button type="button" aria-expanded={orderCartOpen} aria-controls="order-basket" onClick={()=>{setOrderCartOpen(true);}}><ShoppingCart/><span><b>{orderCart.length} article{orderCart.length>1?'s':''}</b><small>Voir le panier</small></span></button><button type="button" className="add-to-order" disabled={!selectedPreset||orderPhotoBusy} onClick={(e) => { const form=e.currentTarget.form;if(!form?.checkValidity()){setOrderConfigOpen(true);requestAnimationFrame(()=>form?.reportValidity());return;} const version=activeDynamicProduct?.folding?.versions.at(-1); if(activeDynamicProduct?.folding&&!version){setToastText('Publiez une première version de ce profil dans le catalogue.');setToast(true);return;} let foldingSnapshot:(typeof orderCart)[number]['foldingSnapshot']; if(version&&activeDynamicProduct){try{foldingSnapshot={productId:activeDynamicProduct.id,versionId:version.id,versionNumber:version.number,geometry:configuredGeometry(version.geometry,dynamicValues),values:structuredClone(dynamicValues)}}catch(error){setOrderConfigOpen(true);setToastText((error as Error).message);setToast(true);return;}} const isProfile = orderCategory === 'Pliage' && (selectedPreset === 'Capage porte de garage' || selectedPreset === 'Beam'); const soffit = orderCategory === 'Matériaux' && ['J soffite', 'Boîte de soffite'].includes(selectedPreset); const dynamicDetail = activeDynamicProduct ? activeDynamicProduct.fields.filter(field => field.filledBy === 'terrain').map(field => `${field.name}: ${field.type === 'Oui/Non' ? (dynamicValues[field.id] ? 'Oui' : 'Non') : (dynamicValues[field.id] ?? field.defaultValue)}`).join(' · ') : ''; const detail = dynamicDetail ? `${dynamicDetail} · Couleur: ${itemColor === 'Autre' ? customColor : itemColor}${activeDynamicProduct && activeDynamicProduct.units.length > 1 ? ` · Unité: ${itemUnit}` : ''}` : selectedPreset === 'Colonne' ? `Quantité ${columnQty} · Noir/blanc à confirmer` : selectedPreset === 'Beam' ? `${length1} × ${lengthQty1}${beamDoubleFold ? ' · A–E plié double' : ''}` : isProfile ? `${length1} × ${lengthQty1}${length2 ? ` + ${length2} × ${lengthQty2}` : ''}` : soffit ? `Quantité ${orderQuantity} · ${itemColor === 'Autre' ? customColor : itemColor} · ${itemUnit}` : `Quantité ${orderQuantity}`; const enteredOptions = Array.from(form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-order-option]')).map(field => { const value = field instanceof HTMLInputElement && field.type === 'checkbox' ? (field.checked ? 'Oui' : 'Non') : field.value.trim(); return value ? `${field.dataset.orderOption}: ${value}` : ''; }).filter(Boolean); const savedDetail = [...detail.split(' · ').filter(part=>!part.startsWith('Unité:')&&part!==itemUnit), ...enteredOptions, ...(orderPriority ? [`Priorité: ${orderPriority}`] : []), `Unité: ${itemUnit}`].filter(Boolean).join(' · '); setOrderCart((items) => [...items, { id: crypto.randomUUID(), quantity: activeDynamicProduct?Number(dynamicValues[activeDynamicProduct.fields.find(f=>f.type==='Quantité')?.id||'']??activeDynamicProduct.fields.find(f=>f.type==='Quantité')?.defaultValue??orderQuantity):selectedPreset==='Colonne'?columnQty:isProfile?lengthQty1+(length2?lengthQty2:0):orderQuantity, category: orderCategory, item: selectedPreset, detail: savedDetail, foldingSnapshot, photos: [...orderPhotos] }]); setOrderPhotos([]); setOrderPriority(''); setDynamicValues({}); setSelectedPreset(''); setToastText(`${selectedPreset} ajouté à la commande`); setToast(true); window.setTimeout(() => setToast(false), 1800); }}>
+<Plus/><span>Ajouter à<br/>la commande</span></button></div></form></section>}
+
+        {fieldView !== 'work' && <FieldWorkspace jobs={timeData?.jobs||[]} view={fieldView} session={activeSession!} role={role as 'Chef'|'Employé'} navigate={navigateField} logoSrc={logoSrc} onNewOrder={job=>{if(orderCart.length&&orderJob!==job.id){if(!window.confirm('Changer de chantier videra la commande actuelle. Continuer?'))return;setOrderCart([]);setOrderPhotos([]);}setOrderJob(job.id);navigateField('orders');setModal(true)}} punch={{punched,selectedJob,activeJob,startedAt:punchStartedAt,onToggle:()=>void togglePunch(),onChangeJob:setSelectedJob}}/>}
         <div className="welcome">
 <div>
 <p>FORGE · LES REVÊTEMENTS MIR · VUE {role.toUpperCase()}</p>
@@ -503,7 +772,7 @@ export default function Home() {
           </div>
         </section>}
         {displayedRole === 'Chef' && <section className="chef-field-flow">
-<article className="panel employee-order-create" id="orders">
+<article className="panel employee-order-create" data-legacy-orders="true">
 <div className="order-create-icon">
 <ShoppingCart />
 </div>
@@ -971,7 +1240,7 @@ export default function Home() {
 <button className="confirm-load" onClick={() => { setToastText(`Chargement de ${chef} confirmé`); setToast(true); window.setTimeout(() => setToast(false), 3200); }}>
 <Check /> Confirmer les articles embarqués</button>
 </div>; })}</article>}</section>}
-        <div className={`main-grid ${displayedRole === 'Employé' ? 'employee-grid' : ''}`}>{displayedRole === 'Employé' ? <section className="panel employee-order-create" id="orders">
+        <div className={`main-grid ${displayedRole === 'Employé' ? 'employee-grid' : ''}`}>{displayedRole === 'Employé' ? <section className="panel employee-order-create" data-legacy-orders="true">
 <div className="order-create-icon">
 <PackageCheck />
 </div>
@@ -981,7 +1250,7 @@ export default function Home() {
 <button onClick={() => setModal(true)}>
 <Plus /> Créer une commande</button>
 <small>Tu verras le statut de ta demande dans les notifications.</small>
-</section> : <section className="panel orders-panel" id="orders">
+</section> : <section className="panel orders-panel" data-legacy-orders="true">
           <div className="panel-head">
 <div>
 <h2>Commandes en cours</h2>
@@ -1067,77 +1336,7 @@ export default function Home() {
 <small>{p.status}</small>
 </div>)}</section>
         </aside>}</div>
-        {isFieldRole && <section className="panel purchase-confirm" id="purchases">
-<div className="panel-head">
-<div>
-<h2>Confirmation d’achat</h2>
-<p>Envoie le reçu directement à l’administration</p>
-</div>
-<div className="purchase-head-icon">
-<ReceiptText />
-</div>
-</div>
-<form onSubmit={submitPurchase}>
-<div className="purchase-fields">
-<label>No de job<select required defaultValue="JOB-214">
-<option>JOB-214 — Breton</option>
-<option>JOB-315 — Leduc</option>
-<option>Aucun job / compagnie</option>
-</select>
-</label>
-<label>Montant total<input required type="number" min="0" step="0.01" placeholder="0,00 $"/>
-</label>
-</div>
-<label>Description de l’achat<input required placeholder="Ex. Essence, quincaillerie, vis, location…"/>
-</label>
-<fieldset>
-<legend>Comment l’achat a-t-il été payé?</legend>
-<label>
-<input type="radio" name="payment" value="refund" required/>
-<span>
-<b>À rembourser</b>
-<small>Payé avec mon argent personnel</small>
-</span>
-</label>
-<label>
-<input type="radio" name="payment" value="company-card"/>
-<span>
-<b>Carte de compagnie</b>
-<small>Achat déjà payé par l’entreprise</small>
-</span>
-</label>
-<label>
-<input type="radio" name="payment" value="account"/>
-<span>
-<b>Porter au compte</b>
-<small>Facturé au compte fournisseur</small>
-</span>
-</label>
-</fieldset>
-<div className="mobile-photo-actions">
-<label>
-<input type="file" accept="image/*" capture="environment"/>
-<Camera />
-<span>
-<b>Prendre une photo</b>
-<small>Ouvrir la caméra</small>
-</span>
-</label>
-<label>
-<input type="file" accept="image/*"/>
-<Paperclip />
-<span>
-<b>Choisir du téléphone</b>
-<small>Galerie de photos</small>
-</span>
-</label>
-</div>
-<label>Note pour Ester / l’administration<textarea placeholder="Fournisseur, raison de l’achat ou détail important…"/>
-</label>
-<button type="submit">
-<Check /> Confirmer l’achat</button>
-</form>
-</section>}
+        {isFieldRole && activeSession && <ExpenseWorkspace actor={activeSession}/>} 
         {displayedRole === 'Chef' && <section className="panel job-extra">
 <div className="panel-head">
 <div>
@@ -1380,205 +1579,6 @@ export default function Home() {
 </div>
 </div>
 </div>}
-    {modal && <div className="modal-wrap" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget)
-            setModal(false); }}>
-<form className="modal order-modal" onSubmit={submitRequest}>
-      <div className="modal-head">
-<div>
-<span>COMMANDE MULTI-ARTICLES</span>
-<h2>Nouvelle commande</h2>
-<p>Les articles rapides s’adaptent à la catégorie choisie.</p>
-</div>
-<button type="button" onClick={() => setModal(false)} aria-label="Fermer">
-<X />
-</button>
-</div>
-      <div className="form-row">
-<label>Projet / chantier<select required value={orderJob} onChange={e=>{if(orderCart.length&&e.target.value!==orderJob){if(!window.confirm('Changer de chantier videra la commande actuelle. Continuer?'))return;setOrderCart([]);setOrderPhotos([]);}setOrderJob(e.target.value)}}>
-<option value="">Choisir un chantier</option>
-{timeData?.jobs.filter(j=>j.company_id===activeSession!.companyId&&j.members.includes(activeSession!.email)).map(j=><option key={j.id} value={j.number}>{j.number} — {j.name}</option>)}
-</select>
-</label>
-<label>Catégorie<select value={orderCategory} onChange={(e) => { const category = e.target.value as 'Matériaux' | 'Outils' | 'Pliage'; setOrderCategory(category); setSelectedPreset(category === 'Outils' ? 'Gun à revêtement' : category === 'Pliage' ? 'Fascia' : 'Lame de Skill'); }}>
-<option>Matériaux</option>
-<option>Outils</option>
-<option>Pliage</option>
-</select>
-</label>
-</div>
-      <div className="preset-title">
-<span>ARTICLES RAPIDES · {orderCategory.toUpperCase()}</span>{displayedRole === 'Adjointe' && <button type="button" onClick={() => { const name = window.prompt('Nom du nouveau choix'); if (name?.trim()) {
-            setPresetSets((sets) => ({ ...sets, [orderCategory]: [...sets[orderCategory], name.trim()] }));
-            setSelectedPreset(name.trim());
-        } }}>
-<Plus /> Créer un choix</button>}</div>
-      <div className="presets category-presets">{quickItems.map((item) => <div className="preset-chip" draggable={isFieldRole} key={item} onDragStart={() => setDraggedPreset(item)} onDragOver={(e) => e.preventDefault()} onDrop={() => { if (!draggedPreset || draggedPreset === item)
-            return; setPresetSets((sets) => { const list = [...sets[orderCategory]]; const from = list.indexOf(draggedPreset); const to = list.indexOf(item); if (from < 0 || to < 0)
-            return sets; list.splice(to, 0, list.splice(from, 1)[0]); return { ...sets, [orderCategory]: list }; }); setDraggedPreset(null); }}>
-<button className={selectedPreset === item ? 'selected' : ''} type="button" onClick={() => setSelectedPreset(item)}>
-<span className="drag-handle">↕</span>{item}</button>{displayedRole === 'Adjointe' && <span className="preset-admin">
-<button type="button" aria-label={`Modifier ${item}`} onClick={() => { const name = window.prompt('Modifier ce choix', item); if (!name?.trim())
-            return; setPresetSets((sets) => ({ ...sets, [orderCategory]: sets[orderCategory].map((choice) => choice === item ? name.trim() : choice) })); if (selectedPreset === item)
-            setSelectedPreset(name.trim()); }}>✎</button>
-<button type="button" aria-label={`Retirer ${item}`} onClick={() => { setPresetSets((sets) => ({ ...sets, [orderCategory]: sets[orderCategory].filter((choice) => choice !== item) })); if (selectedPreset === item)
-            setSelectedPreset(quickItems.find((choice) => choice !== item) || ''); }}>×</button>
-</span>}</div>)}</div>
-      {orderCategory === 'Outils' && selectedPreset.includes('OLSA') && <div className="manual-size">
-<label>Grosseur OLSA<input required placeholder="Inscrire la grosseur"/>
-</label>
-</div>}
-      {orderCategory === 'Pliage' && <div className="folding-options">
-<label>Couleur<select defaultValue="Noir">
-<option>Noir</option>
-<option>Blanc</option>
-</select>
-</label>
-<label className="simon-confirm">
-<input type="checkbox" required/>
-<span>
-<b>Confirmer avec Simon</b>
-<small>Dimensions et couleur vérifiées avant l’envoi</small>
-</span>
-</label>
-</div>}
-      {orderCategory === 'Pliage' && selectedPreset === 'Colonne' && <div className="garage-folding technical-profile column-profile">
-<div className="garage-diagram">
-<img src="/profil-colonne.svg" alt="Profil technique Colonne avec mesure A sur le dessus et B sur le côté droit"/>
-</div>
-<div className="garage-fields">
-<span>PRESET PLIAGE · COLONNE</span>
-<h3>Mesures et quantité</h3>
-<div className="profile-measures column-measures">{['A', 'B'].map((measure) => <label key={measure}>
-<b>{measure}</b>
-<input required placeholder="Mesure"/>
-</label>)}</div>
-<label className="column-qty">Quantité<input required type="number" min="1" value={columnQty} onChange={(e) => setColumnQty(Number(e.target.value))}/>
-</label>
-<div className="column-confirmed">
-<Check />
-<span>Noir ou blanc · À confirmer avec Simon ci-dessus</span>
-</div>
-</div>
-</div>}
-      {orderCategory === 'Pliage' && !activeDynamicProduct && (selectedPreset === 'Capage porte de garage' || selectedPreset === 'Beam') && <div className="garage-folding technical-profile">
-<div className="garage-diagram">
-<img src={selectedPreset === 'Beam' ? '/profil-beam.svg' : '/profil-porte-garage.svg'} alt={selectedPreset === 'Beam' ? 'Profil technique Beam avec cinq segments identifiés' : 'Profil technique de capage de porte de garage avec trois segments identifiés'}/>
-</div>
-<div className="garage-fields">
-<span>PRESET CUSTOM · {selectedPreset.toUpperCase()}</span>
-<h3>Mesures du profil</h3>
-<div className="profile-measures">{(selectedPreset === 'Beam' ? ['A', 'B', 'C', 'D', 'E'] : ['A', 'B', 'C']).map((measure) => <label key={measure}>
-<b>{measure}</b>
-<input required placeholder="Mesure"/>
-</label>)}</div>{selectedPreset === 'Beam' && <div className="beam-double-folds">
-<label className={beamDoubleFold ? 'checked' : ''}>
-<input type="checkbox" checked={beamDoubleFold} onChange={(e) => setBeamDoubleFold(e.target.checked)}/>
-<b>A–E</b>
-<small>Plié double</small>
-</label>
-</div>}<div className={selectedPreset === 'Beam' ? 'beam-length-row' : 'profile-lengths paired-lengths'}>
-<label>Longueur<input required value={length1} onChange={(e) => setLength1(e.target.value)} placeholder="Inscrire la longueur"/>
-</label>
-<label>Quantité<input required type="number" min="1" value={lengthQty1} onChange={(e) => setLengthQty1(Number(e.target.value))}/>
-</label>{selectedPreset !== 'Beam' && <>
-<label>Longueur 2 <small>optionnelle</small>
-<input value={length2} onChange={(e) => setLength2(e.target.value)} placeholder="Inscrire la longueur"/>
-</label>
-<label>Quantité longueur 2<input type="number" min="1" value={lengthQty2} onChange={(e) => setLengthQty2(Number(e.target.value))}/>
-</label>
-</>}</div>
-</div>
-</div>}
-      {activeDynamicProduct && <div className="dynamic-order-form">
-<div className="dynamic-profile-view">
-<ProfilePreview product={activeDynamicProduct}/>
-</div>
-<div className="dynamic-order-fields">
-<span>ARTICLE DU CATALOGUE · {activeDynamicProduct.name.toUpperCase()}</span>
-<h3>Mesures et données</h3>
-<div>{activeDynamicProduct.fields.filter(field => field.filledBy === 'terrain').map(field => <label key={field.id}>{field.name}{field.type === 'Oui/Non' ? <input type="checkbox" checked={Boolean(dynamicValues[field.id])} onChange={e => setDynamicValues(v => ({ ...v, [field.id]: e.target.checked }))}/> : <input required={field.required} value={String(dynamicValues[field.id] ?? field.defaultValue)} onChange={e => setDynamicValues(v => ({ ...v, [field.id]: e.target.value }))} placeholder={field.type}/>}<small>{field.unit}</small>
-</label>)}</div>{activeDynamicProduct.colors.length > 0 && <label>Couleur<select value={itemColor} onChange={e => setItemColor(e.target.value)}>{activeDynamicProduct.colors.map(color => <option key={color}>{color}</option>)}</select>
-</label>}{itemColor === 'Autre' && <label>Couleur personnalisée<input value={customColor} onChange={e => setCustomColor(e.target.value)} required/>
-</label>}{activeDynamicProduct.units.length > 1 && <label>Unité<select value={itemUnit} onChange={e => setItemUnit(e.target.value)}>{activeDynamicProduct.units.map(unit => <option key={unit}>{unit}</option>)}</select>
-</label>}</div>
-</div>}
-      {!activeDynamicProduct && !(orderCategory === 'Pliage' && (selectedPreset === 'Capage porte de garage' || selectedPreset === 'Beam' || selectedPreset === 'Colonne')) && <div className="item-line">
-<label>Article<input required value={selectedPreset} onChange={(e) => setSelectedPreset(e.target.value)}/>
-</label>
-<label>Qté<input required type="number" min="1" defaultValue="2"/>
-</label>
-<button type="button" aria-label="Retirer">
-<X />
-</button>
-</div>}
-      {orderCategory === 'Matériaux' && ['J soffite', 'Boîte de soffite'].includes(selectedPreset) && <div className="soffit-options">
-<label>Couleur<select value={itemColor} onChange={e => setItemColor(e.target.value)}>
-<option>Noir</option>
-<option>Blanc</option>
-<option>Autre</option>
-</select>
-</label>{itemColor === 'Autre' && <label>Couleur personnalisée<input value={customColor} onChange={e => setCustomColor(e.target.value)} placeholder="Inscrire la couleur" required/>
-</label>}<label>Unité<select value={itemUnit} onChange={e => setItemUnit(e.target.value)}>
-<option value="morceau">Morceau</option>
-<option value="boîte">Boîte</option>
-</select>
-</label>
-</div>}
-      <button type="button" className="add-line">
-<Plus /> Ajouter un autre article ou changer de catégorie</button>
-<div className="mobile-photo-actions">
-<label>
-<input type="file" accept="image/*" capture="environment" onChange={(e) => setOrderPhotos(Array.from(e.target.files || []).map((file) => file.name))}/>
-<Camera />
-<span>
-<b>Prendre une photo</b>
-<small>{orderPhotos.length ? `${orderPhotos.length} photo jointe` : 'Chantier ou matériel'}</small>
-</span>
-</label>
-<label>
-<input type="file" accept="image/*" multiple onChange={(e) => setOrderPhotos(Array.from(e.target.files || []).map((file) => file.name))}/>
-<Paperclip />
-<span>
-<b>Choisir du téléphone</b>
-<small>{orderPhotos.length ? `${orderPhotos.length} photo${orderPhotos.length > 1 ? 's' : ''} sélectionnée${orderPhotos.length > 1 ? 's' : ''}` : 'Galerie de photos'}</small>
-</span>
-</label>
-</div>
-      <div className="form-row">
-<label>Priorité<select>
-<option>Normale</option>
-<option>Urgente</option>
-</select>
-</label>
-<label>Livraison souhaitée<input defaultValue="Dans 2 jours — au chantier"/>
-</label>
-</div>
-<label>Note<textarea placeholder="Couleur, dimensions, angle, détails importants…"/>
-</label>
-      <button type="button" className="add-to-order" onClick={() => { const isProfile = orderCategory === 'Pliage' && (selectedPreset === 'Capage porte de garage' || selectedPreset === 'Beam'); const soffit = orderCategory === 'Matériaux' && ['J soffite', 'Boîte de soffite'].includes(selectedPreset); const dynamicDetail = activeDynamicProduct ? activeDynamicProduct.fields.filter(field => field.filledBy === 'terrain').map(field => `${field.name}: ${field.type === 'Oui/Non' ? (dynamicValues[field.id] ? 'Oui' : 'Non') : (dynamicValues[field.id] ?? field.defaultValue)}`).join(' · ') : ''; const detail = dynamicDetail ? `${dynamicDetail} · Couleur: ${itemColor === 'Autre' ? customColor : itemColor}${activeDynamicProduct && activeDynamicProduct.units.length > 1 ? ` · Unité: ${itemUnit}` : ''}` : selectedPreset === 'Colonne' ? `Quantité ${columnQty} · Noir/blanc à confirmer` : selectedPreset === 'Beam' ? `${length1} × ${lengthQty1}${beamDoubleFold ? ' · A–E plié double' : ''}` : isProfile ? `${length1} × ${lengthQty1}${length2 ? ` + ${length2} × ${lengthQty2}` : ''}` : soffit ? `Quantité 2 · ${itemColor === 'Autre' ? customColor : itemColor} · ${itemUnit}` : 'Quantité 2'; setOrderCart((items) => [...items, { id: Date.now(), category: orderCategory, item: selectedPreset, detail, photos: [...orderPhotos] }]); setOrderPhotos([]); setDynamicValues({}); setToastText(`${selectedPreset} ajouté à la commande`); setToast(true); window.setTimeout(() => setToast(false), 1800); }}>
-<ShoppingCart /> Ajouter à la commande</button>
-      {orderCart.length > 0 && <div className="order-cart-preview">
-<div className="cart-preview-head">
-<div>
-<span>MA COMMANDE</span>
-<h3>{orderCart.length} article{orderCart.length > 1 ? 's' : ''} · plusieurs catégories permises</h3>
-</div>
-<b>{orderCart.length}</b>
-</div>{orderCart.map((item) => <div className="cart-preview-item" key={item.id}>
-<span>{item.category.slice(0, 3).toUpperCase()}</span>
-<div>
-<b>{item.item}</b>
-<small>{item.detail}{item.photos.length ? ` · ${item.photos.length} photo${item.photos.length > 1 ? 's' : ''} jointe${item.photos.length > 1 ? 's' : ''}` : ''}</small>
-</div>
-<button type="button" onClick={() => setOrderCart((items) => items.filter((i) => i.id !== item.id))} aria-label={`Retirer ${item.item}`}>
-<Trash2 />
-</button>
-</div>)}<small className="cart-help">Change de catégorie ci-dessus pour ajouter d’autres types d’articles à la même commande.</small>
-</div>}
-      <button className="submit" type="submit" disabled={!orderCart.length}>
-<Send /> {orderCart.length ? `Envoyer la commande · ${orderCart.length} item${orderCart.length > 1 ? 's' : ''}` : 'Ajoute un item avant d’envoyer'}</button>
-    </form>
-</div>}
     {jobDossierOpen && <div className="modal-wrap" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) {
         setJobDossierOpen(false);
         setExtraFormOpen(false);
@@ -1654,14 +1654,14 @@ export default function Home() {
 </span>
 <div>
 <b>{toastText}</b>
-<small>L’administration vient d’être avisée.</small>
+<small>{workTarget==='orders'?'Aperçu local · aucune transmission à l’administration.':'L’administration vient d’être avisée.'}</small>
 </div>
 </div>}
     {isFieldRole && <nav className="mobile-bottom-nav" aria-label="Navigation mobile">
 <button className={fieldView==='home'?'active':''} onClick={()=>navigateField('home')}><LayoutDashboard/><span>Accueil</span></button>
 <button className={fieldView==='projects'||fieldView.startsWith('project')?'active':''} onClick={()=>navigateField('projects')}><Folder/><span>Projets</span></button>
 <button className="punch-nav" onClick={()=>navigateField('punch')}><Clock3/><span>Punch</span></button>
-<button onClick={()=>navigateField('messages')}><MessageSquare/><span>Messages</span><i /></button>
+<button className={fieldView==='work'&&workTarget==='messages'?'active':''} onClick={()=>navigateField('messages')}><MessageSquare/><span>Messages</span>{activeSession&&<MessageUnreadBadge session={activeSession}/>}</button>
 <button className={fieldView==='menu'?'active':''} onClick={()=>navigateField('menu')}><Menu/><span>Menu</span></button>
 </nav>}
   </main>;

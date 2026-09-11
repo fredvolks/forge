@@ -11,6 +11,23 @@
 [data-forge-theme="teal"]{--accent:#079c9b;--forge-bg:#eff8f8;--forge-sidebar:#e6f4f4;--forge-surface:#fff;--forge-surface-2:#dff1f0;--forge-border:#c4dedc;--forge-text:#173333;--forge-muted:#607a79;--forge-shadow:0 14px 38px #075b5b16;--forge-radius:12px}
 [data-mode="light"][data-forge-theme="forge"],[data-mode="light"][data-forge-theme="navy"],[data-mode="light"][data-forge-theme="slate"],[data-mode="light"][data-forge-theme="forest"],[data-mode="light"][data-forge-theme="sunset"],[data-mode="light"][data-forge-theme="purple"]{--forge-bg:#f5f7f5;--forge-sidebar:#fff;--forge-surface:#fff;--forge-surface-2:#eaf0ec;--forge-border:#d6dfd9;--forge-text:#172019;--forge-muted:#68756d;--forge-shadow:0 13px 36px #20342716}
 [data-mode="dark"][data-forge-theme="arctic"],[data-mode="dark"][data-forge-theme="sand"],[data-mode="dark"][data-forge-theme="rose"],[data-mode="dark"][data-forge-theme="teal"]{--forge-bg:#111513;--forge-sidebar:#151b18;--forge-surface:#19201c;--forge-surface-2:#222c27;--forge-border:#37443d;--forge-text:#f5f8f6;--forge-muted:#98a49d;--forge-shadow:0 18px 45px #0006}
+/* Shared FORGE palette requested across all roles, independent of saved themes. */
+:root,html[data-forge-theme],html[data-mode],body,.admin-portal,.app-shell,.suite-page{
+ --accent:#a8e64b!important;--forge-bg:#141719!important;--forge-sidebar:#101315!important;
+ --forge-surface:#202426!important;--forge-surface-2:#293326!important;--forge-card:#202426!important;
+ --forge-border:#3b4540!important;--forge-text:#edf1ec!important;--forge-muted:#a2aca4!important;
+ --bg:#141719!important;--background:#141719!important;--foreground:#edf1ec!important;
+ --ink:#edf1ec!important;--muted:#a2aca4!important;--line:#3b4540!important;--border:#3b4540!important;--nav:#101315!important;
+}
+/* Keep the shared Forge identity, but honor the user's light-mode choice. */
+html[data-mode="light"],html[data-mode="light"] :is(body,.admin-portal,.app-shell,.suite-page){
+ --accent:#34751e!important;--forge-bg:#f2f5f3!important;--forge-sidebar:#fff!important;
+ --forge-surface:#fff!important;--forge-surface-2:#e7efe8!important;--forge-card:#fff!important;
+ --forge-border:#cbd6ce!important;--forge-text:#1e3026!important;--forge-muted:#53665b!important;
+ --bg:#f2f5f3!important;--background:#f2f5f3!important;--foreground:#1e3026!important;
+ --ink:#1e3026!important;--muted:#53665b!important;--line:#cbd6ce!important;--border:#cbd6ce!important;--nav:#fff!important;
+ color-scheme:light;
+}
 html body,.admin-portal,.app-shell,.suite-page{font-family:var(--forge-font);background:var(--forge-bg);color:var(--forge-text)}
 .admin-sidebar,.sidebar{background:var(--forge-sidebar)!important;border-color:var(--forge-border)!important}.admin-topbar,.topbar{background:color-mix(in srgb,var(--forge-sidebar) 94%,transparent)!important;border-color:var(--forge-border)!important}.admin-content,.workspace{background:var(--forge-bg)!important}
 .attention-grid>button,.dashboard-flow,.portal-job-list>button,.job-section-card,.job-chat-page,.job-history-page,.command-hub-grid>button,.report-hub>button,.administration-grid>button,.suite-page article,.style-grid>button,.settings-sections article,.branding-panel{background:var(--forge-surface)!important;border-color:var(--forge-border)!important;border-radius:var(--forge-radius)!important;color:var(--forge-text)!important;box-shadow:var(--forge-shadow)}

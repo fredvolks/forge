@@ -1,5 +1,17 @@
 # Central chat implementation — 2026-09-10
 
+## Current redesign on fred-dev
+
+The user explicitly selected fred-dev instead of the attachment's fred prerequisite. Existing local changes were retained; no checkout, pull, push or deployment occurred.
+
+ForgeMessages now serves Boss, Adjointe, Chef and Employé. The AdjointeDiscussion wrapper delegates directly to this component, removing its separate hardcoded discussion/message lists. A single in-memory demo adapter supplies canonical existing Job IDs, pair-specific private threads, groups, messages and calculated read state. Messages persist between role switches during this visit, not after a reload. Reply links now store reply_to_message_id. Attachments retain their original references. Do not present this adapter as server authorization.
+
+Visual changes: conversation menu replaces Infos; functional Discussion/Files/Photos/Links/Members tabs, explicit unconnected Tasks empty state, fixed composer with camera/microphone/send, lime sent bubbles, conversation filters, new group creation with existing employees, calculated bottom-navigation badge, bounded 40-message rendering and older-message button, light-theme chat tokens.
+
+Verified: build; four demo-domain tests; six existing server tests (the superseded shared Administration test still describes the unactivated legacy resolver); browser send and empty Photos tab; no document overflow at the current 946×698 desktop viewport; local message visible after switching Adjointe to Employé; five mobile tabs and composer fit the 390×844 device simulation.
+
+Not acceptance-complete: exact screenshot fidelity (no real Job photos/PDFs available in the current demo), all requested device sizes, real mobile keyboard testing, light-mode visual testing, server API integration, uploads/download authorization, realtime notifications, complete business-object pickers, and activation of the pair-specific production private-chat model. Do not claim those are finished.
+
 ## Updated requirement: separate private conversations
 
 The user corrected the Administration requirement: every employee and team lead
