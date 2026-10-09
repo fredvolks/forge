@@ -141,18 +141,27 @@ function chrono(){
  <div class="chrono-grid">${runners.map((r,i)=>{const p=state.pilots[i];return `<div class="stop-card ${r.status==='ready'?'disabled':''} ${r.status==='stopped'?'is-stopped':''} ${r.status==='running'?'running':''}" id="card_${i}" data-card-lap="${i}" role="button" tabindex="0" aria-label="${r.status==='running'?'Enregistrer le tour de':r.status==='ready'?'Démarrer le chronomètre de':'Chronomètre arrêté de'} ${esc(p.name)}. Touchez cette carte."><div class="stop-card-header"><strong>${esc(p.name)}</strong><span class="driver-num">#${esc(p.num)}</span><button class="card-tour-link" data-history="${i}" aria-label="Voir les tours de ${esc(p.name)}" id="lapcount_${i}">${r.laps.length} tours ›</button></div><div class="stop-value" id="time_${i}">${formatMs(displayedElapsed(r,performance.now()))}</div><div class="lap-meta"><div>DERNIER<b id="last_${i}">${r.laps.length?formatMs(r.laps.at(-1)):'—'}</b></div><div>MEILLEUR<b id="best_${i}">${r.laps.length?formatMs(Math.min(...r.laps)):'—'}</b></div></div><div class="lap-hint" id="hint_${i}">${r.status==='running'?'EN PISTE':r.status==='stopped'?'ARRÊTÉ':'PRÊT'}</div><div class="stop-btns"><button data-timer="stop" data-i="${i}" ${r.status==='ready'?'disabled':''}>${r.status==='stopped'?'RESET':'STOP'}</button></div></div>`}).join('')}</div>
  <div class="chrono-footer">Toute la carte = LAP · Coin bas droit = prochain · STOP séparé</div></div>`
 }
-/* Stable sort by predicted absolute arrival time, keeping the soonest in slot 4 (lower right).
-   Unknown predictions are never mistaken for known arrival times. */
+/* Keep the earliest expected passage in slot 4 (lower right).
+   Before the first recorded lap, use the order in which pilots started/passed:
+   the earliest first touch is the most likely to be the first to return.
+   Once lap times exist, use the absolute expected next-passage times. */
 function predictedPassTime(r){const d=timerLapDuration(r);return r.status==='running'&&d!=null&&Number.isFinite(d)&&d>0?r.lastStart+d:null}
 function orderedRunners(){
- const ids=[0,1,2,3], now=performance.now();
+ const ids=[0,1,2,3];
  return ids.sort((a,b)=>{
-  const pa=predictedPassTime(runners[a]), pb=predictedPassTime(runners[b]);
+  const ra=runners[a],rb=runners[b];
   const cat=r=>r.status==='stopped'?0:r.status==='ready'?1:2;
-  if(cat(runners[a])!==cat(runners[b]))return cat(runners[a])-cat(runners[b]);
-  // known estimates last; within them, the earliest prediction goes to lower-right
+  if(cat(ra)!==cat(rb))return cat(ra)-cat(rb);
+  const pa=predictedPassTime(ra),pb=predictedPassTime(rb);
   if((pa===null)!==(pb===null))return pa===null?-1:1;
   if(pa!==null&&pb!==null&&Math.abs(pa-pb)>1)return pb-pa;
+  if(ra.status==='running'&&rb.status==='running'&&pa===null&&pb===null){
+   // First pilot tapped/started stays at bottom-right until a better estimate exists.
+   if(Math.abs(ra.started-rb.started)>1)return rb.started-ra.started;
+   // When all timers started together, use first completed passages as tie-breaker.
+   const ia=passes.indexOf(a),ib=passes.indexOf(b);
+   if(ia!==ib){if(ia<0)return -1;if(ib<0)return 1;return ia-ib}
+  }
   return a-b;
  });
 }
@@ -160,10 +169,10 @@ let chronoVisualOrder='';
 function updateChronoOrder(){
  if(page!=='chrono')return;
  const grid=document.querySelector('.chrono-grid');if(!grid)return;
- const order=orderedRunners();const signature=order.join(',');
+ const order=orderedRunners(),signature=order.join(',');
  if(signature!==chronoVisualOrder){order.forEach(i=>{const card=document.getElementById('card_'+i);if(card)grid.appendChild(card)});chronoVisualOrder=signature}
- const next=order[3]; const isKnown=predictedPassTime(runners[next])!==null;
- order.forEach(i=>{const c=document.getElementById('card_'+i);if(c)c.classList.toggle('priority',i===next&&isKnown)});
+ const next=order[3],active=runners[next].status==='running';
+ order.forEach(i=>{const c=document.getElementById('card_'+i);if(c)c.classList.toggle('priority',i===next&&active)});
 }
 
 function lapsForHistory(){
@@ -262,7 +271,7 @@ function timerAction(action,i){const now=performance.now();if(action==='all-star
 if(i<0||i>3)return;const r=runners[i];if(action==='lap'){if(r.status==='ready'){runners[i]={...r,status:'running',started:now,lastStart:now,elapsed:0,alerted:false,runId:new Date().toISOString()+'_'+i};render();return}if(r.status==='running'){const lap=now-r.lastStart;if(lap<700)return;r.laps.push(lap);r.lastStart=now;r.alerted=false;passes=[i,...passes.filter(x=>x!==i)];state.laps.push({at:new Date().toISOString(),pilot:state.pilots[i].name,pilotNum:state.pilots[i].num,pilotIndex:i,runId:r.runId||null,lapNo:r.laps.length,timeMs:lap,track:state.track});if(state.laps.length>4000)state.laps=state.laps.slice(-4000);save();document.getElementById('last_'+i).textContent=formatMs(lap);document.getElementById('best_'+i).textContent=formatMs(Math.min(...r.laps));document.getElementById('hint_'+i).textContent='TOUR '+r.laps.length;const countEl=document.getElementById('lapcount_'+i);if(countEl)countEl.textContent=r.laps.length+' tours ›';updateChronoOrder();return}}
 if(action==='stop'){if(r.status==='running'){r.elapsed=Math.max(0,now-r.lastStart);r.status='stopped'}else if(r.status==='stopped'){runners[i]={status:'ready',lastStart:0,started:0,elapsed:0,laps:[],alerted:false}}render()}}
 function vibrate(){try{if(navigator.vibrate)navigator.vibrate([120,65,120])}catch(e){}}
-function tick(){if(page!=='chrono'){return}updateChronoOrder();const nextId=orderedRunners()[3];const knownNext=predictedPassTime(runners[nextId])!==null;const now=performance.now();runners.forEach((r,i)=>{const t=document.getElementById('time_'+i);if(!t)return;t.textContent=formatMs(displayedElapsed(r,now));const hint=document.getElementById('hint_'+i);const card=document.getElementById('card_'+i);if(r.status==='running'){const base=timerLapDuration(r),elapsed=now-r.lastStart;if(base!=null){const remain=base-elapsed;hint.textContent=remain>0?`PASSAGE ~ ${Math.ceil(remain/1000)} s`:'PASSAGE ATTENDU';if(!r.alerted&&base>(state.lead+1)*1000&&remain<=state.lead*1000&&remain>-1500){r.alerted=true;vibrate();card.classList.add('alert')}if(remain<-1500)card.classList.remove('alert')}else hint.textContent='PREMIER TOUR';if(i===nextId&&knownNext)hint.textContent='★ PROCHAIN · '+hint.textContent;}else if(r.status==='stopped'){hint.textContent='ARRÊTÉ'}else hint.textContent='PRÊT'})}
+function tick(){if(page!=='chrono'){return}updateChronoOrder();const nextId=orderedRunners()[3];const knownNext=runners[nextId].status==='running';const now=performance.now();runners.forEach((r,i)=>{const t=document.getElementById('time_'+i);if(!t)return;t.textContent=formatMs(displayedElapsed(r,now));const hint=document.getElementById('hint_'+i);const card=document.getElementById('card_'+i);if(r.status==='running'){const base=timerLapDuration(r),elapsed=now-r.lastStart;if(base!=null){const remain=base-elapsed;hint.textContent=remain>0?`PASSAGE ~ ${Math.ceil(remain/1000)} s`:'PASSAGE ATTENDU';if(!r.alerted&&base>(state.lead+1)*1000&&remain<=state.lead*1000&&remain>-1500){r.alerted=true;vibrate();card.classList.add('alert')}if(remain<-1500)card.classList.remove('alert')}else hint.textContent='PREMIER TOUR';if(i===nextId&&knownNext)hint.textContent='★ PROCHAIN · '+hint.textContent;}else if(r.status==='stopped'){hint.textContent='ARRÊTÉ'}else hint.textContent='PRÊT'})}
 setInterval(tick,38);
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-nav],[data-action],[data-modal],[data-history],[data-history-pilot],[data-history-scope],[data-set],[data-step],[data-lead],[data-wet],[data-timer],[data-symptom],[data-card-lap]');if(!b){if(e.target.matches('[data-dismiss]')){modal=null;render()}return}
 if(b.dataset.history!==undefined){historyPilot=b.dataset.history;historyScope='track';modal='lap-history';render();return}
