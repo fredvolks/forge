@@ -39,7 +39,7 @@ class MainActivity:ComponentActivity() {
 @Composable
 private fun KartApp(activity:MainActivity) {
  val prefs=remember { activity.getSharedPreferences("kart_prefs",Context.MODE_PRIVATE) }
- val names=remember { mutableStateListOf(*Array(4){i->prefs.getString("pilot_$i",listOf("Jacob #27","Lucas #17","Pilote 3","Pilote 4")[i]) ?: ""}.toTypedArray()) }
+ val names=remember { mutableStateListOf(*Array(4){i->prefs.getString("pilot_$i",listOf("Jacob #27","Lucas #17","Pilote 3","Pilote 4")[i]) ?: ""}) }
  val slots=remember { mutableStateListOf(*Array(4){Stopwatch()}) }
  val order=remember { mutableStateListOf(0,1,2,3) }
  var tab by remember { mutableStateOf("chrono") }
