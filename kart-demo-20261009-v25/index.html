@@ -186,6 +186,8 @@ function orderedRunners(){
   const ra=runners[a],rb=runners[b];
   const cat=r=>r.status==='stopped'?0:r.status==='ready'?1:2;
   if(cat(ra)!==cat(rb))return cat(ra)-cat(rb);
+  // Until a runner has their first completed lap, keep them ahead of runners with predictions.
+  if(ra.status==='running'&&rb.status==='running'&&(ra.laps.length===0)!==(rb.laps.length===0))return ra.laps.length===0?1:-1;
   const pa=predictedPassTime(ra),pb=predictedPassTime(rb);
   if((pa===null)!==(pb===null))return pa===null?-1:1;
   if(pa!==null&&pb!==null&&Math.abs(pa-pb)>1)return pb-pa;
