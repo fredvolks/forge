@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#090e16"><meta name="color-scheme" content="dark"><title>Kart Setup Pro · Local 2.3 Chrono rotation</title>
+<style>
+:root{--bg:#080d16;--bg2:#0d1522;--surface:#141e2d;--surface2:#1b293b;--stroke:#28374b;--text:#f4f7fc;--muted:#8b9bb0;--accent:#f46e49;--accent2:#ffb66d;--cyan:#64d4e7;--green:#59d6a3;--yellow:#ffcf68;--red:#ff657b;--rad:18px;--nav:74px;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}*{box-sizing:border-box}html,body{height:100%;margin:0}body{background:radial-gradient(ellipse at 90% -5%,#20304a 0,transparent 48%),var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}button,input,select{font:inherit}button{cursor:pointer;touch-action:manipulation}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}button:disabled{opacity:.45;cursor:not-allowed}input,select{border:1px solid var(--stroke);background:#111c2a;color:var(--text);border-radius:12px;padding:12px;width:100%;min-width:0;outline:none}input[type=number]{font-variant-numeric:tabular-nums}input[type=checkbox]{accent-color:var(--accent)}.shell{max-width:560px;margin:auto;min-height:100dvh;position:relative;padding-bottom:calc(var(--nav) + env(safe-area-inset-bottom) + 18px)}.appbar{height:67px;padding:11px 17px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #22304499;background:#0b111bcc;position:sticky;top:0;z-index:10;backdrop-filter:blur(18px)}.brand{display:flex;align-items:center;gap:11px}.mark{width:37px;height:37px;border-radius:11px;background:linear-gradient(145deg,#ff935d,#db3d3a);display:grid;place-items:center;color:white;font-size:24px;font-weight:900;transform:skew(-8deg);box-shadow:0 5px 20px #fa5f3650}.brand-name{font-weight:900;letter-spacing:.035em;font-size:15px}.brand-sub{font-size:10px;letter-spacing:.13em;color:var(--muted);margin-top:2px}.head-action{color:var(--cyan);background:#152739;border:1px solid #24445b;border-radius:12px;padding:10px;display:flex;align-items:center;gap:7px;font-size:12px;font-weight:750}.head-action svg,.navbtn svg,.btn svg,.tile-icon svg,.small-icon svg{width:18px;height:18px}.content{padding:19px 16px 16px}.eyebrow{font-size:10px;font-weight:900;color:var(--cyan);letter-spacing:.15em;text-transform:uppercase}.section-title{font-size:27px;font-weight:850;letter-spacing:-.04em;margin:6px 0 3px}.subtext{color:var(--muted);font-size:12px;line-height:1.45}.panel{background:linear-gradient(145deg,#172336,#111a28);border:1px solid var(--stroke);border-radius:var(--rad);padding:15px;box-shadow:0 8px 26px #0002}.panel+.panel{margin-top:12px}.space{height:14px}.tiny-space{height:8px}.row{display:flex;align-items:center;gap:10px}.spread{justify-content:space-between}.grow{flex:1;min-width:0}.muted{color:var(--muted)}.light{color:#cbd7e6}.highlight{color:var(--cyan)}.orange{color:var(--accent2)}.green{color:var(--green)}.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid #344157;border-radius:99px;padding:5px 9px;font-size:10px;font-weight:750;color:#b8c8d9;white-space:nowrap}.pill.live{border-color:#2c6552;color:var(--green);background:#1b4034}.pill.warn{border-color:#604d32;color:var(--yellow);background:#382e20}.pill.cyan{border-color:#28546b;color:var(--cyan);background:#142c3b}.hero{background:linear-gradient(125deg,#27273a,#172638 45%,#101d2c);border-color:#415069;position:relative;overflow:hidden;padding:21px 18px 19px}.hero:before{content:"";position:absolute;width:200px;height:200px;right:-100px;top:-110px;border:35px solid #fa734b22;transform:rotate(24deg);border-radius:44px}.hero>*{position:relative}.big-track{font-weight:900;letter-spacing:-.055em;font-size:38px;margin:9px 0 7px}.weather-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:16px 0}.weather-bit{background:#101b2b88;padding:11px 9px;border:1px solid #354459;border-radius:13px}.weather-bit strong{font-size:20px;display:block;font-variant-numeric:tabular-nums}.weather-bit span{font-size:10px;color:#a9b8c7}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--stroke);border-radius:13px;min-height:43px;padding:10px 14px;color:var(--text);background:#243144;font-weight:800;font-size:13px}.btn.primary{background:linear-gradient(135deg,#ff8659,#e54b3b);border:1px solid #ff9955;color:#160f13}.btn.secondary{background:#1a293c;color:#d2e4f5}.btn.outline{background:transparent;border-color:#425269}.btn.cyanbtn{background:#183d4d;border-color:#2f6b75;color:var(--cyan)}.btn.full{width:100%}.btn.compact{min-height:34px;padding:6px 9px;font-size:12px}.btn.small{min-height:38px;padding:7px 12px}.btn-row{display:flex;gap:9px}.btn-row>*{flex:1}.action-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}.action-tile{height:125px;padding:14px;border:1px solid #2d3e53;border-radius:17px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;text-align:left;color:var(--text);background:linear-gradient(150deg,#223047,#141f2f);position:relative;overflow:hidden}.action-tile:first-child{border-color:#695141;background:linear-gradient(145deg,#473335,#1f2736)}.action-tile:after{content:'↗';position:absolute;right:13px;top:14px;font-size:17px;color:#6c8298}.tile-icon{display:grid;place-items:center;width:32px;height:32px;background:#334258;border-radius:10px;color:var(--cyan)}.action-tile:first-child .tile-icon{color:var(--accent2);background:#5a3d3a}.action-tile b{font-size:17px;letter-spacing:-.02em}.action-tile small{font-size:10px;color:#a7b6c8}.block-heading{display:flex;align-items:center;justify-content:space-between;margin:20px 0 11px}.block-heading h3{margin:0;font-size:16px}.block-heading small{font-size:11px;color:var(--muted)}.device-line{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0}.device-line+.device-line{border-top:1px solid var(--stroke)}.device-line strong{font-size:13px}.device-line small{color:var(--muted);display:block;margin-top:3px;font-size:10px}.dot{width:8px;height:8px;background:#68798e;border-radius:50%;flex:none}.nav{height:calc(var(--nav) + env(safe-area-inset-bottom));padding:7px 10px calc(7px + env(safe-area-inset-bottom));background:#101824ed;border-top:1px solid #2a394b;position:fixed;bottom:0;left:50%;width:min(100%,560px);transform:translateX(-50%);display:flex;justify-content:space-around;z-index:15;backdrop-filter:blur(20px)}.navbtn{background:none;border:0;color:#8495ac;padding:6px 5px;min-width:0;display:flex;gap:5px;flex-direction:column;align-items:center;justify-content:center;flex:1;font-size:10px;font-weight:700}.navbtn.active{color:var(--accent2)}.navbtn.active svg{stroke-width:2.5}.select-row{display:flex;gap:7px;flex-wrap:wrap}.chip{color:#b6c3d3;border:1px solid #344357;background:#111d2d;padding:10px 12px;min-height:41px;border-radius:11px;font-size:12px;font-weight:750}.chip.selected{color:#10131a;background:var(--accent2);border-color:var(--accent2)}.chip.cyan-selected.selected{background:var(--cyan);border-color:var(--cyan)}.label{font-size:11px;color:#a6b6c9;font-weight:750;letter-spacing:.015em;margin:0 0 7px;display:block}.field-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.field-grid.three{grid-template-columns:repeat(3,1fr)}.field{min-width:0}.field-value{font-size:24px;font-weight:850;font-variant-numeric:tabular-nums}.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;background:#0e1927;border:1px solid #2a3b50;border-radius:13px;padding:4px}.seg button{background:transparent;border:0;padding:11px 4px;color:#a6b7c9;font-weight:800;border-radius:10px;font-size:13px}.seg button.active{color:#0e121b;background:var(--cyan)}.seg.orange-sel button.active{background:var(--accent2)}.setting-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:13px}.setting-title h3{font-size:15px;letter-spacing:-.01em;margin:0}.setting-title span{font-size:10px;color:var(--muted)}.mini-step{display:flex;align-items:center;gap:5px}.mini-step button{height:39px;width:38px;border-radius:11px;border:1px solid #36526b;color:var(--cyan);background:#193044;font-size:21px;font-weight:650;flex:none}.mini-step output{flex:1;min-width:0;font-size:24px;text-align:center;font-weight:900;font-variant-numeric:tabular-nums}.note{font-size:11px;color:var(--muted);line-height:1.48;background:#0f1c2c;border:1px dashed #344963;padding:11px 12px;border-radius:12px}.note.warning{border-color:#66503c;color:#eed6ad}.diagram{background:radial-gradient(circle at 50% 50%,#2a3a47,#101a29 66%);border:1px solid #354558;border-radius:17px;display:grid;place-items:center;padding:8px;min-height:165px}.diagram svg{width:100%;max-width:260px;height:auto}.wx-gauges{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.wx-cell{padding:12px;background:#101c2c;border:1px solid #2c3b50;border-radius:12px}.wx-cell b{display:block;font-size:22px;font-variant-numeric:tabular-nums}.wx-cell span{color:var(--muted);font-size:10px}.choose-track{width:100%;background:#101c2b;padding:11px;border:1px solid #37506a;border-radius:12px;color:var(--text);font-weight:800}.center{text-align:center}.timeline{border-left:2px solid #36546a;margin:10px 0 0 11px;padding-left:16px}.time-item{margin-bottom:13px;position:relative}.time-item:before{content:"";position:absolute;left:-21px;top:3px;width:8px;height:8px;background:var(--cyan);border:2px solid var(--bg);border-radius:50%}.time-item small{font-size:10px;color:var(--muted)}.time-item b{font-size:13px;display:block;margin-top:3px}.divider{height:1px;background:var(--stroke);margin:15px 0}.camstrip{background:#102534;border:1px solid #22556a;border-radius:12px;padding:11px;font-size:12px;color:#b1e0e7;display:flex;align-items:flex-start;gap:8px}.camstrip svg{flex:none}.preset-jet{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.preset-jet button{padding:14px 0;border-radius:12px;font-size:17px;color:#cad6e6;background:#101d2c;border:1px solid #33445a;font-weight:900}.preset-jet button.active{color:#181314;background:var(--accent2);border-color:var(--accent2)}.clip-track{display:flex;gap:7px}.clip-track button{flex:1;min-width:0;height:41px;border:1px solid #3a4960;border-radius:10px;background:#0e1a2a;color:#ccd5e0;font-weight:800}.clip-track button.active{color:#0b1019;background:var(--cyan)}.wet-level{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.wet-level button{padding:9px 1px;border:1px solid #35445c;border-radius:10px;font-size:9px;font-weight:900;color:#c3d2df;background:#132031;line-height:1.25;min-height:49px}.wet-level button.active{background:#1a4860;border-color:var(--cyan);color:var(--cyan)}.gear-big{text-align:center;padding:20px 10px;background:linear-gradient(145deg,#283247,#172c40);border:1px solid #3c5168;border-radius:16px}.gear-big small{font-size:11px;color:var(--muted)}.gear-big strong{font-size:34px;display:block;margin:6px 0;color:var(--cyan);font-variant-numeric:tabular-nums}.tire-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.tire-panel{padding:11px;border:1px solid #2e4054;background:#121f2f;border-radius:14px}.tire-panel b{font-size:12px;display:block;margin-bottom:11px}.tiny-label{color:var(--muted);font-size:10px;display:block;margin-bottom:4px}.tire-panel input{padding:9px 7px;font-size:15px}.form-row{display:flex;gap:9px;align-items:center}.toggle{display:flex;align-items:center;gap:10px;color:#b9c9d6;font-size:12px;font-weight:650}.toggle input{width:18px;height:18px}.chrono-screen{height:calc(100dvh - 67px - var(--nav) - env(safe-area-inset-bottom));display:flex;flex-direction:column;padding:10px 11px 8px;gap:8px;overflow:hidden}.chrono-top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:42px}.chrono-title{font-weight:900;font-size:17px;letter-spacing:-.02em}.chrono-sub{color:var(--muted);font-size:10px;margin-top:3px}.global-delay{display:flex;align-items:center;gap:5px;border:1px solid #37526a;background:#152a3d;border-radius:10px;padding:4px 5px;color:var(--cyan);font-size:12px;font-weight:900}.global-delay button{border:0;background:#243b4f;color:var(--cyan);border-radius:7px;min-width:30px;height:29px;font-size:19px}.chrono-control{display:grid;grid-template-columns:1.15fr .85fr .85fr;gap:5px}.chrono-control button{font-size:10px;min-height:36px;padding:6px 4px;gap:4px}.chrono-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));flex:1;min-height:0;gap:8px}.stop-card{background:linear-gradient(160deg,#1b2a3e,#121e2d);border:1px solid #35485e;border-radius:16px;padding:10px 9px 9px;display:flex;flex-direction:column;overflow:hidden;min-height:0}.stop-card.alert{border-color:var(--yellow);box-shadow:0 0 0 2px #ffd57333}.stop-card-header{display:flex;gap:6px;align-items:center;justify-content:space-between}.stop-card-header strong{font-size:14px;max-width:70%;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}.driver-num{font-size:10px;font-weight:900;color:var(--accent2)}.card-tour-link{border:1px solid #395a70;background:#182c40;color:#99e5ed;border-radius:7px;padding:3px 5px;font-size:10px;font-weight:850;min-height:22px;white-space:nowrap}.stop-value{font-size:clamp(18px,5.2vw,29px);letter-spacing:-.075em;font-weight:900;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:center;margin:auto 0 4px;font-family:ui-monospace,Roboto Mono,Menlo,Consolas,monospace}.lap-meta{display:grid;grid-template-columns:1fr 1fr;gap:3px;color:#a7b7c9;font-size:10px;text-align:center}.lap-meta b{display:block;font-size:12px;margin-top:2px;color:#f2f6fc;font-variant-numeric:tabular-nums}.lap-hint{min-height:15px;text-align:center;font-size:10px;color:var(--cyan);font-weight:800;margin:4px 0}.stop-btns{display:grid;grid-template-columns:1.3fr 1fr;gap:5px}.stop-btns button{height:44px;border-radius:10px;border:1px solid #3c5268;font-weight:900;font-size:13px;background:#203348;color:white}.stop-btns .lap{background:linear-gradient(140deg,#ff8251,#e24b40);border-color:#ff976a;color:#201013}.stop-card.disabled .stop-value{color:#9ca8b8}.chrono-footer{font-size:10px;text-align:center;color:var(--muted);min-height:13px}.modal-cover{position:fixed;inset:0;background:#03080ecb;z-index:20;display:flex;align-items:flex-end;justify-content:center;overflow:auto}.modal{width:min(100%,560px);max-height:86dvh;overflow:auto;padding:21px 18px calc(20px + env(safe-area-inset-bottom));background:#152335;border:1px solid #3b4d62;border-radius:22px 22px 0 0;box-shadow:0 -16px 45px #0006}.modal h2{margin:2px 0 9px}.modal p{font-size:12px;color:#b3c3d6;line-height:1.55}.inline-select{display:flex;justify-content:space-between;align-items:center;gap:8px}.toast{position:fixed;bottom:calc(var(--nav) + 22px);left:50%;transform:translateX(-50%);background:#e0f4e9;color:#132d23;border-radius:13px;padding:11px 17px;font-weight:750;font-size:13px;z-index:40;box-shadow:0 10px 35px #0007;max-width:90vw;text-align:center}.intro-image{height:128px;border:1px solid #38475c;border-radius:15px;background:radial-gradient(circle at 65% 15%,#49616f 0,transparent 50%),linear-gradient(150deg,#1b2b3b,#101621);overflow:hidden}.intro-image svg{width:100%;height:100%}.hidden{display:none!important}.empty{padding:25px 12px;text-align:center;color:var(--muted);font-size:13px}.offline-badge{color:#f2bb7e}.input-with-unit{display:flex;align-items:center;position:relative}.input-with-unit input{padding-right:42px}.input-with-unit span{position:absolute;right:12px;color:#8397ad;font-weight:750;font-size:12px;pointer-events:none}summary{cursor:pointer;font-size:12px;color:var(--cyan);font-weight:800;padding:7px 0}details[open] summary{margin-bottom:9px}.test-line{border-left:3px solid var(--accent);padding:8px 11px;background:#2c2630;border-radius:0 9px 9px 0;font-size:12px;color:#efbcb0;line-height:1.5}@media(max-width:360px){.content{padding:14px 11px}.chrono-screen{padding:7px;gap:6px}.stop-card{padding:8px 6px}.stop-value{font-size:18px}.stop-btns button{height:39px;font-size:11px}.lap-meta{font-size:9px}.lap-meta b{font-size:11px}.brand-name{font-size:13px}.navbtn{font-size:9px}.big-track{font-size:32px}}@media(max-height:720px){.chrono-screen{gap:5px;padding-top:5px}.stop-card{padding:7px 7px 6px}.chrono-top{min-height:33px}.chrono-control button{min-height:31px}.stop-btns button{height:36px}.stop-value{margin:auto 0 1px}.lap-hint{margin:2px 0;min-height:12px}}@media(min-width:700px){.shell{box-shadow:0 0 0 1px #303a4b,0 0 70px #0008;margin:15px auto;min-height:calc(100dvh - 30px)}.nav{border-radius:0 0 20px 20px}.chrono-screen{height:calc(100dvh - 100px - var(--nav))}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+/* Historique des laps : feuille distincte pour préserver les 4 chronos à l'écran */
+.lap-history-modal{max-height:91dvh;display:flex;flex-direction:column;overflow:hidden;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+.lap-history-modal h2{margin:2px 0 2px;font-size:23px;letter-spacing:-.035em}
+.lap-history-modal .hist-tabs{display:flex;gap:6px;overflow-x:auto;flex:none;padding:4px 0 8px;scrollbar-width:thin}
+.hist-tabs .chip{white-space:nowrap;min-height:35px;padding:8px 10px;flex-shrink:0}
+.hist-scopes{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:3px;border-radius:11px;border:1px solid #38506a;background:#101c2c;margin-bottom:8px;flex:none}
+.hist-scopes button{border:0;border-radius:8px;padding:8px 5px;background:none;color:#9db1c7;font-size:11px;font-weight:800}
+.hist-scopes button.active{background:#28425a;color:#d6f5ff}
+.hist-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:9px;flex:none}
+.hist-stat{padding:10px 5px;background:#102134;border:1px solid #2d465e;border-radius:12px;text-align:center;min-width:0}
+.hist-stat small{display:block;color:#a3b6cc;font-size:9px;font-weight:800;letter-spacing:.02em}
+.hist-stat strong{display:block;font-size:clamp(12px,3.4vw,18px);font-variant-numeric:tabular-nums;color:#f7f9fc;margin-top:4px;white-space:nowrap}
+.hist-counter{font-size:11px;color:#99b7cb;margin-bottom:7px;flex:none}
+.hist-list{overflow-y:auto;overscroll-behavior:contain;min-height:88px;max-height:46dvh;border:1px solid #31465b;border-radius:13px;background:#0f1a28;flex:1}
+.hist-entry{display:grid;grid-template-columns:minmax(0,1.05fr) auto 64px;gap:8px;align-items:center;padding:10px 10px;border-bottom:1px solid #27394b}
+.hist-entry:last-child{border-bottom:0}
+.hist-entry strong{font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-entry small{font-size:9px;color:#9badc2;display:block;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-laptime{font-weight:900;font-size:14px;letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hist-laptime.best{color:var(--green)}
+.hist-delta{font-size:11px;color:#b1c2d7;font-weight:800;text-align:right;white-space:nowrap}
+.hist-delta.best{color:var(--green)}
+.hist-note{font-size:10px;color:#9eafc3;line-height:1.4;margin:8px 0 0;flex:none}
+@media(max-width:360px){.chrono-control button{font-size:9px}.hist-entry{padding:8px;gap:5px;grid-template-columns:minmax(0,1fr) auto 55px}.hist-laptime{font-size:12px}.lap-history-modal{padding:15px 11px 9px}}
+
+
+/* Chrono v2.3: target always lower-right, the entire card is one big LAP action. */
+.chrono-grid .stop-card{cursor:pointer;touch-action:manipulation;position:relative;transition:border-color .14s ease,background .14s ease;user-select:none;-webkit-user-select:none}
+.chrono-grid .stop-card:focus-visible{outline:3px solid #81eaf4;outline-offset:-3px}
+.chrono-grid .stop-card.priority{border:2px solid #ffc76c;background:linear-gradient(160deg,#2d3541,#192639);box-shadow:inset 0 0 0 1px #ffc76c36,0 0 13px #ffb75a22}
+.chrono-grid .stop-card.priority .lap-hint{color:#ffe295;font-weight:900}
+.chrono-grid .stop-card.running::after{content:'TOUCHER = LAP';pointer-events:none;position:absolute;bottom:7px;left:10px;font-size:8px;font-weight:900;color:#f8b18f;letter-spacing:.05em}
+.chrono-grid .stop-card.priority.running::after{color:#ffdf95}
+.stop-btns{display:flex;justify-content:flex-end;align-items:center;min-height:38px;padding-bottom:3px}
+.stop-btns button{min-width:58px;max-width:72px;height:35px;font-size:11px;position:relative;z-index:2}
+.stop-card:active:not(.is-stopped){background:#30405a}
+@media(max-height:720px){.chrono-grid .stop-card.running::after{font-size:7px;bottom:3px}.stop-btns button{height:30px}.stop-btns{min-height:34px}}
+</style>
+</head>
+<body>
+<div class="shell"><header class="appbar" id="bar"></header><main id="app"></main><nav class="nav" id="nav" aria-label="Navigation principale"></nav></div><div id="modal-root"></div><div id="toast-root"></div>
+<script>
+if(Date.now() > Date.parse("2026-10-17T03:59:59Z")) { document.body.innerHTML='<main style="font:18px system-ui;background:#090e16;color:#fff;min-height:100vh;padding:40px 20px"><h1>Essai terminé</h1><p>Le lien temporaire KART SETUP PRO est expiré.</p></main>'; } else {
+
+(function(){'use strict';
+const KEY='kart_setup_pro_local_v2_2026';
+const CIRCUITS=['Mirabel','Québec','SH','Mont-Tremblant (sens 1)','Mont-Tremblant (sens inverse)','SC Performance','Trois-Rivières','Château-Richer'];
+const AXLES=[['S','S · souple +'],['B','B · souple'],['F','F · standard'],['M','M · mi-dur'],['K','K · dur']];
+const TRACKSTATES=[['sec','Sec'],['humide','Humide'],['faible','Pluie faible'],['moyenne','Pluie moyenne'],['forte','Forte pluie']];
+const GEAR_RANGES={sec:[0,0],humide:[0,1],faible:[1,2],moyenne:[2,4],forte:[3,6]};
+const DEFAULT_SETUP={frontHeight:'Milieu',rearHeight:'Milieu',frontSpacersL:1.5,frontSpacersR:1.5,spacersLinked:true,rearWidth:139,caster:'0.5',camber:'',axle:'F',seat:'T11VG',rims:'Freeline',seatBars:2,frontBar:true,sprocket:12,crown:76,notes:''};
+const DEFAULT_CARBU={jet:126,needle:'K57',clip:3,airScrew:1.75,floatL:3.5,floatR:3.5,floatWeight:'4,0',floatGauge:'non_verifie',notes:''};
+const DEFAULT_TIRES={FL:{cold:'',hot:'',ir:'',hotIR:''},FR:{cold:'',hot:'',ir:'',hotIR:''},RL:{cold:'',hot:'',ir:'',hotIR:''},RR:{cold:'',hot:'',ir:'',hotIR:''},trackTemp:''};
+const DEFAULTS={jetWeatherReference:null,uniproAssignments:null,uniproError:null,uniproTransfer:null,uniproLastRead:null,track:'Mirabel',trackState:'sec',circuits:{},pilots:[{name:'Jacob',num:'27'},{name:'Pilote 2',num:'2'},{name:'Pilote 3',num:'3'},{name:'Pilote 4',num:'4'}],lead:3,laps:[],sessions:[],weather:null,weatherCoords:{},autoGps:false,weatherCities:{}};
+function clone(x){return JSON.parse(JSON.stringify(x))}
+let state=clone(DEFAULTS);
+try{const obj=JSON.parse(localStorage.getItem(KEY)||'null');if(obj&&typeof obj==='object'){state={...state,...obj};}}catch(e){console.warn('État local illisible',e)}
+function initTrack(name){if(!state.circuits[name])state.circuits[name]={setup:clone(DEFAULT_SETUP),carbu:clone(DEFAULT_CARBU),tires:clone(DEFAULT_TIRES),updatedAt:null,history:[]};const c=state.circuits[name];c.setup={...clone(DEFAULT_SETUP),...(c.setup||{})};c.carbu={...clone(DEFAULT_CARBU),...(c.carbu||{})};c.tires={...clone(DEFAULT_TIRES),...(c.tires||{})};return c;}
+CIRCUITS.forEach(initTrack);
+state.weatherCities=state.weatherCities||{};
+let page='home',modal=null,dirty=false,toastTimer=null;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtNum=n=>Number(n).toLocaleString('fr-CA',{maximumFractionDigits:1});
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));dirty=false;return true}catch(e){notify('Sauvegarde indisponible : espace navigateur');return false}}
+function changed(){initTrack(state.track).updatedAt=new Date().toISOString();save();}
+function notify(msg){const r=$('#toast-root');r.innerHTML=`<div class="toast" role="status">${esc(msg)}</div>`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>r.innerHTML='',2600)}
+function svg(key,sz=20){const p={pin:'<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',weather:'<path d="M20 16.6A4.6 4.6 0 0 0 17.6 8a7 7 0 0 0-13.5 2A4.5 4.5 0 0 0 6 19h13"/><path d="m8 21 1-2m5 2 1-2"/>',wrench:'<path d="M14.5 6.2a5.5 5.5 0 0 0-6.9 7L3 17.8 6.2 21l4.7-4.6a5.5 5.5 0 0 0 7-6.9l-4.1 4.1-3.7-3.7L14.5 6Z"/>',gauge:'<path d="M12 14 17 9M3.5 18a9 9 0 1 1 17 0"/><circle cx="12" cy="14" r="1"/>',timer:'<circle cx="12" cy="13" r="9"/><path d="M12 4V2m-3 0h6m-3 6v5l3 2"/>',flag:'<path d="M4 22V3m0 1c6-3 10 3 16 0v12c-6 3-10-3-16 0"/>',tire:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 7v10m-5-5h10"/>',history:'<path d="M3 12a9 9 0 1 0 3-7M3 4v5h5m4-2v5l3 2"/>',wifi:'<path d="M2 8c6-6 14-6 20 0M5 12c4-4 10-4 14 0m-10 4c2-2 4-2 6 0"/><circle cx="12" cy="20" r="1"/>',bluetooth:'<path d="m7 7 10 10-5 4V3l5 4L7 17"/>',chevron:'<path d="m9 18 6-6-6-6"/>',settings:'<path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2" fill="#132033"/><circle cx="16" cy="12" r="2" fill="#132033"/><circle cx="10" cy="18" r="2" fill="#132033"/>',cloud:'<path d="M20 17H6a4 4 0 1 1 1.3-7.8A6.2 6.2 0 0 1 19.4 11 3 3 0 0 1 20 17Z"/>',layers:'<path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5"/>',check:'<path d="m5 12 5 5L20 7"/>',down:'<path d="m6 9 6 6 6-6"/>',upload:'<path d="M12 16V3m-5 5 5-5 5 5M4 17v3h16v-3"/>',location:'<circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="9"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3"/>',x:'<path d="M6 6l12 12M18 6 6 18"/>'};return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p[key]||p.layers}</svg>`;}
+function current(){return initTrack(state.track)}
+function pageHeader(name,desc){return `<div class="eyebrow">${esc(state.track)} • Birel ART S8</div><h1 class="section-title">${name}</h1><div class="subtext">${desc}</div>`}
+function appNav(){const pages=[['home','Accueil','flag'],['setup','Setup','wrench'],['carbu','Carbu','gauge'],['circuits','Circuits','pin'],['chrono','Chrono','timer']];$('#nav').innerHTML=pages.map(([key,n,ico])=>`<button type="button" class="navbtn ${page===key?'active':''}" data-nav="${key}" aria-label="${n}" aria-current="${page===key?'page':'false'}">${svg(ico)}<span>${n}</span></button>`).join('')}
+function appBar(){const active=page==='chrono'?'CHRONO':page==='carbu'?'CARBURATION':page==='setup'?'SETUP':'COURSE';$('#bar').innerHTML=`<div class="brand"><div class="mark">K</div><div><div class="brand-name">KART SETUP <span style="color:#ff865c">PRO</span></div><div class="brand-sub">${active} • OFFLINE READY</div></div></div><button class="head-action" data-modal="options" title="Options et sauvegarde">${svg('settings')}<span>Options</span></button>`}
+function label(value){return TRACKSTATES.find(x=>x[0]===value)?.[1]||'Sec'}
+function weatherData(){return state.weather&&state.weather.lat!=null&&state.weather.track===state.track?state.weather:null}
+function weatherAge(w){if(!w)return 'Non chargée';const min=Math.max(0,Math.round((Date.now()-w.timestamp)/60000));return min<1?'À l’instant':min<60?`Il y a ${min} min`:`Il y a ${Math.round(min/60)} h`}
+function weatherStrip(){const w=weatherData();return `<div class="weather-strip"><div class="weather-bit"><strong>${w?esc(w.temp)+'°':'—'}</strong><span>Air · °C</span></div><div class="weather-bit"><strong>${w?esc(w.humidity)+'%':'—'}</strong><span>Humidité</span></div><div class="weather-bit"><strong>${w?esc(w.rain)+' mm':'—'}</strong><span>Pluie / heure</span></div></div>`}
+function miniWeather(){const w=weatherData();return `<div class="wx-gauges"><div class="wx-cell"><b>${w?esc(w.temp)+' °C':'—'}</b><span>Température air</span></div><div class="wx-cell"><b>${w?esc(w.humidity)+' %':'—'}</b><span>Humidité relative</span></div><div class="wx-cell"><b>${w?esc(w.pressure)+' hPa':'—'}</b><span>Pression surface</span></div><div class="wx-cell"><b>${w?esc(w.seaPressure)+' hPa':'—'}</b><span>Pression niveau mer</span></div></div>`}
+function home(){const w=weatherData();return `<div class="content">
+<div class="panel hero"><div class="row spread"><span class="pill live">${svg('pin',13)} CIRCUIT ACTIF</span><span class="pill">${w?(w.source==='GPS'?'GPS':'MÉTÉO CIRCUIT'):'MODE LOCAL'}</span></div><div class="big-track">${esc(state.track)}</div><div class="subtext">${w?`Open-Meteo · ${weatherAge(w)} · ${esc(w.source==='GPS'?'Position du téléphone':w.source||'Circuit sélectionné')}`:'Prêt pour ta prochaine séance au circuit'}</div>${weatherStrip()}<div class="btn-row"><button class="btn primary" data-action="track-weather">${svg('weather')} Météo circuit</button><button class="btn secondary" data-action="gps-weather">${svg('location')} GPS</button></div></div>
+<div class="block-heading"><h3>Ton garage de piste</h3><small>Un accès, un réglage</small></div><div class="action-grid"><button class="action-tile" data-nav="setup"><span class="tile-icon">${svg('wrench')}</span><div><b>Setup châssis</b><br><small>Essieu, hauteurs, voies, banc</small></div></button><button class="action-tile" data-nav="carbu"><span class="tile-icon">${svg('gauge')}</span><div><b>Carburation</b><br><small>Jet, K57, flotte et météo</small></div></button><button class="action-tile" data-nav="circuits" data-sub="rain"><span class="tile-icon">${svg('weather')}</span><div><b>Rain Gear</b><br><small>État de piste et transmission</small></div></button><button class="action-tile" data-nav="tires"><span class="tile-icon">${svg('tire')}</span><div><b>Pneus / UniPro</b><br><small>PSI et températures IR</small></div></button></div>
+<div class="block-heading"><h3>Acquisition de données</h3><button class="btn compact outline" data-nav="devices">Voir tout ${svg('chevron',14)}</button></div><div class="panel"><div class="device-line"><div class="row"><span class="dot"></span><div><strong>AiM MyChron 5</strong><small>Wi-Fi direct · import à développer</small></div></div><span class="pill">À connecter</span></div><div class="device-line"><div class="row"><span class="dot"></span><div><strong>UniPro UniTire V2 IR</strong><small>Bluetooth BLE · protocole à valider</small></div></div><span class="pill">À connecter</span></div></div>
+<div class="block-heading"><h3>Journal de piste</h3><button class="btn compact outline" data-nav="sessions">Historique ${svg('chevron',14)}</button></div><div class="panel"><div class="row spread"><div><b style="font-size:14px">Tes réglages sauvegardés</b><div class="subtext">Localement sur cet appareil</div></div><span class="pill cyan">${state.sessions.length} séance${state.sessions.length>1?'s':''}</span></div><button class="btn full secondary" style="margin-top:13px" data-action="snapshot">${svg('check')} Enregistrer le setup actuel</button></div>
+</div>`}
+function seg(field,opts,area='setup'){const val=current()[area][field];return `<div class="seg">${opts.map(v=>`<button class="${String(val)===String(v)?'active':''}" data-set="${area}.${field}" data-value="${esc(v)}">${esc(v)}</button>`).join('')}</div>`}
+function chips(field,opts,area='setup'){const val=current()[area][field];return `<div class="select-row">${opts.map(([v,t])=>`<button class="chip ${String(val)===String(v)?'selected':''}" data-set="${area}.${field}" data-value="${esc(v)}">${esc(t)}</button>`).join('')}</div>`}
+function numInput(area,field,labelText,opts=''){const val=current()[area][field];return `<div class="field"><label class="label" for="${area}_${field}">${labelText}</label><input id="${area}_${field}" data-input="${area}.${field}" value="${esc(val)}" ${opts} autocomplete="off"></div>`}
+function setup(){const s=current().setup;return `<div class="content">${pageHeader('Réglage du kart','Tout se règle avec les repères utilisés au paddock.')}<div class="space"></div><div class="note warning">Configuration de départ : valide les valeurs du kart et enregistre un premier setup de référence pour ce circuit.</div><div class="space"></div>
+<div class="panel"><div class="setting-title"><h3>Hauteur du châssis</h3><span>Positions physiques</span></div><div class="label">AVANT</div>${seg('frontHeight',['Bas','Milieu','Haut'])}<div class="tiny-space"></div><div class="label">ARRIÈRE</div>${seg('rearHeight',['Bas','Milieu','Haut'])}</div>
+<div class="space"></div><div class="panel"><div class="setting-title"><h3>Largeur avant</h3><span>Bagues à l'intérieur</span></div><div class="diagram">${kartDiagram(s)}</div><div class="tiny-space"></div><label class="toggle"><input type="checkbox" data-check="setup.spacersLinked" ${s.spacersLinked?'checked':''}>Garder gauche et droite identiques</label><div class="field-grid" style="margin-top:12px"><div><div class="label">GAUCHE · nombre de bagues</div><div class="mini-step"><button data-step="frontSpacersL" data-delta="-0.5">−</button><output>${String(s.frontSpacersL).replace('.',',')}</output><button data-step="frontSpacersL" data-delta="0.5">+</button></div></div><div><div class="label">DROITE · nombre de bagues</div><div class="mini-step"><button data-step="frontSpacersR" data-delta="-0.5" ${s.spacersLinked?'disabled':''}>−</button><output>${String(s.frontSpacersR).replace('.',',')}</output><button data-step="frontSpacersR" data-delta="0.5" ${s.spacersLinked?'disabled':''}>+</button></div></div></div><p class="subtext">Pas de ½ bague : 1 · 1½ · 2 · 2½ ...</p></div>
+<div class="space"></div><div class="panel"><div class="setting-title"><h3>Train arrière</h3><span>Mesure extérieure</span></div><div class="field-grid"><div>${numInput('setup','rearWidth','Largeur arrière (cm)','type="number" min="110" max="140" step="0.5" inputmode="decimal"')}</div><div><div class="label">Référence connue</div><div class="field-value">139 <span class="muted" style="font-size:12px">cm</span></div><div class="subtext">Limite habituelle 140 cm</div></div></div><div class="divider"></div><div class="label">Essieu Freeline · lettre gravée</div>${chips('axle',AXLES)}<div class="note" style="margin-top:10px">Codes constructeur : S très souple · B souple · F référence · M mi-dur · K dur. Vérifier les dimensions et le modèle exact.</div></div>
+<div class="space"></div><div class="panel"><div class="setting-title"><h3>Banc et renforts</h3><span>Tillett / Freeline</span></div><div class="label">Banc</div>${chips('seat',[['T11T','T11T'],['T11VG','T11VG']])}<div class="tiny-space"></div><div class="field-grid"><div><div class="label">Barres de banc</div><div class="mini-step"><button data-step="seatBars" data-delta="-1">−</button><output>${s.seatBars}</output><button data-step="seatBars" data-delta="1">+</button></div></div><div><div class="label">Barre avant</div>${chips('frontBar',[[true,'Installée'],[false,'Retirée']])}</div></div><div class="divider"></div><div class="label">Jantes</div>${chips('rims',[['Freeline','Freeline'],['OTK MXC','OTK MXC']])}</div>
+<div class="space"></div><div class="panel"><div class="setting-title"><h3>Géométrie</h3><span>Valeurs réelles</span></div><div class="field-grid">${numInput('setup','caster','Caster (°)','type="number" step="0.25" inputmode="decimal"')}${numInput('setup','camber','Carrossage (°)','type="number" step="0.25" inputmode="decimal"')}</div></div>
+<div class="space"></div><div class="panel"><div class="setting-title"><h3>Transmission sèche</h3><span>Départ du Rain Gear</span></div><div class="field-grid">${numInput('setup','sprocket','Pignon moteur','type="number" min="10" max="18"')}${numInput('setup','crown','Couronne','type="number" min="60" max="99"')}</div><button class="btn full secondary" style="margin-top:12px" data-nav="circuits" data-sub="rain">Voir le Rain Gear Advisor ${svg('chevron')}</button></div>
+<div class="space"></div><div class="panel"><div class="setting-title"><h3>Comportement en piste</h3><span>Diagnostic</span></div><div class="select-row" id="symptoms">${['Sous-virage lent','Arrière glisse en rapide','Manque de traction','Kart qui sautille','Manque de rotation'].map(x=>`<button data-symptom="${x}" class="chip ${state.symptoms?.includes(x)?'selected':''}">${x}</button>`).join('')}</div><div class="note warning" style="margin-top:12px">Les essais seront proposés un à la fois; jamais de correction automatique sans tenir compte de la piste, des pneus et des RPM.</div></div>
+<div class="space"></div><button class="btn primary full" data-action="snapshot">${svg('check')} Enregistrer ce setup dans le journal</button></div>`}
+function kartDiagram(s){return `<svg viewBox="0 0 320 170" role="img" aria-label="Schéma du kart, vue de dessus, largeur avant par bagues intérieures"><g stroke="#4f667d" fill="none" stroke-width="1.5"><path d="M145 10 130 22 116 64 120 123 143 153 177 153 200 123 204 64 190 22 175 10Z" fill="#243546"/><rect x="126" y="68" width="68" height="52" rx="21" fill="#192533"/><path d="M115 41h90M115 132h90" stroke-width="7" stroke="#718096"/><rect x="79" y="28" width="27" height="46" rx="8" fill="#080c14" stroke="#627a91" stroke-width="4"/><rect x="214" y="28" width="27" height="46" rx="8" fill="#080c14" stroke="#627a91" stroke-width="4"/><rect x="86" y="115" width="24" height="45" rx="8" fill="#080c14" stroke="#627a91" stroke-width="4"/><rect x="210" y="115" width="24" height="45" rx="8" fill="#080c14" stroke="#627a91" stroke-width="4"/><path d="M160 18v22m-13 0h26"/></g><path d="M107 50h16m74 0h16" stroke="#69dce9" stroke-width="5"/><text x="53" y="22" fill="#b9c9dd" font-size="10" text-anchor="middle">G</text><text x="268" y="22" fill="#b9c9dd" font-size="10" text-anchor="middle">D</text><text x="53" y="53" fill="#72deed" font-size="16" font-weight="bold" text-anchor="middle">${esc(String(s.frontSpacersL).replace('.',','))}</text><text x="268" y="53" fill="#72deed" font-size="16" font-weight="bold" text-anchor="middle">${esc(String(s.frontSpacersR).replace('.',','))}</text><text x="160" y="92" fill="#f28563" font-weight="bold" font-size="11" text-anchor="middle">BIREL</text></svg>`}
+
+/* Comparateur météo du jet principal.
+   Modèle simplifié : concentration relative d'air sec/oxygène ~ (P - e)/(T_K).
+   Le diamètre nominal du gicleur est proportionnel à sqrt(correction de densité).
+   CE N'EST PAS l'algorithme officiel ROTAX, ni une validation de sécurité moteur.
+   Référence provisoire 126 à 20°C / 1013,25 hPa surface / 50% HR.
+   Une référence sur moteur validée par l'utilisateur remplace cette hypothèse. */
+const JET_DEMO_REFERENCE={jet:126,temp:20,humidity:50,pressure:1013.25,source:'hypothèse illustrative'};
+const JET_SIZES=[122,124,125,126,128,130];
+function jetSatVaporHpa(tempC){
+ return 6.112*Math.exp(17.67*tempC/(tempC+243.5));
+}
+function jetRelativeOxygen(w){
+ if(!w)return null;
+ const t=Number(w.temp),h=Number(w.humidity),p=Number(w.pressure);
+ if(!Number.isFinite(t)||!Number.isFinite(h)||!Number.isFinite(p)||t< -15||t>50||h<0||h>100||p<850||p>1100)return null;
+ const pv=jetSatVaporHpa(t)*h/100,dry=p-pv;
+ if(dry<=0)return null;
+ return dry/(t+273.15);
+}
+function jetWeatherEstimate(weather,reference){
+ const cur=jetRelativeOxygen(weather),ref=jetRelativeOxygen(reference);
+ const jet=Number(reference.jet);
+ if(cur==null||ref==null||!Number.isInteger(jet)||jet<90||jet>220)return null;
+ const factor=Math.sqrt(cur/ref),raw=jet*factor;
+ const suggested=JET_SIZES.reduce((best,n)=>Math.abs(n-raw)<Math.abs(best-raw)?n:best,JET_SIZES[0]);
+ return {suggested,raw,change:raw-jet,oxygenPercent:(cur/ref-1)*100,
+     outside:raw<JET_SIZES[0]-1||raw>JET_SIZES.at(-1)+1};
+}
+
+function jetBaseNeedleAndAirHTML(){
+ const c=current().carbu;
+ const clip=Number(c.clip),air=Number(c.airScrew);
+ const cText=Number.isFinite(clip)?esc(clip):'—',aText=Number.isFinite(air)?esc(air.toLocaleString('fr-CA',{maximumFractionDigits:2})):'—';
+ const clipDifferent=clip!==2,airDifferent=Math.abs(air-2.25)>0.001;
+ return '<div class="divider"></div>'+
+ '<div class="setting-title"><h3>Clip K57 + vis d’air</h3><span>BASE ROTAX</span></div>'+
+ '<p class="subtext" style="margin:7px 0 12px">Ces deux réglages <b>ne peuvent pas être calculés uniquement avec le GPS</b>. On part du réglage standard du manuel Rotax pour le Dell’Orto VHSB 34 XS, puis on ajuste selon la réponse du moteur en piste.</p>'+
+ '<div class="field-grid" style="gap:10px">'+
+ '<div style="padding:14px;border:1px solid #40546a;border-radius:17px"><div class="label">Clip aiguille K57</div><strong style="display:block;color:var(--cyan);font-size:39px;margin:5px 0">2</strong><div class="subtext">2e encoche depuis le haut<br>Actuel dans le setup : <b>'+cText+'</b>'+ (clipDifferent?' · différent de la base':' · identique à la base')+'</div></div>'+
+ '<div style="padding:14px;border:1px solid #40546a;border-radius:17px"><div class="label">Air screw</div><strong style="display:block;color:var(--cyan);font-size:39px;margin:5px 0">2¼</strong><div class="subtext">Tours dévissés depuis la position fermée doucement<br>Actuel dans le setup : <b>'+aText+' tours</b>'+(airDifferent?' · différent de la base':' · identique à la base')+'</div></div>'+
+ '</div>'+
+ '<div class="note" style="margin-top:11px"><b>Affinage :</b> vis d’air = ralenti / début d’ouverture; clip K57 = réponse mi-régime. Vis d’air ouverte → mélange plus pauvre; clip vers 5 → plus riche. Ajuste seulement après avoir observé le comportement du moteur. <b>Les valeurs du setup restent inchangées</b> tant que tu n’appuies pas sur le bouton.</div>'+
+ '<button class="btn secondary full" style="margin-top:10px" data-action="jet-rotax-base">INSCRIRE CES 2 VALEURS DE BASE DANS MON SETUP</button>';
+}
+function jetUseRotaxBase(){
+ const currentClip=current().carbu.clip,currentAir=current().carbu.airScrew;
+ if(!confirm('Inscrire le clip K57 à 2 et la vis d’air à 2,25 tours dans ta fiche ?\\n\\nRéglages actuels : clip '+currentClip+', vis '+currentAir+' tours.\\n\\nTu dois ajuster le carburateur physiquement toi-même et valider les réglages avant de rouler.'))return;
+ current().carbu.clip=2;
+ current().carbu.airScrew=2.25;
+ changed();render();notify('Bases Rotax notées dans le setup : clip 2 · vis 2¼');
+}
+
+function jetWeatherAdvisor(w){
+ const realRef=state.jetWeatherReference;
+ const ref=realRef||JET_DEMO_REFERENCE;
+ const age=w?Math.max(0,Date.now()-Number(w.timestamp)):Infinity;
+ const fresh=age<=90*60000;
+ const est=w&&fresh?jetWeatherEstimate(w,ref):null;
+ let html='<div class="panel" id="jetadvisor"><div class="setting-title"><h3>Gicleur selon la météo</h3><span>'+(realRef?'TON RÉGLAGE ÉTALONNÉ':'ESTIMATION')+'</span></div>';
+ if(!w)html+='<div class="note warning">Charge « Mon GPS » ou « Météo circuit » pour afficher une estimation de gicleur.</div>';
+ else if(!fresh)html+='<div class="note warning">Météo trop ancienne ('+esc(weatherAge(w))+'). Recharge le GPS avant de calculer une nouvelle suggestion.</div>';
+ else if(!est)html+='<div class="note warning">Météo incomplète ou hors limites de calcul. Aucune suggestion chiffrée.</div>';
+ else {
+   const number=est.suggested;
+   const qualifier=realRef?'Comparaison à ton gicleur de référence '+realRef.jet:'Simulation à partir du gicleur fictif 126';
+   html+='<div style="padding:7px 0"><div class="subtext">'+esc(qualifier)+'</div>'+
+    '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:10px 0"><strong style="font-size:54px;line-height:1;color:var(--accent2)">'+esc(number)+'</strong><div class="subtext">GICLEUR INDICATIF<br>'+esc((est.change>=0?'+':'')+est.change.toFixed(1))+' point(s) théoriques par rapport à '+esc(ref.jet)+'<br>Air sec/oxygène : '+esc((est.oxygenPercent>=0?'+':'')+est.oxygenPercent.toFixed(1))+' %</div></div></div>'+
+    '<div class="note '+(est.outside?'warning':'')+'"><b>'+(realRef?'Estimation calibrée sur ta référence.':'Ce nombre est une simulation, PAS un jet validé pour ton moteur.')+'</b><br>Calcul simplifié à partir de '+esc(w.temp)+' °C, '+esc(w.humidity)+' % HR et '+esc(w.pressure)+' hPa <b>à la surface</b>. '+(est.outside?'Le résultat théorique est hors de ta plage habituelle 122–130. Vérifie la plage adaptée à ton moteur.':'')+'<br>Ce calcul n’est pas la table officielle Rotax : contrôle avec le guide constructeur, le comportement du moteur et un préparateur si nécessaire.</div>';
+   if(realRef)html+='<button class="btn primary full" style="margin-top:10px" data-action="jet-apply">COPIER '+esc(number)+' DANS MON SETUP</button>';
+ }
+ html+=jetBaseNeedleAndAirHTML();
+ html+='<div class="divider"></div><b>Gicleur de référence personnel</b>';
+ if(realRef){
+  html+='<div class="subtext" style="margin:8px 0">Jet '+esc(realRef.jet)+' · '+esc(realRef.temp)+' °C · '+esc(realRef.humidity)+' % · '+esc(realRef.pressure)+' hPa · enregistré le '+esc(new Date(realRef.savedAt).toLocaleDateString('fr-CA'))+'</div>';
+  html+='<button class="btn outline full" data-action="jet-reference-reset">REMPLACER / EFFACER LA RÉFÉRENCE</button>';
+ }else{
+  html+='<p class="subtext">Pour obtenir une suggestion adaptée à <b>ton Rotax Senior EVO</b>, règle d’abord le gicleur réellement validé dans « Main jet », charge la météo et enregistre ce couple comme référence.</p>';
+  html+='<button class="btn secondary full" data-action="jet-reference-save" '+(!w||!fresh?'disabled':'')+'>ENREGISTRER MON JET VALIDÉ COMME RÉFÉRENCE</button>';
+ }
+ html+='<div class="subtext" style="margin-top:12px">Pour modifier les réglages manuellement, fais défiler plus bas : sections « Aiguille et clip » et « Vis d’air ».</div></div>';
+ return html;
+}
+function jetSaveReference(){
+ const weather=weatherData(),age=weather?Date.now()-Number(weather.timestamp):Infinity;
+ if(!weather||age>90*60000){notify('Charge une météo récente avant de confirmer la référence');return}
+ const ref={jet:Number(current().carbu.jet),temp:Number(weather.temp),humidity:Number(weather.humidity),pressure:Number(weather.pressure)};
+ if(jetRelativeOxygen(ref)===null||!Number.isInteger(ref.jet)||ref.jet<90||ref.jet>220){notify('Jet ou météo non valide');return}
+ if(!confirm('Tu confirmes que le gicleur '+ref.jet+' a déjà été validé sur ton moteur, avec une météo comparable ?\\n\\nCette confirmation sert uniquement de référence personnelle. Elle ne remplace pas les recommandations Rotax.'))return;
+ state.jetWeatherReference={...ref,source:weather.source,track:state.track,savedAt:new Date().toISOString()};
+ save();render();notify('Référence enregistrée : jet '+ref.jet);
+}
+function jetResetReference(){
+ if(!confirm('Effacer la référence enregistrée ? Le calcul reviendra à une simulation illustrative.'))return;
+ state.jetWeatherReference=null;save();render();notify('Référence effacée');
+}
+function jetApplySuggestion(){
+ const w=weatherData(),ref=state.jetWeatherReference;
+ if(!ref||!w||Date.now()-Number(w.timestamp)>90*60000){notify('Référence et météo récente nécessaires');return}
+ const result=jetWeatherEstimate(w,ref);if(!result){notify('Estimation indisponible');return}
+ if(result.outside){notify('Hors plage habituelle : vérifier avec Rotax avant de choisir');return}
+ const jet=result.suggested;
+ if(!confirm('Noter le gicleur indicatif '+jet+' dans la fiche de setup ?\\n\\nCela NE change PAS la carburation physique du kart. Vérifie le réglage selon les consignes Rotax.'))return;
+ current().carbu.jet=jet;changed();render();notify('Gicleur '+jet+' noté dans le setup');
+}
+
+function jetInsight(w){
+if(!w)return '<div class="note" style="margin-top:11px">Active la météo GPS pour retrouver une séance comparable et observer le sens des corrections.</div>';
+const candidates=state.sessions.filter(s=>s.track===state.track&&s.weather&&Number.isFinite(Number(s.weather.temp))&&Number.isFinite(Number(s.carbu?.jet)));
+if(!candidates.length)return '<div class="note" style="margin-top:11px">Première météo enregistrée : sauvegarde tes séances pour que l’assistant puisse comparer de vraies conditions avec tes main jets habituels.</div>';
+const score=s=>Math.abs(w.temp-s.weather.temp)/8+Math.abs(w.humidity-s.weather.humidity)/25+Math.abs(w.pressure-s.weather.pressure)/10;
+const match=candidates.slice().sort((a,b)=>score(a)-score(b))[0];
+const t=w.temp-match.weather.temp,h=w.humidity-match.weather.humidity,p=w.pressure-match.weather.pressure;
+let lines=[];
+if(Math.abs(t)>=2)lines.push(t>0?'Air plus chaud : tendance jet ↓':'Air plus froid : tendance jet ↑');
+if(Math.abs(h)>=5)lines.push(h>0?'Humidité plus élevée : tendance jet ↓':'Humidité plus faible : tendance jet ↑');
+if(Math.abs(p)>=2)lines.push(p>0?'Pression plus élevée : tendance jet ↑':'Pression plus faible : tendance jet ↓');
+return `<div class="note" style="margin-top:11px"><b class="light">Dernière référence météo comparable : jet ${esc(match.carbu.jet)}</b><br>${esc(match.weather.temp)} °C · ${esc(match.weather.humidity)} % HR · ${esc(match.weather.pressure)} hPa<br>${lines.length?lines.map(esc).join('<br>'):'Conditions proches de la référence.'}<br><i>Comparer les tendances ensemble. Aucun nouveau jet calculé automatiquement sans étalonnage.</i></div>`;
+}
+function carbu(){const c=current().carbu;const w=weatherData();return `<div class="content">${pageHeader('Carburation','Rotax MAX Senior EVO · Dell’Orto VHSB 34 XS')}<div class="space"></div><div class="note warning">Le jet affiché dans ton setup n’est pas automatiquement validé. La suggestion météo est une <b>estimation indicative</b> : utilise le guide officiel Rotax et confirme ton réglage réel.</div><div class="space"></div>
+<div class="panel"><div class="setting-title"><h3>${svg('weather',18)} Météo pour le jetting</h3><span>${w?weatherAge(w):'Non mesurée'}</span></div>${miniWeather()}<div class="btn-row" style="margin-top:12px"><button class="btn primary" data-action="track-weather">${svg('weather')} Météo circuit</button><button class="btn secondary" data-action="gps-weather">${svg('location')} Mon GPS</button></div>${w&&w.source==='GPS'?'<div class="note warning" style="margin-top:10px">Météo de la position actuelle du téléphone; ce n’est pas nécessairement la météo du circuit sélectionné.</div>':''}<div class="subtext" style="margin-top:10px">La pluie seule n’impose jamais une taille de gicleur : température, humidité et pression doivent être analysées ensemble.</div></div>
+<div class="space"></div>${jetWeatherAdvisor(w)}<div class="space"></div><div class="panel"><div class="setting-title"><h3>Main jet</h3><span>Plage habituelle 122–130</span></div><div class="preset-jet">${[122,124,126,128,130].map(v=>`<button class="${Number(c.jet)===v?'active':''}" data-set="carbu.jet" data-value="${v}">${v}</button>`).join('')}</div><div class="tiny-space"></div><details><summary>Autre valeur de gicleur</summary><div class="field">${numInput('carbu','jet','Main jet personnalisé','type="number" min="90" max="220" step="1" inputmode="numeric"')}</div></details><div class="camstrip" style="margin-top:12px">${svg('gauge',17)} <span>Le gicleur proposé tient compte de la température, de l’humidité et de la pression à la surface. Sans étalonnage sur ton propre moteur, c’est seulement une simulation.</span></div>${jetInsight(w)}</div>
+<div class="space"></div><div class="panel"><div class="setting-title"><h3>Aiguille et clip</h3><span>Ta configuration</span></div><div class="row spread"><div><div class="label">Aiguille Dell’Orto</div><div style="font-size:26px;font-weight:900">K57</div></div><span class="pill live">FIXE</span></div><div class="divider"></div><div class="label">Position du clip (1 en haut, 5 en bas)</div><div class="clip-track">${[1,2,3,4,5].map(n=>`<button class="${Number(c.clip)===n?'active':''}" data-set="carbu.clip" data-value="${n}">${n}</button>`).join('')}</div><p class="subtext">Clip plus bas sur l’aiguille = aiguille relevée = généralement plus riche au régime intermédiaire.</p></div>
+<div class="space"></div><div class="panel"><div class="setting-title"><h3>Vis d’air</h3><span>Nombre de tours</span></div><div class="field-grid"><div>${numInput('carbu','airScrew','Air screw','type="number" step="0.25" min="0" max="6" inputmode="decimal"')}</div><div class="note">Enregistrer le réglage actuel; ne pas changer simultanément tous les circuits de carburation.</div></div></div>
+<div class="space"></div><div class="panel"><div class="setting-title"><h3>Hauteur de flotte</h3><span>Mesure personnelle</span></div><div class="field-grid">${numInput('carbu','floatL','Patte gauche (mm)','type="number" step="0.1" min="0" max="10" inputmode="decimal"')}${numInput('carbu','floatR','Patte droite (mm)','type="number" step="0.1" min="0" max="10" inputmode="decimal"')}</div><div class="note" style="margin-top:11px">Carburateur retourné, cuve retirée : distance entre le plan de joint de cuve et la petite patte en laiton. Tes relevés sont habituellement autour de 3–4 mm. Cette valeur n’est pas une validation réglementaire.</div><div class="divider"></div><div class="label">Contrôle gabarit Rotax 277400</div>${chips('floatGauge',[['non_verifie','À vérifier'],['conforme','Conforme'],['non_conforme','Non conforme']],'carbu')}<div class="subtext" style="margin-top:10px">Flotteurs : 4,0 g chacun (vérifier le règlement applicable).</div></div>
+<div class="space"></div><button class="btn primary full" data-action="snapshot">${svg('check')} Sauvegarder réglage + météo</button></div>`}
+function circuits(){const s=current().setup;const lo=GEAR_RANGES[state.trackState]||[0,0],sprocket=Number(s.sprocket),crown=Number(s.crown);const valid=sprocket>0&&crown>0;return `<div class="content">${pageHeader('Circuits & Rain Gear','Un setup indépendant pour chaque piste.')}<div class="space"></div><div class="panel"><div class="label">Circuit sélectionné</div><select class="choose-track" data-choice="track">${CIRCUITS.map(c=>`<option ${state.track===c?'selected':''} value="${esc(c)}">${esc(c)}</option>`).join('')}</select><div class="row spread" style="margin-top:11px"><span class="subtext">Position GPS associée : ${state.weatherCoords[state.track]?'Oui':'Non'}</span><button class="btn compact outline" data-action="pin-track">${svg('pin',14)} Associer GPS</button></div></div>
+<div class="space"></div><div class="panel"><div class="setting-title"><h3>${svg('weather',17)} Météo du circuit</h3><span>GPS non obligatoire</span></div><button class="btn primary full" data-action="track-weather">${svg('weather')} Charger la météo à proximité du circuit</button><button class="btn outline full" style="margin-top:8px" data-modal="weather-place">${svg('pin')} Choisir la ville météo / coordonnées</button><div class="subtext" style="margin-top:9px">Sur un fichier HTML local, Chrome peut bloquer le GPS. La météo par ville fonctionne sans permission de localisation avec Internet.</div></div><div class="space"></div><div class="note warning">Les données affichées sont des paramètres de départ tant qu’aucun setup n’a été enregistré sur ce circuit.</div><div class="space"></div><div class="panel" id="rainadvisor"><div class="setting-title"><h3>Rain Gear Advisor</h3><span>État réel de la piste</span></div><div class="wet-level">${TRACKSTATES.map(([k,l])=>`<button class="${state.trackState===k?'active':''}" data-wet="${k}">${l}</button>`).join('')}</div><div class="tiny-space"></div><div class="gear-big"><small>Référence sèche</small><strong>${valid?sprocket+'/'+crown:'À définir'}</strong><small>Plage d’essai ${label(state.trackState).toLowerCase()}</small><strong style="color:var(--accent2);font-size:26px">${valid?`${sprocket}/${crown+lo[0]} — ${sprocket}/${crown+lo[1]}`:'—'}</strong></div><div class="note warning" style="margin-top:12px">Repères expérimentaux, non une recommandation mécanique automatique. À contrôler selon le grip, le patinage, les tours et le RPM de MyChron 5.</div><button class="btn full secondary" style="margin-top:12px" data-nav="setup">Modifier le gear sec ${svg('chevron')}</button></div>
+<div class="space"></div><div class="panel"><div class="setting-title"><h3>Historique du circuit</h3><span>${current().history.length} réglages</span></div>${current().history.length?`<div class="timeline">${current().history.slice().reverse().slice(0,4).map(h=>`<div class="time-item"><small>${esc(new Date(h.at).toLocaleString('fr-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}))}</small><b>${esc(h.state)} • ${esc(h.title||'Setup sauvegardé')}</b></div>`).join('')}</div>`:'<div class="empty">Aucun essai enregistré sur ce circuit.</div>'}<button class="btn full outline" data-nav="sessions">Comparer les séances</button></div></div>`}
+function tireDelta(newV,oldV,unit){
+ if(newV===''||oldV===''||newV==null||oldV==null)return 'Δ '+unit+' —';
+ const n=Number(newV)-Number(oldV);return Number.isFinite(n)?'Δ '+unit+' '+(n>0?'+':'')+n.toFixed(1).replace('.',','):'Δ '+unit+' —';
+}
+function tireAdvice(d){
+ const all=['FL','FR','RL','RR'];
+ const p=all.map(k=>d[k]?.cold!==''&&d[k]?.hot!==''&&d[k]?.cold!=null&&d[k]?.hot!=null?Number(d[k].hot)-Number(d[k].cold):NaN).filter(Number.isFinite).sort((a,b)=>a-b);
+ const t=all.map(k=>d[k]?.ir!==''&&d[k]?.hotIR!==''&&d[k]?.ir!=null&&d[k]?.hotIR!=null?Number(d[k].hotIR)-Number(d[k].ir):NaN).filter(Number.isFinite).sort((a,b)=>a-b);
+ const lines=[];
+ if(p.length){const m=(p[Math.floor((p.length-1)/2)]+p[Math.floor(p.length/2)])/2;lines.push('Augmentation médiane : '+(m>0?'+':'')+m.toFixed(1)+' PSI.');}
+ if(p.length===4)lines.push('Différence des augmentations entre pneus : '+(p[3]-p[0]).toFixed(1)+' PSI'+((p[3]-p[0])>0.8?' — vérifier l’équilibre et le moment de mesure.':'.'));
+ if(t.length===4)lines.push('Écart d’évolution des températures : '+(t[3]-t[0]).toFixed(1)+' °C entre pneus.');
+ if(p.length<4)lines.push('Mesure d’abord les 4 pneus avant et après la séance pour comparer les augmentations.');
+ if(d.trackTemp==null||d.trackTemp==='')lines.push('Ajoute la température de piste pour mieux interpréter les relevés.');
+ return lines.map(esc).join('<br><br>');
+}
+const UNITIRE_SERVICE='b81b1206-eee6-4a3d-87ef-4d0011b0efff';
+const UNITIRE_READ='b81b1207-eee6-4a3d-87ef-4d0011b0efff';
+async function readUniPro(){
+ if(!window.isSecureContext||!navigator.bluetooth){notify('UniPro : ouvre le lien HTTPS dans Chrome Android');return;}
+ let device;
+ const rows=[];
+ try{
+  device=await navigator.bluetooth.requestDevice({filters:[{namePrefix:'UNITIRE_'},{namePrefix:'UniTire_'}],optionalServices:[UNITIRE_SERVICE]});
+  const gatt=await device.gatt.connect();
+  const service=await gatt.getPrimaryService(UNITIRE_SERVICE);
+  const characteristic=await service.getCharacteristic(UNITIRE_READ);
+  for(let i=0;i<5;i++){
+   const value=await characteristic.readValue();
+   const data=new Uint8Array(value.buffer,value.byteOffset,value.byteLength);
+   rows.push({index:i+1,ms:Math.round(performance.now()),length:data.length,hex:Array.from(data,b=>b.toString(16).padStart(2,'0')).join(' ').toUpperCase()});
+   if(i<4)await new Promise(resolve=>setTimeout(resolve,350));
+  }
+  const name=device.name||'UniTire';
+  state.uniproLastRead={name,at:new Date().toISOString(),hex:rows.at(-1).hex,length:rows.at(-1).length};
+  state.uniproDiagnostic={device:name,at:new Date().toISOString(),service:UNITIRE_SERVICE,readCharacteristic:UNITIRE_READ,mode:'lecture-seule',reads:rows};
+  save();render();
+  const unique=new Set(rows.map(r=>r.hex));
+  notify('UniPro : 5 lectures reçues · '+unique.size+' valeur(s) distincte(s)');
+ }catch(e){
+  if(rows.length){state.uniproDiagnostic={device:device?.name||'UniTire',at:new Date().toISOString(),mode:'lecture-seule',reads:rows,error:String(e.message||e)};save();render();}
+  notify('UniPro : '+(e.name==='NotFoundError'?'appareil non choisi':e.message||'lecture indisponible'));
+ }finally{try{if(device?.gatt?.connected)device.gatt.disconnect()}catch(e){}}
+}
+function copyUniProDiagnostic(){
+ if(!state.uniproDiagnostic){notify('Aucun diagnostic à copier');return;}
+ const d=state.uniproDiagnostic;
+ const msg='KART SETUP PRO · Diagnostic UniTire V2 (lecture seule)\n'+
+  'Appareil : '+d.device+'\nDate : '+d.at+'\nService READ : '+UNITIRE_READ+'\n'+
+  d.reads.map(r=>'Lecture '+r.index+' : '+r.hex+' ('+r.length+' octet(s))').join('\n');
+ if(navigator.clipboard?.writeText){navigator.clipboard.writeText(msg).then(()=>notify('Diagnostic copié')).catch(()=>window.prompt('Copie ce diagnostic',msg));}
+ else window.prompt('Copie ce diagnostic',msg);
+}
+
+
+const UNITIRE_WRITE='b81b1208-eee6-4a3d-87ef-4d0011b0efff';
+function decodeUniProPacket(bytes){
+ const a=bytes instanceof Uint8Array?bytes:new Uint8Array(bytes);
+ const start=a.length%44;
+ if(a.length<44||start>3)throw Error('Longueur inattendue : '+a.length);
+ const sides=['FR','FL','RL','RR'],out=[];
+ for(let i=start;i<a.length;i+=44){
+  const q=a.subarray(i,i+44);
+  if(q.length!==44||q[6]!==255||q[7]!==255||q[0]>23||q[1]>59||q[2]>59||q[3]<1||q[3]>31||q[4]<1||q[4]>12)throw Error('Entête UniTire non reconnu');
+  const view=new DataView(q.buffer,q.byteOffset,44),pressure={},temperature={};
+  for(let j=0;j<4;j++){
+   const p=view.getInt32(8+j*4,true)/1000,t=view.getInt32(24+j*4,true)/100;
+   pressure[sides[j]]=p>=2&&p<=35?+p.toFixed(2):null;
+   temperature[sides[j]]=t>=-40&&t<=120?+t.toFixed(1):null;
+  }
+  const track=view.getInt32(40,true)/100;
+  out.push({clock:[q[3],q[4],2000+q[5]].map((v,j)=>j===2?v:String(v).padStart(2,'0')).join('/')+' '+[q[0],q[1],q[2]].map(v=>String(v).padStart(2,'0')).join(':'),signature:Array.from(q.slice(0,8),b=>b.toString(16).padStart(2,'0')).join(''),pressure,temperature,trackTemp:track>=-40&&track<=120?+track.toFixed(1):null});
+ }
+ return out;
+}
+function validUniProValue(v){return v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v))}
+function uniproHasPressure(r){return ['FR','FL','RL','RR'].some(side=>validUniProValue(r.pressure?.[side]))}
+function uniproHasIR(r){return ['FR','FL','RL','RR'].some(side=>validUniProValue(r.temperature?.[side]))}
+async function uniproSync(){
+ if(!window.isSecureContext||!navigator.bluetooth){notify('Ouvre le lien HTTPS dans Chrome Samsung');return}
+ let d=null,packets=[],records=[];
+ state.uniproError=null;
+ try{
+  d=await navigator.bluetooth.requestDevice({filters:[{namePrefix:'UNITIRE_'},{namePrefix:'UniTire_'}],optionalServices:[UNITIRE_SERVICE]});
+  const svc=await (await d.gatt.connect()).getPrimaryService(UNITIRE_SERVICE);
+  const rd=await svc.getCharacteristic(UNITIRE_READ),wr=await svc.getCharacteristic(UNITIRE_WRITE);
+  if(typeof wr.writeValueWithResponse!=='function')throw Error('Chrome ne prend pas en charge les commandes BLE avec réponse');
+  // Ces seules commandes de consultation ont été observées sur le transfert officiel.
+  // NE PAS envoyer 0A (rôle non établi), de commandes firmware, DFU ou effacement.
+  for(const cmd of [8,9]){
+   await wr.writeValueWithResponse(new Uint8Array([cmd]));
+   const view=await rd.readValue(),bytes=new Uint8Array(view.buffer,view.byteOffset,view.byteLength);
+   packets.push({cmd,length:bytes.length,hex:Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join(' ').toUpperCase()});
+   try{records.push(...decodeUniProPacket(bytes))}catch(e){packets.at(-1).decodeError=String(e.message||e)}
+  }
+  const unique=new Set();
+  records=records.filter(rec=>{const key=rec.signature+JSON.stringify(rec.pressure)+JSON.stringify(rec.temperature);if(unique.has(key))return false;unique.add(key);return true});
+  state.uniproTransfer={track:state.track,device:d.name||'UniTire',at:new Date().toISOString(),records,packets};
+  save();render();
+  notify(records.length?records.length+' relevé(s) lus. Vérifie les mesures avant de classer.':'Aucun relevé reconnu. Aucun pneu modifié.');
+ }catch(e){
+  state.uniproError=String(e.message||'Connexion impossible');
+  if(packets.length){state.uniproTransfer={track:state.track,device:d?.name||'UniTire',at:new Date().toISOString(),records,packets};}
+  save();render();notify('UniPro : '+state.uniproError);
+ }finally{try{if(d?.gatt?.connected)d.gatt.disconnect()}catch(e){}}
+}
+function uniproRecordsUI(){
+ const t=state.uniproTransfer;
+ if(!t)return '<div class="subtext">Aucun téléchargement effectué dans cette version.</div>';
+ let s='<p class="subtext"><b>Dernier transfert :</b> '+esc(t.device)+' · '+esc(new Date(t.at).toLocaleString('fr-CA'))+' · '+t.records.length+' enregistrement(s).</p>';
+ s+='<div class="note" style="margin:9px 0">Les anciens relevés peuvent rester dans l’appareil. L’horloge interne UniPro peut être décalée. Ne classe que des chiffres que tu reconnais, et vérifie avec une nouvelle mesure avant de faire confiance à l’import.</div>';
+ if(t.track!==state.track)s+='<div class="note warning">Reviens au circuit '+esc(t.track)+' pour enregistrer ces valeurs.</div>';
+ t.records.forEach((r,i)=>{
+  const hasP=uniproHasPressure(r),hasT=uniproHasIR(r);
+  const items=[];
+  for(const side of ['FR','FL','RL','RR']){
+   if(validUniProValue(r.pressure[side]))items.push(side+' '+r.pressure[side].toFixed(2)+' PSI');
+   if(validUniProValue(r.temperature[side]))items.push(side+' '+r.temperature[side].toFixed(1)+' °C');
+  }
+  if(validUniProValue(r.trackTemp))items.push('Piste '+r.trackTemp.toFixed(1)+' °C');
+  s+='<div class="panel" style="padding:12px;margin-top:10px"><b>Relevé '+(i+1)+' · '+(hasP&&hasT?'Pression + IR':hasP?'Pressions':hasT?'Températures IR':'Non classé')+'</b><div class="subtext">Horloge UniPro : '+esc(r.clock||'inconnue')+'</div><p class="subtext" style="margin:8px 0">'+esc(items.join(' · ')||'Aucune mesure reconnue')+'</p>';
+  if(hasP)s+='<div class="btn-row"><button class="btn outline compact" data-unipro-assign="'+i+':avant">PRESSIONS AVANT</button><button class="btn primary compact" data-unipro-assign="'+i+':chaud">PRESSIONS APRÈS</button></div>';
+  if(hasT)s+='<button class="btn cyanbtn compact" style="margin-top:8px" data-unipro-assign="'+i+':ir">TEMPÉRATURES APRÈS (IR)</button>';
+  s+='</div>';
+ });
+ if(!t.records.length)s+='<div class="note warning">Aucune mesure reconnue : fais un nouveau relevé sur ton UniPro, remets-le en TRANSFERT et réessaie. Aucune donnée n’a été remplacée.</div>';
+ if(t.packets?.some(p=>p.decodeError))s+='<div class="note warning">Certains paquets n’ont pas pu être décodés; rien de ces paquets n’est importé.</div>';
+ if(state.uniproError)s+='<div class="note warning">Dernière erreur : '+esc(state.uniproError)+'</div>';
+ return s;
+}
+function uniproAssign(action){
+ const [pos,phase]=action.split(':'),t=state.uniproTransfer,r=t?.records?.[Number(pos)];
+ if(!r||t.track!==state.track){notify('Ce relevé ne correspond pas au circuit sélectionné');return}
+ if(phase!=='ir'&&!uniproHasPressure(r)){notify('Aucune pression dans ce relevé');return}
+ if(phase==='ir'&&!uniproHasIR(r)){notify('Aucune température IR dans ce relevé');return}
+ const dest=current().tires;
+ const assignments=state.uniproAssignments||{};
+ let count=0;
+ for(const side of ['FR','FL','RL','RR']){
+  if(phase==='ir'){
+   if(validUniProValue(r.temperature[side])){dest[side].hotIR=r.temperature[side];count++}
+  }else if(validUniProValue(r.pressure[side])){
+   dest[side][phase==='avant'?'cold':'hot']=r.pressure[side];count++;
+  }
+ }
+ if(phase==='ir'&&validUniProValue(r.trackTemp)){dest.trackTemp=r.trackTemp;count++}
+ assignments[phase]={signature:r.signature||'',clock:r.clock||'',importedAt:new Date().toISOString(),transferAt:t.at};
+ state.uniproAssignments=assignments;
+ changed();render();
+ notify(count+' valeur(s) ajoutée(s) : '+(phase==='avant'?'AVANT':phase==='chaud'?'APRÈS':'IR APRÈS'));
+}
+function uniproSessionStatus(){
+ const a=state.uniproAssignments||{},d=current().tires;
+ const p=['FL','FR','RL','RR'].filter(k=>validUniProValue(d[k].cold)&&validUniProValue(d[k].hot)).length;
+ const t=['FL','FR','RL','RR'].filter(k=>validUniProValue(d[k].hotIR)).length;
+ return '<div class="note" style="margin-top:12px"><b>Fiche de séance :</b> '+p+'/4 pneus AVANT + APRÈS · '+t+'/4 températures IR APRÈS.<br>'+
+ 'Dernières sélections : '+(a.avant?'AVANT ✓':'AVANT —')+' · '+(a.chaud?'APRÈS ✓':'APRÈS —')+' · '+(a.ir?'IR ✓':'IR —')+'</div>';
+}
+function uniproNewSession(){
+ if(!confirm('Commencer une nouvelle fiche pneus ? Les valeurs actuelles seront effacées de la fiche active. Enregistre ton essai précédent avant de continuer.'))return;
+ current().tires=clone(DEFAULT_TIRES);state.uniproAssignments=null;
+ changed();render();notify('Nouvelle fiche pneus prête');
+}
+async function uniproSaveSession(){
+ const d=current().tires;
+ const p=['FL','FR','RL','RR'].filter(k=>validUniProValue(d[k].cold)&&validUniProValue(d[k].hot)).length;
+ const t=['FL','FR','RL','RR'].filter(k=>validUniProValue(d[k].hotIR)).length;
+ if(p===0&&t===0){notify('Ajoute au moins une pression ou une température avant la sauvegarde');return}
+ if(p<4||t<4){if(!confirm('Relevé incomplet ('+p+'/4 pneus et '+t+'/4 températures après). Sauvegarder quand même ?'))return}
+ const title=prompt('Nom de cette session','Séance pneus '+new Date().toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'}));
+ if(title===null)return;
+ const c=current(),w=weatherData(),fresh=w&&Date.now()-w.timestamp<15*60000;
+ if(!fresh){try{await trackWeather()}catch(e){}}
+ const weather=weatherData();
+ const s={id:String(Date.now())+'_'+Math.random().toString(36).slice(2,6),at:new Date().toISOString(),title:title.trim()||'Séance pneus',
+  track:state.track,state:label(state.trackState),setup:clone(c.setup),carbu:clone(c.carbu),
+  tires:clone(c.tires),weather:weather?clone(weather):null,kind:'unipro',assigned:clone(state.uniproAssignments||{}),
+  recommendations:uniproAdviceLines(c.tires)};
+ state.sessions.push(s);c.history.push({id:s.id,at:s.at,state:s.state,title:s.title});
+ save();render();notify('Séance UniPro sauvegardée dans le journal');
+}
+function uniproAdviceLines(d){
+ const sides=['FL','FR','RL','RR'],named={FL:'avant gauche',FR:'avant droit',RL:'arrière gauche',RR:'arrière droit'};
+ const rise=sides.filter(k=>validUniProValue(d[k].cold)&&validUniProValue(d[k].hot)).map(k=>({side:k,value:Number(d[k].hot)-Number(d[k].cold)}));
+ const temps=sides.filter(k=>validUniProValue(d[k].hotIR)).map(k=>({side:k,value:Number(d[k].hotIR)}));
+ const tips=[];
+ if(rise.length){
+  const med=rise.map(r=>r.value).sort((a,b)=>a-b);tips.push('Montée médiane des pressions : '+((med[Math.floor((med.length-1)/2)]+med[Math.floor(med.length/2)])/2).toFixed(2)+' PSI.');
+  if(rise.length===4){
+   const sorted=rise.slice().sort((a,b)=>a.value-b.value),gap=sorted[3].value-sorted[0].value;
+   if(gap>0.8)tips.push('Gains inégaux ('+gap.toFixed(2)+' PSI) : vérifier '+named[sorted[0].side]+' et '+named[sorted[3].side]+', le délai de mesure et le comportement du kart, avant de modifier la pression AVANT.');
+  }
+ }else tips.push('Pressions AVANT et APRÈS manquantes pour calculer la montée.');
+ if(temps.length===4){
+  const sorted=temps.slice().sort((a,b)=>a.value-b.value),spread=sorted[3].value-sorted[0].value;
+  if(spread>12)tips.push('Écart IR de '+spread.toFixed(1)+' °C entre '+named[sorted[0].side]+' et '+named[sorted[3].side]+'. Vérifier la prise de mesure immédiate après arrêt et les caractéristiques du circuit.');
+  else tips.push('Températures IR relativement rapprochées (écart '+spread.toFixed(1)+' °C).');
+ }else tips.push('Ajoute les 4 températures IR APRÈS pour analyser les écarts.');
+ tips.push('Recommandations indicatives : les chronos et le comportement doivent confirmer tout changement de setup.');
+ return tips;
+}
+
+function tires(){const d=current().tires;return `<div class="content">${pageHeader('Pneus & UniPro','Pressions en PSI, températures en °C.')}<div class="space"></div><div class="panel"><div class="setting-title"><h3>4 pneus · Mojo D5</h3><span>PSI · °C</span></div><div class="note" style="margin-bottom:10px">Mesures <b>CHAUD EN HAUT</b>, mesures <b>AVANT EN BAS</b>. Le relevé précédent reste conservé pour calculer la différence.</div><div class="tire-grid">${[['FL','AV G'],['FR','AV D'],['RL','AR G'],['RR','AR D']].map(([k,t])=>`<div class="tire-panel"><b>${t}</b>${[['hot','CHAUD · PSI'],['hotIR','CHAUD · IR °C'],['cold','AVANT · PSI'],['ir','AVANT · IR °C']].map(([f,l])=>`<label class="tiny-label" for="tire_${k}_${f}">${l}</label><input id="tire_${k}_${f}" type="number" inputmode="decimal" step="0.1" data-input="tires.${k}.${f}" value="${esc(d[k][f])}" style="margin-bottom:9px">`).join('')}<div class="subtext" style="color:var(--cyan)">${tireDelta(d[k].hot,d[k].cold,'PSI')} · ${tireDelta(d[k].hotIR,d[k].ir,'°C')}</div></div>`).join('')}</div><div class="divider"></div>${numInput('tires','trackTemp','Température asphalte (°C)','type="number" step="0.1" inputmode="decimal"')}</div><div class="space"></div><div class="panel"><div class="setting-title"><h3>UniPro UniTire V2 IR</h3><span>Bluetooth direct · essai</span></div><p class="subtext">Ferme l’application officielle UniPro et nRF Connect, puis mets l’UniTire sur TRANSFERT. On utilise les commandes 08 et 09 vues dans le journal officiel. <b>Aucune commande d’effacement.</b></p><button class="btn primary full" data-action="unipro-direct">TÉLÉCHARGER LES RELEVÉS UNIPRO</button><div class="note" style="margin:8px 0">Import expérimental. Commandes de consultation 08/09 observées dans le transfert officiel. Aucune valeur modifiée sans confirmation.</div>${uniproRecordsUI()}${uniproSessionStatus()}<div class="btn-row" style="margin-top:12px"><button class="btn primary" data-action="unipro-save">ENREGISTRER CETTE SÉANCE</button><button class="btn outline" data-action="unipro-new">NOUVELLE SÉANCE</button></div><button class="btn outline full" style="margin-top:10px" data-action="unipro-read">Diagnostic simple READ</button><div class="note" style="margin-top:12px"><b>Diagnostic Bluetooth</b><br>${state.uniproDiagnostic?`Appareil : ${esc(state.uniproDiagnostic.device)}<br>${state.uniproDiagnostic.reads.map(r=>`Lecture ${r.index} · ${r.length} octet(s) : <code>${esc(r.hex||"—")}</code>`).join("<br>")}`:state.uniproLastRead?`Dernière lecture : <code>${esc(state.uniproLastRead.hex)}</code> (${esc(state.uniproLastRead.length)} octet)`:"En attente de lecture."}<br><span style="color:var(--muted)">Des codes bruts ne sont pas des mesures PSI/°C. Aucun WRITE envoyé.</span></div><button class="btn full outline" style="margin-top:9px" data-action="unipro-copy">COPIER LE DIAGNOSTIC</button></div><div class="space"></div><div class="panel"><h3>Analyse des relevés</h3><div class="subtext">${tireAdvice(d)}</div><div class="note" style="margin-top:10px">Comparaisons indicatives. Ne change pas la pression sur ce seul relevé : vérifie les chronos, le grip et les recommandations du manufacturier.</div></div><div class="space"></div><button class="btn primary full" data-action="snapshot">${svg('check')} Enregistrer dans le journal</button></div>`}
+function devices(){return `<div class="content">${pageHeader('Mes appareils','Connexion des équipements prévue pour l’application Android.')}<div class="space"></div><div class="panel"><div class="row spread"><div class="row">${svg('wifi',26)}<div><b>AiM MyChron 5</b><div class="subtext">Modèle original, pas MyChron 5S</div></div></div><span class="pill warn">Non connecté</span></div><div class="divider"></div><p class="subtext">Objectif : récupérer les tours, RPM, secteurs et tracés par le réseau Wi-Fi AiM-MYC5, directement depuis le téléphone. Le protocole original n’a pas encore été validé.</p><button class="btn full outline" data-modal="mychron">Détails de l’intégration ${svg('chevron')}</button></div><div class="space"></div><div class="panel"><div class="row spread"><div class="row">${svg('bluetooth',26)}<div><b>UniPro UniTire V2 IR</b><div class="subtext">Bluetooth + pressions et IR</div></div></div><span class="pill warn">Non connecté</span></div><div class="divider"></div><p class="subtext">Objectif : transférer les mesures des quatre pneus et de la piste en une action, avec association à la séance. Le protocole BLE doit être étudié et testé.</p><button class="btn full outline" data-nav="tires">Saisie pneus disponible ${svg('chevron')}</button></div><div class="space"></div><div class="panel"><h3 style="margin-top:0">Météo GPS</h3><p class="subtext">Cette maquette fonctionne hors ligne; Open-Meteo est interrogé uniquement avec une connexion et une autorisation de géolocalisation.</p><button class="btn full cyanbtn" data-action="track-weather">${svg('weather')} Météo du circuit (sans GPS)</button></div></div>`}
+function sessions(){return `<div class="content">${pageHeader('Journal & essais','Toutes tes séances et changements importants.')}<div class="space"></div><button class="btn primary full" data-action="snapshot">${svg('check')} Enregistrer un instantané maintenant</button><div class="space"></div>${state.sessions.length?state.sessions.slice().reverse().map((s,i)=>`<div class="panel"><div class="row spread"><div><div class="eyebrow">${esc(s.track)}</div><b>${esc(s.title)}</b><div class="subtext">${esc(new Date(s.at).toLocaleString('fr-CA'))}</div></div><span class="pill ${s.state==='Sec'?'cyan':'warn'}">${esc(s.state)}</span></div><div class="divider"></div><div class="field-grid"><div><div class="label">Carburation enregistrée</div><strong>${esc('Main jet '+s.carbu.jet)} · K57</strong></div><div><div class="label">Châssis</div><strong>${esc(s.setup.axle)} · ${esc(s.setup.seat)}</strong></div></div><div class="subtext" style="margin-top:8px">${s.weather?`Météo : ${esc(s.weather.temp)} °C · ${esc(s.weather.humidity)} % HR`:'Sans météo relevée'}</div>${s.kind==='unipro'?`<div class="divider"></div><b>Pneus AVANT → APRÈS · IR après</b><div class="subtext" style="margin:8px 0">${['FL','FR','RL','RR'].map(k=>{const t=s.tires[k];return k+' : '+(validUniProValue(t.cold)?esc(t.cold):'—')+' → '+(validUniProValue(t.hot)?esc(t.hot):'—')+' PSI · '+(validUniProValue(t.hotIR)?esc(t.hotIR):'—')+' °C'}).join('<br>')}</div><b>Observations</b><div class="subtext" style="margin-top:8px">${(s.recommendations||[]).map(x=>'• '+esc(x)).join('<br><br>')}</div>`:''}<button class="btn full outline small" style="margin-top:12px" data-action="restore" data-id="${esc(s.id)}">Rétablir ce setup sur son circuit</button></div>`).join('<div class="space"></div>'):'<div class="panel empty">Aucune séance enregistrée. Les modifications se sauvegardent automatiquement; ajoute un instantané pour conserver les versions.</div>'}</div>`}
+let runners=Array.from({length:4},()=>({status:'ready',lastStart:0,started:0,elapsed:0,laps:[],alerted:false}));
+let passes=[];
+let historyPilot="all", historyScope="track";
+const formatMs=(ms)=>{ms=Math.max(0,Math.floor(ms));return `${String(Math.floor(ms/60000)).padStart(2,'0')}:${String(Math.floor(ms%60000/1000)).padStart(2,'0')}.${String(ms%1000).padStart(3,'0')}`};
+function timerLapDuration(r){const t=r.laps.at(-1);return t==null?null:t}
+function displayedElapsed(r,now){return r.status==='running'?Math.max(0,now-r.lastStart):r.status==='stopped'?r.elapsed:0}
+function chrono(){
+ const d=Number(state.lead)||3;
+ return `<div class="chrono-screen"><div class="chrono-top"><div><div class="chrono-title">LIVE TIMING <span class="pill live" style="font-size:9px">4 PILOTES</span></div><div class="chrono-sub">Prochain passage : en bas à droite</div></div><div class="global-delay"><span>🔔 ${d} s</span><button data-lead="-1" aria-label="Diminuer le délai d’alerte">−</button><button data-lead="1" aria-label="Augmenter le délai d’alerte">+</button></div></div>
+ <div class="chrono-control"><button class="btn primary" data-timer="all-start">${svg('timer',16)} DÉMARRER TOUS</button><button class="btn secondary" data-modal="pilots">${svg('settings',15)} PILOTES</button><button class="btn cyanbtn" data-history="all">${svg('history',15)} TOURS</button></div>
+ <div class="chrono-grid">${runners.map((r,i)=>{const p=state.pilots[i];return `<div class="stop-card ${r.status==='ready'?'disabled':''} ${r.status==='stopped'?'is-stopped':''} ${r.status==='running'?'running':''}" id="card_${i}" data-card-lap="${i}" role="button" tabindex="0" aria-label="${r.status==='running'?'Enregistrer le tour de':r.status==='ready'?'Démarrer le chronomètre de':'Chronomètre arrêté de'} ${esc(p.name)}. Touchez cette carte."><div class="stop-card-header"><strong>${esc(p.name)}</strong><span class="driver-num">#${esc(p.num)}</span><button class="card-tour-link" data-history="${i}" aria-label="Voir les tours de ${esc(p.name)}" id="lapcount_${i}">${r.laps.length} tours ›</button></div><div class="stop-value" id="time_${i}">${formatMs(displayedElapsed(r,performance.now()))}</div><div class="lap-meta"><div>DERNIER<b id="last_${i}">${r.laps.length?formatMs(r.laps.at(-1)):'—'}</b></div><div>MEILLEUR<b id="best_${i}">${r.laps.length?formatMs(Math.min(...r.laps)):'—'}</b></div></div><div class="lap-hint" id="hint_${i}">${r.status==='running'?'EN PISTE':r.status==='stopped'?'ARRÊTÉ':'PRÊT'}</div><div class="stop-btns"><button data-timer="stop" data-i="${i}" ${r.status==='ready'?'disabled':''}>${r.status==='stopped'?'RESET':'STOP'}</button></div></div>`}).join('')}</div>
+ <div class="chrono-footer">Toute la carte = LAP · Coin bas droit = prochain · STOP séparé</div></div>`
+}
+/* Keep the earliest expected passage in slot 4 (lower right).
+   Before the first recorded lap, use the order in which pilots started/passed:
+   the earliest first touch is the most likely to be the first to return.
+   Once lap times exist, use the absolute expected next-passage times. */
+function predictedPassTime(r){const d=timerLapDuration(r);return r.status==='running'&&d!=null&&Number.isFinite(d)&&d>0?r.lastStart+d:null}
+function orderedRunners(){
+ const ids=[0,1,2,3];
+ return ids.sort((a,b)=>{
+  const ra=runners[a],rb=runners[b];
+  const cat=r=>r.status==='stopped'?0:r.status==='ready'?1:2;
+  if(cat(ra)!==cat(rb))return cat(ra)-cat(rb);
+  // Until a runner has their first completed lap, keep them ahead of runners with predictions.
+  if(ra.status==='running'&&rb.status==='running'&&(ra.laps.length===0)!==(rb.laps.length===0))return ra.laps.length===0?1:-1;
+  const pa=predictedPassTime(ra),pb=predictedPassTime(rb);
+  if((pa===null)!==(pb===null))return pa===null?-1:1;
+  if(pa!==null&&pb!==null&&Math.abs(pa-pb)>1)return pb-pa;
+  if(ra.status==='running'&&rb.status==='running'&&pa===null&&pb===null){
+   // First pilot tapped/started stays at bottom-right until a better estimate exists.
+   if(Math.abs(ra.started-rb.started)>1)return rb.started-ra.started;
+   // When all timers started together, use first completed passages as tie-breaker.
+   const ia=passes.indexOf(a),ib=passes.indexOf(b);
+   if(ia!==ib){if(ia<0)return -1;if(ib<0)return 1;return ia-ib}
+  }
+  return a-b;
+ });
+}
+let chronoVisualOrder='';
+function updateChronoOrder(){
+ if(page!=='chrono')return;
+ const grid=document.querySelector('.chrono-grid');if(!grid)return;
+ const order=orderedRunners(),signature=order.join(',');
+ if(signature!==chronoVisualOrder){order.forEach(i=>{const card=document.getElementById('card_'+i);if(card)grid.appendChild(card)});chronoVisualOrder=signature}
+ const next=order[3],active=runners[next].status==='running';
+ order.forEach(i=>{const c=document.getElementById('card_'+i);if(c)c.classList.toggle('priority',i===next&&active)});
+}
+
+function lapsForHistory(){
+ let recs=(Array.isArray(state.laps)?state.laps:[]).filter(x=>Number.isFinite(Number(x.timeMs))&&Number(x.timeMs)>0);
+ if(historyScope==='track')recs=recs.filter(x=>x.track===state.track);
+ if(historyPilot!=='all'){
+  const pilot=state.pilots[Number(historyPilot)];
+  recs=recs.filter(x=>x.pilotNum!=null?String(x.pilotNum)===String(pilot.num):String(x.pilot)===String(pilot.name));
+ }
+ return recs;
+}
+function lapHistoryHTML(){
+ const recs=lapsForHistory();
+ const best=recs.length?Math.min(...recs.map(x=>Number(x.timeMs))):null;
+ const latest=recs.at(-1);
+ const mean=recs.length?recs.reduce((sum,x)=>sum+Number(x.timeMs),0)/recs.length:null;
+ const bestByPilot=new Map();
+ recs.forEach(x=>{const k=x.pilotNum!=null?String(x.pilotNum):String(x.pilot);bestByPilot.set(k,Math.min(Number(x.timeMs),bestByPilot.get(k)??Infinity))});
+ const bstats=(label,val)=>`<div class="hist-stat"><small>${label}</small><strong>${val==null?'—':formatMs(val)}</strong></div>`;
+ return `<div class="modal-cover" data-dismiss="1"><div class="modal lap-history-modal" role="dialog" aria-modal="true" aria-label="Historique des tours">
+  <div class="row spread" style="margin-bottom:8px"><div class="eyebrow">CHRONO · TOURS ENREGISTRÉS</div><button class="btn compact outline" data-action="close-modal" aria-label="Fermer l’historique">${svg('x',15)}</button></div>
+  <h2>Historique des laps</h2>
+  <p style="margin:0 0 8px">${esc(state.track)} · tours conservés sur ce téléphone</p>
+  <div class="hist-tabs" role="group" aria-label="Filtrer par pilote">
+   ${[['all','Tous'],...state.pilots.map((p,i)=>[String(i),p.name+' #'+p.num])].map(([id,name])=>`<button class="chip ${historyPilot===id?'selected':''}" data-history-pilot="${id}" aria-pressed="${historyPilot===id}">${esc(name)}</button>`).join('')}
+  </div>
+  <div class="hist-scopes" role="group" aria-label="Circuits affichés">
+   <button data-history-scope="track" class="${historyScope==='track'?'active':''}" aria-pressed="${historyScope==='track'}">${esc(state.track)}</button>
+   <button data-history-scope="all" class="${historyScope==='all'?'active':''}" aria-pressed="${historyScope==='all'}">Tous les circuits</button>
+  </div>
+  <div class="hist-stats">${bstats('DERNIER',latest?Number(latest.timeMs):null)}${bstats('MEILLEUR',best)}${bstats('MOYENNE',mean)}</div>
+  <div class="hist-counter"><b>${recs.length}</b> tour${recs.length!==1?'s':''} enregistré${recs.length!==1?'s':''} ${historyPilot==='all'?'· 4 pilotes':''}</div>
+  <div class="hist-list" role="list" aria-label="Liste des tours">
+   ${recs.length?recs.slice(-150).reverse().map(lap=>{
+     const key=lap.pilotNum!=null?String(lap.pilotNum):String(lap.pilot);
+     const delta=Number(lap.timeMs)-(bestByPilot.get(key)??Number(lap.timeMs));
+     const isBest=Math.abs(delta)<.6;
+     const time=Number.isNaN(Date.parse(lap.at))?'Date inconnue':new Date(lap.at).toLocaleString('fr-CA',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+     const who=historyPilot==='all'?`${esc(lap.pilot||'Pilote')}${lap.pilotNum?' #'+esc(lap.pilotNum):''}`:lap.lapNo?'Tour '+esc(lap.lapNo):'Tour enregistré';
+     return `<div class="hist-entry" role="listitem"><div><strong>${who}</strong><small>${esc(time)} · ${esc(lap.track||'Circuit non précisé')}</small></div><span class="hist-laptime ${isBest?'best':''}">${formatMs(Number(lap.timeMs))}</span><span class="hist-delta ${isBest?'best':''}">${isBest?'★ BEST':'+'+(delta/1000).toFixed(3)+' s'}</span></div>`;
+   }).join(''):'<div class="empty">Aucun tour enregistré pour ce pilote et ce circuit.<br>Appuie sur LAP après avoir démarré le chrono.</div>'}
+  </div>
+  <div class="hist-note">Les tours restent dans l’historique après STOP / RESET. Export JSON dans Options pour les sauvegarder hors de ce navigateur.</div>
+ </div></div>`;
+}
+
+function modalHTML(){if(!modal)return '';if(modal==='lap-history')return lapHistoryHTML();const c=state.circuits[state.track];const common=`<div class="row spread"><div class="eyebrow">KART SETUP PRO</div><button class="btn compact outline" data-action="close-modal">${svg('x',15)}</button></div>`;if(modal==='options')return `<div class="modal-cover" data-dismiss="1"><div class="modal" role="dialog" aria-modal="true">${common}<h2>Options locales</h2><label class="toggle" style="margin:12px 0"><input type="checkbox" data-autogps ${state.autoGps?'checked':''}> GPS et météo automatiques (requiert HTTPS)</label><div class="note warning">Ouvert comme fichier local ? Le GPS peut être interdit par Chrome même si le téléphone a la localisation active. Utilise « Météo du circuit » pour obtenir température, humidité et pression sans autorisation GPS.</div><div class="btn-row" style="margin-top:11px"><button class="btn primary" data-action="track-weather">Météo circuit</button><button class="btn secondary" data-modal="weather-place">Choisir ville</button></div><p>Les réglages sont enregistrés sur ce téléphone dans le navigateur. Sauvegarde une copie JSON si tu changes de téléphone ou si tu effaces les données du navigateur.</p><div class="btn-row"><button class="btn primary" data-action="export">${svg('upload')} Exporter JSON</button><button class="btn secondary" data-action="import">Importer JSON</button></div><input type="file" id="importfile" accept=".json,application/json" hidden><div class="divider"></div><button class="btn full outline" data-nav="devices">Appareils MyChron / UniPro</button><div class="tiny-space"></div><button class="btn full outline" data-nav="sessions">Journal des essais</button><p>Prototype local — pas encore de synchronisation Supabase ni d’APK mis à jour.</p></div></div>`;
+if(modal==='weather-place')return `<div class="modal-cover" data-dismiss="1"><div class="modal" role="dialog" aria-modal="true">${common}<h2>Lieu de la météo</h2><p>La météo se base sur <b>${esc(state.track)}</b>. Indique une ville proche, ou des coordonnées de ton circuit, sans GPS du téléphone.</p><label class="label">Ville au Québec</label><input id="weather-city" placeholder="Ex. Mirabel" value="${esc(state.weatherCities[state.track]||WEATHER_CITY[state.track]||'')}"><div class="tiny-space"></div><div class="field-grid"><div class="field"><label class="label">Latitude (facultative)</label><input id="weather-lat" inputmode="decimal" type="number" step="0.000001" min="-90" max="90" placeholder="45.68"></div><div class="field"><label class="label">Longitude (facultative)</label><input id="weather-lon" inputmode="decimal" type="number" step="0.000001" min="-180" max="180" placeholder="-74.02"></div></div><div class="note" style="margin:12px 0">Pour Mirabel, une position approximative du complexe ICAR/SRA est prévue. Tu peux remplacer la ville par les coordonnées de ton circuit pour des données plus précises. Ces coordonnées ne servent pas à la détection automatique GPS.</div><button class="btn primary full" data-action="save-weather-place">Enregistrer et charger la météo</button></div></div>`;
+if(modal==='pilots')return `<div class="modal-cover" data-dismiss="1"><div class="modal" role="dialog" aria-modal="true">${common}<h2>Pilotes actifs</h2><p>Prépare tes quatre pilotes avant de démarrer. Les noms et numéros n’encombrent pas le chronomètre.</p>${state.pilots.map((p,i)=>`<div class="field-grid" style="margin:10px 0"><div class="field"><label class="label">Pilote ${i+1}</label><input data-pilot="${i}.name" value="${esc(p.name)}" maxlength="22"></div><div class="field"><label class="label">Numéro</label><input data-pilot="${i}.num" value="${esc(p.num)}" maxlength="5"></div></div>`).join('')}<button class="btn full primary" data-action="close-modal">Terminer</button></div></div>`;
+if(modal==='mychron')return `<div class="modal-cover" data-dismiss="1"><div class="modal" role="dialog" aria-modal="true">${common}<h2>MyChron 5 (original)</h2><p>Le MyChron 5 utilise son propre Wi-Fi. Un futur module Android devra vérifier le protocole et importer des séances : temps, RPM, températures et GPS disponibles. Cette interface ne prétend pas être connectée.</p><button class="btn full primary" data-action="close-modal">Compris</button></div></div>`;
+return ''}
+function render(){appBar();appNav();$('#app').innerHTML=page==='home'?home():page==='setup'?setup():page==='carbu'?carbu():page==='circuits'?circuits():page==='tires'?tires():page==='devices'?devices():page==='sessions'?sessions():page==='chrono'?chrono():home();$('#modal-root').innerHTML=modalHTML();chronoVisualOrder='';if(page==='chrono')updateChronoOrder()}
+function navigate(to,sub=''){page=to;modal=null;render();window.scrollTo({top:0,behavior:'instant'});if(sub==='rain')document.querySelector('#rainadvisor')?.scrollIntoView({block:'nearest'})}
+function toggleSelect(area,field,value){const target=current()[area];target[field]=value==='true'?true:value==='false'?false:!isNaN(Number(value))&&!['seat','axle','rims','frontHeight','rearHeight','floatGauge'].includes(field)?Number(value):value;changed();render();}
+
+// Le GPS d'un fichier content:// ou file:// est bloqué par la plupart des navigateurs mobiles.
+// La météo de ville est un repli distinct du GPS: aucun circuit n'est "détecté" de cette façon.
+const WEATHER_CITY={
+ 'Mirabel':'Mirabel','Québec':'Québec',
+ 'Mont-Tremblant (sens 1)':'Mont-Tremblant',
+ 'Mont-Tremblant (sens inverse)':'Mont-Tremblant',
+ 'Trois-Rivières':'Trois-Rivières','Château-Richer':'Château-Richer'
+};
+const WEATHER_APPROX={
+ 'Mirabel':{lat:45.681239,lon:-74.024948,source:'Secteur ICAR/SRA Mirabel (approx.)'}
+};
+const canUsePhoneGPS=()=>window.isSecureContext&&!['file:','content:'].includes(location.protocol);
+async function trackWeather(){
+  try {
+    const pinned=state.weatherCoords[state.track];
+    if(pinned){await weatherFetch(pinned,'Coordonnées du circuit mémorisées');return}
+    const chosen=(state.weatherCities[state.track]||WEATHER_CITY[state.track]||'').trim();
+    if(state.track==='Mirabel'&&(!state.weatherCities[state.track]||chosen==='Mirabel')) {
+      await weatherFetch(WEATHER_APPROX.Mirabel,WEATHER_APPROX.Mirabel.source);return;
+    }
+    if(!chosen){modal='weather-place';render();notify('Choisis une ville pour ce circuit');return}
+    const url=new URL('https://geocoding-api.open-meteo.com/v1/search');
+    url.searchParams.set('name',chosen+', Québec');
+    url.searchParams.set('countryCode','CA');url.searchParams.set('language','fr');url.searchParams.set('count','10');
+    const resp=await fetch(url.toString());if(!resp.ok)throw Error('Géocodage HTTP '+resp.status);
+    const result=await resp.json();
+    const places=(result.results||[]).filter(x=>x.country_code==='CA');
+    const place=places.find(x=>(x.admin1||'').toLowerCase().includes('québec')||(x.admin1||'').toLowerCase().includes('quebec'))||places[0];
+    if(!place)throw Error('Ville introuvable. Choisir une autre localité.');
+    await weatherFetch({lat:place.latitude,lon:place.longitude},'Ville de '+place.name+' (approx.)');
+  }catch(e){notify('Météo du circuit indisponible : '+(e.message||'vérifie Internet'))}
+}
+function gpsCoords(){return new Promise((res,rej)=>{if(!navigator.geolocation){rej(Error('Géolocalisation indisponible'));return}navigator.geolocation.getCurrentPosition(p=>res({lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy}),rej,{enableHighAccuracy:true,timeout:14000,maximumAge:10000})})}
+async function weatherFetch(c,source){notify('Chargement des données météo…');const p=new URL('https://api.open-meteo.com/v1/forecast');p.searchParams.set('latitude',c.lat);p.searchParams.set('longitude',c.lon);p.searchParams.set('current','temperature_2m,relative_humidity_2m,surface_pressure,pressure_msl,rain,precipitation');p.searchParams.set('timezone','auto');p.searchParams.set('forecast_days','1');const resp=await fetch(p.toString());if(!resp.ok)throw Error('Réponse météo '+resp.status);const j=await resp.json(),w=j.current;if(!w)throw Error('Données météo manquantes');state.weather={track:state.track,lat:c.lat,lon:c.lon,timestamp:Date.now(),measuredAt:w.time,temp:w.temperature_2m,humidity:w.relative_humidity_2m,pressure:w.surface_pressure,seaPressure:w.pressure_msl,rain:w.rain,precipitation:w.precipitation,source};save();render();notify('Météo récupérée · Open-Meteo')}
+async function gpsWeather(){if(!canUsePhoneGPS()){notify('Chrome bloque le GPS du fichier local. Météo du circuit chargée sans GPS.');await trackWeather();return}try{const c=await gpsCoords();let best=null;for(const [name,where] of Object.entries(state.weatherCoords)){if(where.manual)continue;const delta=Math.hypot((c.lat-where.lat)*111,(c.lon-where.lon)*111*Math.cos(c.lat*Math.PI/180));if(delta<2.0&&(!best||delta<best.delta))best={name,delta}}if(best&&state.track!==best.name){state.track=best.name;state.trackState='sec';notify('Circuit reconnu : '+best.name)}await weatherFetch(c,'GPS')}catch(e){const saved=state.weatherCoords[state.track];if(saved){try{await weatherFetch(saved,'Circuit enregistré');return}catch(x){}}notify('GPS non accessible : météo du circuit sans localisation');await trackWeather()}}
+async function pinTrack(){if(!canUsePhoneGPS()){notify('Associer GPS nécessite un site HTTPS ou une app Android');return}try{const c=await gpsCoords();const choice=confirm(`Associer ta position actuelle au circuit « ${state.track} » ?\n\nÀ faire seulement lorsque tu es réellement au circuit.`);if(choice){state.weatherCoords[state.track]=c;save();render();notify('Position du circuit mémorisée')}}catch(e){notify('Position GPS indisponible')}}
+function snapshot(){const title=prompt('Nom du setup / essai','Setup de référence');if(title===null)return;const p=current();const s={id:String(Date.now())+'_'+Math.random().toString(36).slice(2,5),at:new Date().toISOString(),title:title.trim()||'Setup de référence',track:state.track,state:label(state.trackState),setup:clone(p.setup),carbu:clone(p.carbu),tires:clone(p.tires),weather:weatherData()?clone(weatherData()):null};state.sessions.push(s);p.history.push({id:s.id,at:s.at,state:s.state,title:s.title});save();notify('Setup enregistré dans le journal');render()}
+function restore(id){const s=state.sessions.find(x=>x.id===id);if(!s)return;const choice=confirm(`Rétablir le setup « ${s.title} » (${s.track}) ?\nCe changement écrasera les réglages actuels de ce circuit.`);if(!choice)return;const target=initTrack(s.track);target.setup=clone(s.setup);target.carbu=clone(s.carbu);target.tires=clone(s.tires);state.track=s.track;save();navigate('setup');notify('Setup restauré')}
+function exportData(){const blob=new Blob([JSON.stringify({...state,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='kart-setup-pro-sauvegarde-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Sauvegarde JSON créée')}
+function timerAction(action,i){const now=performance.now();if(action==='all-start'){runners.forEach((r,j)=>{if(r.status==='ready')runners[j]={...r,status:'running',started:now,lastStart:now,elapsed:0,alerted:false,runId:new Date().toISOString()+'_'+j}});render();return}
+if(i<0||i>3)return;const r=runners[i];if(action==='lap'){if(r.status==='ready'){runners[i]={...r,status:'running',started:now,lastStart:now,elapsed:0,alerted:false,runId:new Date().toISOString()+'_'+i};render();return}if(r.status==='running'){const lap=now-r.lastStart;if(lap<700)return;r.laps.push(lap);r.lastStart=now;r.alerted=false;passes=[i,...passes.filter(x=>x!==i)];state.laps.push({at:new Date().toISOString(),pilot:state.pilots[i].name,pilotNum:state.pilots[i].num,pilotIndex:i,runId:r.runId||null,lapNo:r.laps.length,timeMs:lap,track:state.track});if(state.laps.length>4000)state.laps=state.laps.slice(-4000);save();document.getElementById('last_'+i).textContent=formatMs(lap);document.getElementById('best_'+i).textContent=formatMs(Math.min(...r.laps));document.getElementById('hint_'+i).textContent='TOUR '+r.laps.length;const countEl=document.getElementById('lapcount_'+i);if(countEl)countEl.textContent=r.laps.length+' tours ›';updateChronoOrder();return}}
+if(action==='stop'){if(r.status==='running'){r.elapsed=Math.max(0,now-r.lastStart);r.status='stopped'}else if(r.status==='stopped'){runners[i]={status:'ready',lastStart:0,started:0,elapsed:0,laps:[],alerted:false}}render()}}
+function vibrate(){try{if(navigator.vibrate)navigator.vibrate([120,65,120])}catch(e){}}
+function tick(){if(page!=='chrono'){return}updateChronoOrder();const nextId=orderedRunners()[3];const knownNext=runners[nextId].status==='running';const now=performance.now();runners.forEach((r,i)=>{const t=document.getElementById('time_'+i);if(!t)return;t.textContent=formatMs(displayedElapsed(r,now));const hint=document.getElementById('hint_'+i);const card=document.getElementById('card_'+i);if(r.status==='running'){const base=timerLapDuration(r),elapsed=now-r.lastStart;if(base!=null){const remain=base-elapsed;hint.textContent=remain>0?`PASSAGE ~ ${Math.ceil(remain/1000)} s`:'PASSAGE ATTENDU';if(!r.alerted&&base>(state.lead+1)*1000&&remain<=state.lead*1000&&remain>-1500){r.alerted=true;vibrate();card.classList.add('alert')}if(remain<-1500)card.classList.remove('alert')}else hint.textContent='PREMIER TOUR';if(i===nextId&&knownNext)hint.textContent='★ PROCHAIN · '+hint.textContent;}else if(r.status==='stopped'){hint.textContent='ARRÊTÉ'}else hint.textContent='PRÊT'})}
+setInterval(tick,38);
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-unipro-assign],[data-nav],[data-action],[data-modal],[data-history],[data-history-pilot],[data-history-scope],[data-set],[data-step],[data-lead],[data-wet],[data-timer],[data-symptom],[data-card-lap]');if(!b){if(e.target.matches('[data-dismiss]')){modal=null;render()}return}
+if(b.dataset.uniproAssign!==undefined){uniproAssign(b.dataset.uniproAssign);return}if(b.dataset.history!==undefined){historyPilot=b.dataset.history;historyScope='track';modal='lap-history';render();return}
+if(b.dataset.historyPilot!==undefined){historyPilot=b.dataset.historyPilot;render();return}
+if(b.dataset.historyScope!==undefined){historyScope=b.dataset.historyScope;render();return}
+if(b.dataset.nav){navigate(b.dataset.nav,b.dataset.sub||'');return}
+if(b.dataset.modal){modal=b.dataset.modal;render();return}
+if(b.dataset.set){const [a,f]=b.dataset.set.split('.');toggleSelect(a,f,b.dataset.value);return}
+if(b.dataset.step){const f=b.dataset.step,s=current().setup;const n=Math.min(f==='seatBars'?4:6,Math.max(0,Number(s[f])+Number(b.dataset.delta)));s[f]=n;if(f==='frontSpacersL'&&s.spacersLinked)s.frontSpacersR=n;changed();render();return}
+if(b.dataset.lead){state.lead=Math.min(15,Math.max(1,Number(state.lead)+Number(b.dataset.lead)));save();render();return}
+if(b.dataset.wet){state.trackState=b.dataset.wet;save();render();return}
+if(b.dataset.timer){timerAction(b.dataset.timer,Number(b.dataset.i));return}if(b.dataset.cardLap!==undefined){timerAction('lap',Number(b.dataset.cardLap));return}
+if(b.dataset.symptom){state.symptoms=state.symptoms||[];const v=b.dataset.symptom;state.symptoms=state.symptoms.includes(v)?state.symptoms.filter(x=>x!==v):[...state.symptoms,v];save();render();return}
+const action=b.dataset.action;if(action==='jet-rotax-base'){jetUseRotaxBase();return}if(action==='jet-reference-save'){jetSaveReference();return}if(action==='jet-reference-reset'){jetResetReference();return}if(action==='jet-apply'){jetApplySuggestion();return}if(action==='unipro-save'){await uniproSaveSession();return}if(action==='unipro-new'){uniproNewSession();return}if(action==='unipro-direct'){await uniproSync();return}if(action==='unipro-read'){await readUniPro();return}if(action==='unipro-copy'){copyUniProDiagnostic();return}if(action==='gps-weather'){await gpsWeather();return}if(action==='track-weather'){modal=null;render();await trackWeather();return}if(action==='save-weather-place'){const city=$('#weather-city')?.value.trim()||'';const latStr=$('#weather-lat')?.value.trim(),lonStr=$('#weather-lon')?.value.trim();state.weatherCities[state.track]=city;if(latStr||lonStr){const lat=Number(latStr),lon=Number(lonStr);if(!latStr||!lonStr||!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180){notify('Latitude / longitude invalides');return}state.weatherCoords[state.track]={lat,lon,manual:true};}else if(state.weatherCoords[state.track]?.manual){delete state.weatherCoords[state.track]};save();modal=null;render();await trackWeather();return}if(action==='pin-track'){await pinTrack();return}if(action==='snapshot'){snapshot();return}if(action==='restore'){restore(b.dataset.id);return}if(action==='close-modal'){modal=null;render();return}if(action==='export'){exportData();return}if(action==='import'){$('#importfile')?.click();return}
+});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-card-lap]')){e.preventDefault();timerAction('lap',Number(e.target.dataset.cardLap));}});
+document.addEventListener('change',async e=>{const inp=e.target;if(inp.dataset.autogps!==undefined){state.autoGps=inp.checked;save();if(state.autoGps)gpsWeather();return}if(inp.dataset.choice==='track'){state.track=inp.value;state.trackState='sec';save();render();return}if(inp.dataset.check){const [area,field]=inp.dataset.check.split('.');current()[area][field]=inp.checked;if(field==='spacersLinked'&&inp.checked)current()[area].frontSpacersR=current()[area].frontSpacersL;changed();render();return}if(inp.dataset.input){const path=inp.dataset.input.split('.');let val=inp.value;if(inp.type==='number'&&val!==''){val=Number(val);if(!Number.isFinite(val)){notify('Valeur incorrecte');return}}if(path[0]==='setup'&&path[1]==='rearWidth'&&Number(val)>140){val=140;inp.value='140';notify('Largeur arrière limitée à 140 cm dans ton profil')}if(path[0]==='tires'&&path.length===3){current().tires[path[1]][path[2]]=val}else{current()[path[0]][path[1]]=val}changed();return}
+if(inp.dataset.pilot){const [i,f]=inp.dataset.pilot.split('.');state.pilots[Number(i)][f]=inp.value;save();return}
+if(inp.id==='importfile'&&inp.files?.length){try{const text=await inp.files[0].text();const obj=JSON.parse(text);if(!obj||!obj.circuits||!Array.isArray(obj.pilots)||!obj.track)throw new Error('Format invalide');if(!confirm('Importer ce fichier remplacera les réglages actuels du prototype. Continuer ?'))return;state={...clone(DEFAULTS),...obj};CIRCUITS.forEach(initTrack);save();modal=null;navigate('home');notify('Sauvegarde importée')}catch(err){notify('Impossible d’importer ce fichier JSON')}}});
+// v2.3: four large touch targets, predictive bottom-right rotation, offline storage; no unverified jet-size calculation.
+render();
+if(state.autoGps){setTimeout(()=>gpsWeather(),500)}
+})();
+}
+</script>
+</body></html>
