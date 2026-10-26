@@ -40,6 +40,7 @@ jobs:
           profile: pixel_7
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
+            gradle --no-daemon :app:installDebug
             adb shell ime enable ca.correcteur.perso/.PersonalKeyboardService
             adb shell ime set ca.correcteur.perso/.PersonalKeyboardService
             gradle --no-daemon :app:connectedDebugAndroidTest
