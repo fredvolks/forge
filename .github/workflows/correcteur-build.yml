@@ -32,20 +32,6 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Tests clavier réel en émulateur Android
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          arch: x86_64
-          profile: pixel_7
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: |
-            gradle --no-daemon :app:installDebug
-            adb shell ime enable ca.correcteur.perso/.PersonalKeyboardService
-            adb shell ime set ca.correcteur.perso/.PersonalKeyboardService
-            adb logcat -c
-            bash -c 'gradle --no-daemon :app:connectedDebugAndroidTest; status=$?; echo "===== AndroidRuntime crash report ====="; adb logcat -d -v time | grep -A 24 -E "FATAL EXCEPTION|AndroidRuntime|ca.correcteur.perso|Fatal signal" | tail -n 200 || true; echo "===== InputMethodService state ====="; adb shell dumpsys input_method | tail -n 45; exit $status'
-
       - uses: actions/upload-artifact@v4
         with:
           name: CorrecteurPerso-Android-APK
@@ -60,3 +46,18 @@ jobs:
           git add releases/CorrecteurPerso-v0.3-debug.apk
           git commit -m "build: ajouter APK Correcteur Perso v0.3" || exit 0
           git push origin HEAD:build/correcteur-perso-android-v01
+
+      - name: Tests clavier réel en émulateur Android
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_7
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: |
+            gradle --no-daemon :app:installDebug
+            adb shell ime enable ca.correcteur.perso/.PersonalKeyboardService
+            adb shell ime set ca.correcteur.perso/.PersonalKeyboardService
+            adb logcat -c
+            bash -c 'gradle --no-daemon :app:connectedDebugAndroidTest; status=$?; echo "===== AndroidRuntime crash report ====="; adb logcat -d -v time | grep -A 24 -E "FATAL EXCEPTION|AndroidRuntime|ca.correcteur.perso|Fatal signal" | tail -n 200 || true; echo "===== InputMethodService state ====="; adb shell dumpsys input_method | tail -n 45; exit $status'
+

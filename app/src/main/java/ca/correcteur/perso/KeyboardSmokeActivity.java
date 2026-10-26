@@ -22,6 +22,7 @@ public final class KeyboardSmokeActivity extends Activity {
         area.addView(label);
         EditText input=new EditText(this);
         input.setTextColor(Color.WHITE);
+        input.setId(R.id.smoke_input);
         input.setSingleLine(false);
         input.setMinLines(3);
         input.setHint("Tape ici pour tester Espace et les émojis");
