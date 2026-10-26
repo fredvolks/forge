@@ -17,10 +17,15 @@ public class KeyboardInputTest {
     @Test public void repeatedSpacebarTapsDoNotCloseKeyboard() throws Exception {
         Instrumentation inst=InstrumentationRegistry.getInstrumentation();
         Context ctx=inst.getTargetContext();
+        UiDevice device=UiDevice.getInstance(inst);
+        device.executeShellCommand("ime enable ca.correcteur.perso/.PersonalKeyboardService");
+        device.executeShellCommand("ime set ca.correcteur.perso/.PersonalKeyboardService");
+        String selected=device.executeShellCommand("settings get secure default_input_method");
+        assertTrue("Correcteur must be selected: "+selected,selected.contains("ca.correcteur.perso"));
+        KeyboardDiagnostics.clear(ctx);
         Intent i=new Intent(ctx,KeyboardSmokeActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         ctx.startActivity(i);
-        UiDevice device=UiDevice.getInstance(inst);
         assertTrue("Spacebar should be visible",device.wait(Until.hasObject(By.desc("Touche espace")),15000));
         for(int k=0;k<12;k++){
             UiObject2 space=device.findObject(By.desc("Touche espace"));
@@ -35,10 +40,15 @@ public class KeyboardInputTest {
     @Test public void emojiButtonCanOpenAndReturnToLetters() throws Exception {
         Instrumentation inst=InstrumentationRegistry.getInstrumentation();
         Context ctx=inst.getTargetContext();
+        UiDevice device=UiDevice.getInstance(inst);
+        device.executeShellCommand("ime enable ca.correcteur.perso/.PersonalKeyboardService");
+        device.executeShellCommand("ime set ca.correcteur.perso/.PersonalKeyboardService");
+        String selected=device.executeShellCommand("settings get secure default_input_method");
+        assertTrue("Correcteur must be selected: "+selected,selected.contains("ca.correcteur.perso"));
+        KeyboardDiagnostics.clear(ctx);
         Intent i=new Intent(ctx,KeyboardSmokeActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         ctx.startActivity(i);
-        UiDevice device=UiDevice.getInstance(inst);
         assertTrue(device.wait(Until.hasObject(By.desc("Touche 😀")),15000));
         device.findObject(By.desc("Touche 😀")).click();
         assertTrue("Emoji UI should open",device.wait(Until.hasObject(By.desc("Touche ABC")),10000));
