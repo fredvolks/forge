@@ -13,7 +13,7 @@ public class CorrectionEngineTest {
         assertEquals("j'ai",correct("jai").replacement);
         assertEquals("c'est",correct("cest").replacement);
         assertEquals("clé",correct("cle").replacement);
-        assertEquals("québécois",CorrectionEngine.protectedWords("québécois").iterator().next().equals("québécois")?"québécois":"error");
+        assertTrue(CorrectionEngine.protectedWords("québécois").contains("québécois"));
     }
     @Test public void protectsQuebecVocabularyAndContext(){
         assertNull(correct("pis"));
