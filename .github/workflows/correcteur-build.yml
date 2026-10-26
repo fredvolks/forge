@@ -3,6 +3,8 @@ on:
   push:
     branches: 
       - build/correcteur-perso-android-v01
+    paths-ignore:
+      - 'releases/**'
   workflow_dispatch:
 jobs:
   android-apk:
@@ -33,9 +35,9 @@ jobs:
       - name: Publier APK dans cette branche seulement
         run: |
           mkdir -p releases
-          cp app/build/outputs/apk/debug/app-debug.apk releases/CorrecteurPerso-v0.1-debug.apk
+          cp app/build/outputs/apk/debug/app-debug.apk releases/CorrecteurPerso-v0.2-debug.apk
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add releases/CorrecteurPerso-v0.1-debug.apk
-          git commit -m "build: ajouter APK Correcteur Perso v0.1" || exit 0
+          git add releases/CorrecteurPerso-v0.2-debug.apk
+          git commit -m "build: ajouter APK Correcteur Perso v0.2" || exit 0
           git push origin HEAD:build/correcteur-perso-android-v01

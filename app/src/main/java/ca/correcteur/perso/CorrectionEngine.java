@@ -30,6 +30,9 @@ public final class CorrectionEngine {
         for(String[] pair:pairs) DICT.put(pair[0],pair[1]);
     }
     private CorrectionEngine() {}
+    static boolean isKnownCorrection(String word){
+        return word!=null && DICT.containsKey(word.toLowerCase(FR));
+    }
     private static String withCase(String old, String fresh) {
         if(old.equals(old.toUpperCase(FR)) && old.length()>1) return fresh.toUpperCase(FR);
         if(!old.isEmpty() && Character.isUpperCase(old.charAt(0)))
