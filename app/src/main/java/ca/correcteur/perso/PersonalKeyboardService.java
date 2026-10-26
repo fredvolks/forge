@@ -17,8 +17,8 @@ import java.util.*;
  * Not Samsung Keyboard and does not embed Samsung proprietary code.
  */
 public final class PersonalKeyboardService extends InputMethodService {
-    private static final int BASE=Color.rgb(220,225,233), KEY=Color.rgb(248,249,252);
-    private static final int SPECIAL=Color.rgb(187,197,210), INK=Color.rgb(34,40,49);
+    private static final int BASE=Color.rgb(20,20,22), KEY=Color.rgb(55,55,59);
+    private static final int SPECIAL=Color.rgb(35,35,39), INK=Color.rgb(247,247,250);
     private LinearLayout root;
     private TextView status;
     private boolean shift=true, symbols=false, emoji=false, sensitive=false;
@@ -84,12 +84,20 @@ public final class PersonalKeyboardService extends InputMethodService {
         key.setTypeface(Typeface.DEFAULT,Typeface.NORMAL);
         GradientDrawable background=new GradientDrawable();
         background.setColor(secondary?SPECIAL:KEY);
-        background.setCornerRadius(dp(6));
+        background.setCornerRadius(dp(7));
         key.setBackground(background);
         LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,weight);
         p.setMargins(dp(2),dp(2),dp(2),dp(2));
         line.addView(key,p);
-        key.setOnClickListener(v->{v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);action.run();});
+        key.setContentDescription(label.equals("Français (CA)")?"Touche espace":"Touche "+label);
+        key.setOnClickListener(v->{
+            v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+            try { action.run(); }
+            catch(RuntimeException | LinkageError e){
+                KeyboardDiagnostics.record(this,"touche",e);
+                try{refresh();}catch(RuntimeException | LinkageError ignored){}
+            }
+        });
         if(longOptions!=null&&longOptions.length>0)
             key.setOnLongClickListener(v->{
                 PopupMenu popup=new PopupMenu(this,key);
@@ -112,7 +120,7 @@ public final class PersonalKeyboardService extends InputMethodService {
         if(root==null)return;
         root.removeAllViews();
         LinearLayout top=row(38);
-        key(top,"☰",.65f,true,18,()->showSettings(),null);
+        key(top,"✦",.65f,true,18,()->showSettings(),null);
         status=new TextView(this);
         status.setTextSize(13);
         status.setTextColor(INK);
@@ -163,7 +171,7 @@ public final class PersonalKeyboardService extends InputMethodService {
         key(bottom,symbols?"ABC":"!#1",1.15f,true,15,()->{symbols=!symbols;shift=false;draw();},null);
         key(bottom,"😀",.9f,true,21,()->{emoji=true;draw();},null);
         key(bottom,",",.55f,false,19,()->type(","),null);
-        key(bottom,"FR · CA",4.1f,false,15,this::space,null);
+        key(bottom,"Français (CA)",4.1f,false,14,this::space,null);
         key(bottom,".",.55f,false,19,()->type("."),null);
         key(bottom,"↵",1.25f,true,23,this::enter,null);
     }
@@ -183,25 +191,11 @@ public final class PersonalKeyboardService extends InputMethodService {
         InputConnection ic=getCurrentInputConnection();
         if(ic==null)return;
         last=null;lastWithSpace=null;
-        CharSequence previous=!sensitive?ic.getTextBeforeCursor(240,0):null;
-        if(previous!=null)StyleLearner.observe(this,previous.toString());
-        if(!sensitive&&getSharedPreferences(SettingsActivity.PREFS,MODE_PRIVATE)
-            .getBoolean(SettingsActivity.AUTO,true)&&previous!=null){
-            android.content.SharedPreferences prefs=getSharedPreferences(SettingsActivity.PREFS,MODE_PRIVATE);
-            Set<String> protectedWords=CorrectionEngine.protectedWords(prefs.getString(SettingsActivity.PROTECTED,""));
-            protectedWords.addAll(StyleLearner.protectedWords(this));
-            Set<String> ignored=prefs.getStringSet(SettingsActivity.IGNORED,Collections.emptySet());
-            CorrectionEngine.Suggestion suggestion=CorrectionEngine.suggest(previous.toString(),protectedWords,ignored);
-            if(suggestion!=null){
-                ic.beginBatchEdit();
-                ic.deleteSurroundingText(suggestion.original.length(),0);
-                ic.commitText(suggestion.replacement,1);
-                ic.endBatchEdit();
-                last=suggestion;
-                lastWithSpace=suggestion.replacement+" ";
-            }
+        SpaceProcessor.Result result=SpaceProcessor.insertSpace(this,ic,sensitive);
+        if(result.correction!=null){
+            last=result.correction;
+            lastWithSpace=result.correction.replacement+" ";
         }
-        ic.commitText(" ",1);
         refresh();
     }
     private void backspace(){

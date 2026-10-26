@@ -16,10 +16,11 @@ public final class SettingsActivity extends Activity {
     private int dp(int n){return (int)(n*getResources().getDisplayMetrics().density+0.5f);}
     private TextView text(String value,int size){
         TextView t=new TextView(this);t.setText(value);t.setTextSize(size);
-        t.setTextColor(Color.rgb(42,53,64));t.setPadding(0,dp(7),0,dp(7));return t;
+        t.setTextColor(Color.rgb(241,243,248));t.setPadding(0,dp(7),0,dp(7));return t;
     }
     private void button(String value,Runnable click){
         Button b=new Button(this);b.setAllCaps(false);b.setText(value);
+        b.setTextColor(Color.WHITE);b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(60,62,69)));
         root.addView(b,new LinearLayout.LayoutParams(-1,dp(55)));
         b.setOnClickListener(v->click.run());
     }
@@ -40,12 +41,12 @@ public final class SettingsActivity extends Activity {
     }
     @Override public void onCreate(Bundle saved){
         super.onCreate(saved);
-        ScrollView scroll=new ScrollView(this);scroll.setBackgroundColor(Color.rgb(247,249,252));
+        ScrollView scroll=new ScrollView(this);scroll.setBackgroundColor(Color.rgb(20,20,22));
         root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(20),dp(24),dp(20),dp(30));
         scroll.addView(root);setContentView(scroll);
         root.addView(text("Correcteur Perso",30));
-        root.addView(text("QWERTY · Français québécois · Version 0.2",16));
+        root.addView(text("QWERTY sombre · Français québécois · Version 0.3",16));
         root.addView(text("1. Activer ton clavier",19));
         root.addView(text("Clavier inspiré de la disposition Samsung QWERTY. Il s'agit d'un clavier distinct, pas d'une modification du clavier Samsung.",14));
         button("Ouvrir les paramètres de clavier",()->startActivity(new Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)));
@@ -54,13 +55,13 @@ public final class SettingsActivity extends Activity {
             if(imm!=null)imm.showInputMethodPicker();
         });
         root.addView(text("2. Correction automatique",19));
-        Switch sw=new Switch(this);sw.setText("Corriger les fautes connues en appuyant sur Espace");
+        Switch sw=new Switch(this);sw.setText("Corriger les fautes connues en appuyant sur Espace");sw.setTextColor(Color.WHITE);
         sw.setChecked(getSharedPreferences(PREFS,MODE_PRIVATE).getBoolean(AUTO,true));
         sw.setOnCheckedChangeListener((v,on)->getSharedPreferences(PREFS,MODE_PRIVATE).edit().putBoolean(AUTO,on).apply());
         root.addView(sw);
         root.addView(text("3. Mes expressions à garder",19));
         root.addView(text("Exemples : pis, fak, pk, ak, tsé. Ajoute tes mots séparés par une virgule.",14));
-        EditText words=new EditText(this);words.setMinLines(3);
+        EditText words=new EditText(this);words.setMinLines(3);words.setTextColor(Color.WHITE);words.setHintTextColor(Color.LTGRAY);
         words.setText(getSharedPreferences(PREFS,MODE_PRIVATE).getString(PROTECTED,
             "pis, pk, ak, fak, faque, tsé, ben, chu, jsuis, jveux, jpeux, tbn, criss, esti, tabarnak, asteur, pantoute, mettons, pcq"));
         root.addView(words);
@@ -76,7 +77,7 @@ public final class SettingsActivity extends Activity {
             .setMessage("Pendant 24 heures, Correcteur Perso comptera les mots isolés quand tu utilises CE clavier. Les mots les plus fréquents serviront à préserver ta façon d'écrire. Recommencer supprime l'ancien profil.")
             .setNegativeButton("Annuler",null)
             .setPositiveButton("Commencer",(d,w)->{StyleLearner.start(this);refresh();}).show());
-        profileSwitch=new Switch(this);profileSwitch.setText("Activer les mots appris");
+        profileSwitch=new Switch(this);profileSwitch.setText("Activer les mots appris");profileSwitch.setTextColor(Color.WHITE);
         profileSwitch.setOnCheckedChangeListener((v,on)->{
             StyleLearner.enable(this,on);
             if(learning!=null)refresh();
@@ -96,6 +97,14 @@ public final class SettingsActivity extends Activity {
             android.content.SharedPreferences.Editor e=p.edit().remove(IGNORED);
             for(String k:p.getAll().keySet())if(k.startsWith("undo_"))e.remove(k);
             e.apply();Toast.makeText(this,"Historique des refus effacé",Toast.LENGTH_SHORT).show();
+        });
+        root.addView(text("7. Diagnostic clavier",19));
+        root.addView(text("Si un problème arrive pendant une frappe, l'app enregistre uniquement le type de l'erreur, jamais les mots écrits.",14));
+        final TextView diag=text(KeyboardDiagnostics.lastError(this),14);
+        root.addView(diag);
+        button("Relire le diagnostic",()->diag.setText(KeyboardDiagnostics.lastError(this)));
+        button("Effacer le diagnostic",()->{
+            KeyboardDiagnostics.clear(this);diag.setText(KeyboardDiagnostics.lastError(this));
         });
         root.addView(text("Prototype hors ligne : aucune permission Internet. L'apprentissage est désactivé par défaut; le profil se finalise lorsque tu ouvres le clavier ou les Réglages après les 24 heures.",13));
         refresh();

@@ -25,8 +25,24 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
-      - name: Compiler le clavier
-        run: gradle --no-daemon :app:assembleDebug
+      - name: Tests du correcteur et compilation APK
+        run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest
+      - name: Autoriser la virtualisation KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Tests clavier réel en émulateur Android
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_7
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: |
+            adb shell ime enable ca.correcteur.perso/.PersonalKeyboardService
+            adb shell ime set ca.correcteur.perso/.PersonalKeyboardService
+            gradle --no-daemon :app:connectedDebugAndroidTest
       - uses: actions/upload-artifact@v4
         with:
           name: CorrecteurPerso-Android-APK
@@ -35,9 +51,9 @@ jobs:
       - name: Publier APK dans cette branche seulement
         run: |
           mkdir -p releases
-          cp app/build/outputs/apk/debug/app-debug.apk releases/CorrecteurPerso-v0.2-debug.apk
+          cp app/build/outputs/apk/debug/app-debug.apk releases/CorrecteurPerso-v0.3-debug.apk
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add releases/CorrecteurPerso-v0.2-debug.apk
-          git commit -m "build: ajouter APK Correcteur Perso v0.2" || exit 0
+          git add releases/CorrecteurPerso-v0.3-debug.apk
+          git commit -m "build: ajouter APK Correcteur Perso v0.3" || exit 0
           git push origin HEAD:build/correcteur-perso-android-v01
