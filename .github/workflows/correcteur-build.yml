@@ -44,12 +44,8 @@ jobs:
             adb shell ime enable ca.correcteur.perso/.PersonalKeyboardService
             adb shell ime set ca.correcteur.perso/.PersonalKeyboardService
             adb logcat -c
-            set +e
-            gradle --no-daemon :app:connectedDebugAndroidTest
-            TEST_RESULT=$?
-            echo "===== FATAL EXCEPTIONS / CORRECTEUR DIAGNOSTICS ====="
-            adb logcat -d -v time | grep -E -A 35 'FATAL EXCEPTION|AndroidRuntime|ca.correcteur.perso|Fatal signal|InputMethodService|Correcteur' | tail -n 280 || true
-            exit $TEST_RESULT
+            bash -c 'gradle --no-daemon :app:connectedDebugAndroidTest; status=$?; echo "===== AndroidRuntime crash report ====="; adb logcat -d -v time | grep -A 24 -E "FATAL EXCEPTION|AndroidRuntime|ca.correcteur.perso|Fatal signal" | tail -n 200 || true; echo "===== InputMethodService state ====="; adb shell dumpsys input_method | tail -n 45; exit $status'
+
       - uses: actions/upload-artifact@v4
         with:
           name: CorrecteurPerso-Android-APK
