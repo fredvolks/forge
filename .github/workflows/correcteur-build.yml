@@ -43,7 +43,13 @@ jobs:
             gradle --no-daemon :app:installDebug
             adb shell ime enable ca.correcteur.perso/.PersonalKeyboardService
             adb shell ime set ca.correcteur.perso/.PersonalKeyboardService
+            adb logcat -c
+            set +e
             gradle --no-daemon :app:connectedDebugAndroidTest
+            TEST_RESULT=$?
+            echo "===== FATAL EXCEPTIONS / CORRECTEUR DIAGNOSTICS ====="
+            adb logcat -d -v time | grep -E -A 35 'FATAL EXCEPTION|AndroidRuntime|ca.correcteur.perso|Fatal signal|InputMethodService|Correcteur' | tail -n 280 || true
+            exit $TEST_RESULT
       - uses: actions/upload-artifact@v4
         with:
           name: CorrecteurPerso-Android-APK
