@@ -1,16 +1,18 @@
 name: Compiler Correcteur Perso APK
 on:
   push:
-    branches:
+    branches: 
       - build/correcteur-perso-android-v01
   workflow_dispatch:
 jobs:
   android-apk:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -26,3 +28,12 @@ jobs:
           name: CorrecteurPerso-Android-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
+      - name: Publier APK dans cette branche seulement
+        run: |
+          mkdir -p releases
+          cp app/build/outputs/apk/debug/app-debug.apk releases/CorrecteurPerso-v0.1-debug.apk
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add releases/CorrecteurPerso-v0.1-debug.apk
+          git commit -m "build: ajouter APK Correcteur Perso v0.1" || exit 0
+          git push origin HEAD:build/correcteur-perso-android-v01
