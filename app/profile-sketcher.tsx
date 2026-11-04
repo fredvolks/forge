@@ -5,6 +5,7 @@ import { useRef, useState } from 'react';
 import { Expand, ImagePlus, Minimize2, MousePointer2, RotateCcw, Sparkles, Tag } from 'lucide-react';
 
 import type { CatalogField, DynamicProduct, ProfileSegment } from './catalog-builder';
+import {orthogonalProjection,shouldSwitchOrthogonalAxis,type Axis} from '../lib/mir-zone-geometry';
 
 type Point={x:number;
 y:number};
@@ -101,7 +102,7 @@ fail()};
 image.src=url}
 export function ProfileSketcher({product,onChange}:{product:DynamicProduct;
 onChange:(product:DynamicProduct)=>void}){const svgRef=useRef<SVGSVGElement>(null);
-const shiftAnchor=useRef<Point|null>(null),shiftAxis=useRef<'horizontal'|'vertical'|null>(null);
+const shiftAnchor=useRef<Point|null>(null),shiftAxis=useRef<Axis|null>(null);
 const [raw,setRaw]=useState<Point[]>([]),[drawing,setDrawing]=useState(false),[fullscreen,setFullscreen]=useState(false),[mode,setMode]=useState<'draw'|'labels'>('draw'),[message,setMessage]=useState('Trace la forme ou importe une photo.');
 const getPoint=(event:React.PointerEvent<SVGSVGElement>)=>{const matrix=svgRef.current?.getScreenCTM();
 if(!matrix)return{x:0,y:0};
@@ -152,10 +153,18 @@ setRaw([getPoint(e)])}} onPointerMove={e=>{if(drawing&&mode==='draw'){const poin
 setRaw(current=>{if(!e.shiftKey){shiftAnchor.current=null;
 shiftAxis.current=null;
 return[...current,point]}
-const anchor=shiftAnchor.current??current[current.length-1]??point;
+let anchor=shiftAnchor.current??current[current.length-1]??point;
 if(!shiftAnchor.current)shiftAnchor.current=anchor;
-if(!shiftAxis.current&&Math.hypot(point.x-anchor.x,point.y-anchor.y)>3)shiftAxis.current=Math.abs(point.x-anchor.x)>=Math.abs(point.y-anchor.y)?'horizontal':'vertical';
-const locked=shiftAxis.current==='horizontal'?{x:point.x,y:anchor.y}:shiftAxis.current==='vertical'?{x:anchor.x,y:point.y}:point;
+if(!shiftAxis.current&&Math.hypot(point.x-anchor.x,point.y-anchor.y)>3)shiftAxis.current=orthogonalProjection(anchor,point).axis;
+if(shiftAxis.current&&shouldSwitchOrthogonalAxis(anchor,point,shiftAxis.current,20)&&current.length>1){
+const corner=current[current.length-1];
+shiftAnchor.current=corner;
+shiftAxis.current=shiftAxis.current==='horizontal'?'vertical':'horizontal';
+anchor=corner;
+const switched=orthogonalProjection(anchor,point,shiftAxis.current).point;
+return[...current,switched]
+}
+const locked=orthogonalProjection(anchor,point,shiftAxis.current).point;
 return[...current,locked]})}}} onPointerUp={finish} onPointerCancel={finish}>
 <defs>
 <pattern id="profile-grid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -186,6 +195,6 @@ return <g key={s.id} onClick={()=>assignLabel(i)} className={mode==='labels'?'la
 <b>2</b> FORGE redresse sans déplacer le tracé</span>
 <span>
 <b>3</b> Ajoute les mesures</span>
-<span className="shift-hint"><kbd>SHIFT</kbd> Maintiens la touche pour tracer un segment parfaitement droit</span>
+<span className="shift-hint"><kbd>SHIFT</kbd> Maintiens : chaque segment devient horizontal/vertical et les coins restent à 90°</span>
 </div>
 </div>}
