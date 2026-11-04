@@ -53,6 +53,39 @@ const payrollRows = [
     { name: 'Marco T.', role: 'Chef', gross: '44 h 00', lunch: '- 1 h 15', payable: '42 h 45', state: 'À confirmer' },
     { name: 'Samir B.', role: 'Employé', gross: '37 h 45', lunch: '- 1 h 00', payable: '36 h 45', state: 'Confirmé' },
 ];
+const unicodeFractions:Record<string,number>={'⅛':1/8,'¼':1/4,'⅜':3/8,'½':1/2,'⅝':5/8,'¾':3/4,'⅞':7/8};
+function parseInches(input:unknown):number|null{
+    if(typeof input==='number')return Number.isFinite(input)?input:null;
+    let raw=String(input??'').trim().toLowerCase().replace(/po|pouces?|[″"]/g,'').replace(',','.').trim();
+    if(!raw)return null;
+    let unicode=0;
+    Object.entries(unicodeFractions).forEach(([glyph,value])=>{if(raw.includes(glyph)){unicode+=value;raw=raw.replaceAll(glyph,' ').trim();}});
+    let total=0;
+    for(const token of raw.split(/\s+/).filter(Boolean)){
+        if(token.includes('/')){
+            const [n,d]=token.split('/').map(Number);
+            if(!Number.isFinite(n)||!Number.isFinite(d)||!d)return null;
+            total+=n/d;
+        }else{
+            const n=Number(token);
+            if(!Number.isFinite(n))return null;
+            total+=n;
+        }
+    }
+    const value=total+unicode;
+    return Number.isFinite(value)?value:null;
+}
+function formatInches(value:number):string{
+    const rounded=Math.round(value*16)/16;
+    const whole=Math.floor(rounded+1e-9);
+    const sixteenths=Math.round((rounded-whole)*16);
+    if(!sixteenths)return String(whole);
+    const gcd=(a:number,b:number):number=>b?gcd(b,a%b):a;
+    const div=gcd(sixteenths,16),n=sixteenths/div,d=16/div;
+    const glyph:Record<string,string>={'1/8':'⅛','1/4':'¼','3/8':'⅜','1/2':'½','5/8':'⅝','3/4':'¾','7/8':'⅞'};
+    const fraction=glyph[`${n}/${d}`]||`${n}/${d}`;
+    return whole?`${whole}${glyph[`${n}/${d}`]?'':' '}${fraction}`:fraction;
+}
 export default function Home() {
     const [role, setRole] = useState<Role>('Boss');
     const [fieldView, setFieldView] = useState<FieldView | 'work'>('home');
@@ -111,6 +144,7 @@ export default function Home() {
     const [itemUnit, setItemUnit] = useState('morceau');
     const [dynamicCatalog, setDynamicCatalog] = useState<DynamicProduct[]>([]);
     const [dynamicValues, setDynamicValues] = useState<Record<string, string | boolean>>({});
+    const [dynamicRuleOverrides, setDynamicRuleOverrides] = useState<Record<string, boolean>>({});
     const [basketItems, setBasketItems] = useState([
         { id: 1, chef: 'Fred G.', job: 'JOB-214', name: 'Lames Olfa 1″', qty: '2 boîtes', loaded: false },
         { id: 2, chef: 'Fred G.', job: 'JOB-214', name: 'Tape rouge', qty: '6 rouleaux', loaded: false },
@@ -193,6 +227,17 @@ export default function Home() {
         return <AdminPortal role={role as 'Boss' | 'Adjointe'} session={session} onLogout={() => { localStorage.removeItem('forge:session'); setSession(null); }}/>;
     const quickItems = presetSets[orderCategory];
     const activeDynamicProduct = dynamicCatalog.find(product => product.active && product.category === orderCategory && product.name === selectedPreset);
+    const dynamicValidationIssues = (activeDynamicProduct?.validationRules || []).flatMap(rule => {
+        const baseField = activeDynamicProduct?.fields.find(field => field.id === rule.baseFieldId);
+        const targetField = activeDynamicProduct?.fields.find(field => field.id === rule.targetFieldId);
+        const base = parseInches(dynamicValues[rule.baseFieldId] ?? baseField?.defaultValue);
+        const target = parseInches(dynamicValues[rule.targetFieldId] ?? targetField?.defaultValue);
+        if(base===null||target===null)return [];
+        const min=base+rule.offset;
+        return target+1e-6<min?[{rule,base,target,min,accepted:Boolean(dynamicRuleOverrides[rule.id])}]:[];
+    });
+    const unresolvedDynamicRules = dynamicValidationIssues.filter(issue => !issue.accepted);
+    const dynamicRuleAudit = dynamicValidationIssues.filter(issue => issue.accepted).map(issue => `Exception acceptée: ${issue.rule.label} — ${formatInches(issue.target)} po < minimum ${formatInches(issue.min)} po`).join(' · ');
     const switchingJob = punched && selectedJob !== activeJob;
     const navigateField = (destination:FieldView|'punch'|'orders'|'messages'|'purchases') => {
         if (['punch','orders','messages','purchases'].includes(destination)) {
@@ -1377,7 +1422,7 @@ export default function Home() {
 <option>JOB-418 — Bélanger</option>
 </select>
 </label>
-<label>Catégorie<select value={orderCategory} onChange={(e) => { const category = e.target.value as 'Matériaux' | 'Outils' | 'Pliage'; setOrderCategory(category); setSelectedPreset(category === 'Outils' ? 'Gun à revêtement' : category === 'Pliage' ? 'Fascia' : 'Lame de Skill'); }}>
+<label>Catégorie<select value={orderCategory} onChange={(e) => { const category = e.target.value as 'Matériaux' | 'Outils' | 'Pliage'; setOrderCategory(category); setSelectedPreset(category === 'Outils' ? 'Gun à revêtement' : category === 'Pliage' ? 'Fascia' : 'Lame de Skill'); setDynamicValues({}); setDynamicRuleOverrides({}); }}>
 <option>Matériaux</option>
 <option>Outils</option>
 <option>Pliage</option>
@@ -1393,7 +1438,7 @@ export default function Home() {
       <div className="presets category-presets">{quickItems.map((item) => <div className="preset-chip" draggable={isFieldRole} key={item} onDragStart={() => setDraggedPreset(item)} onDragOver={(e) => e.preventDefault()} onDrop={() => { if (!draggedPreset || draggedPreset === item)
             return; setPresetSets((sets) => { const list = [...sets[orderCategory]]; const from = list.indexOf(draggedPreset); const to = list.indexOf(item); if (from < 0 || to < 0)
             return sets; list.splice(to, 0, list.splice(from, 1)[0]); return { ...sets, [orderCategory]: list }; }); setDraggedPreset(null); }}>
-<button className={selectedPreset === item ? 'selected' : ''} type="button" onClick={() => setSelectedPreset(item)}>
+<button className={selectedPreset === item ? 'selected' : ''} type="button" onClick={() => { setSelectedPreset(item); setDynamicValues({}); setDynamicRuleOverrides({}); }}>
 <span className="drag-handle">↕</span>{item}</button>{role === 'Adjointe' && <span className="preset-admin">
 <button type="button" aria-label={`Modifier ${item}`} onClick={() => { const name = window.prompt('Modifier ce choix', item); if (!name?.trim())
             return; setPresetSets((sets) => ({ ...sets, [orderCategory]: sets[orderCategory].map((choice) => choice === item ? name.trim() : choice) })); if (selectedPreset === item)
@@ -1474,8 +1519,19 @@ export default function Home() {
 <div className="dynamic-order-fields">
 <span>ARTICLE DU CATALOGUE · {activeDynamicProduct.name.toUpperCase()}</span>
 <h3>Mesures et données</h3>
-<div>{activeDynamicProduct.fields.filter(field => field.filledBy === 'terrain').map(field => <label key={field.id}>{field.name}{field.type === 'Oui/Non' ? <input type="checkbox" checked={Boolean(dynamicValues[field.id])} onChange={e => setDynamicValues(v => ({ ...v, [field.id]: e.target.checked }))}/> : <input required={field.required} value={String(dynamicValues[field.id] ?? field.defaultValue)} onChange={e => setDynamicValues(v => ({ ...v, [field.id]: e.target.value }))} placeholder={field.type}/>}<small>{field.unit}</small>
-</label>)}</div>{activeDynamicProduct.colors.length > 0 && <label>Couleur<select value={itemColor} onChange={e => setItemColor(e.target.value)}>{activeDynamicProduct.colors.map(color => <option key={color}>{color}</option>)}</select>
+<div>{activeDynamicProduct.fields.filter(field => field.filledBy === 'terrain').map(field => <label key={field.id}>{field.name}{field.type === 'Oui/Non' ? <input type="checkbox" checked={Boolean(dynamicValues[field.id])} onChange={e => { setDynamicValues(v => ({ ...v, [field.id]: e.target.checked })); setDynamicRuleOverrides({}); }}/> : <input required={field.required} value={String(dynamicValues[field.id] ?? field.defaultValue)} onChange={e => { setDynamicValues(v => ({ ...v, [field.id]: e.target.value })); setDynamicRuleOverrides({}); }} placeholder={field.type}/>}<small>{field.unit}</small>
+</label>)}</div>{dynamicValidationIssues.map(issue => <div className={`dynamic-rule-warning ${issue.accepted?'accepted':''}`} key={issue.rule.id}>
+<AlertTriangle/>
+<div>
+<b>{issue.rule.label}</b>
+<p>{issue.rule.message} Actuel : {formatInches(issue.target)} po · minimum : {formatInches(issue.min)} po.</p>
+<small>Exemple : retour J {formatInches(issue.base)} po → clouage minimum {formatInches(issue.min)} po.</small>
+<div className="dynamic-rule-actions">
+<button type="button" onClick={() => { setDynamicValues(values => ({...values,[issue.rule.targetFieldId]:formatInches(issue.min)})); setDynamicRuleOverrides(values=>({...values,[issue.rule.id]:false})); }}>Corriger automatiquement à {formatInches(issue.min)} po</button>
+{issue.accepted?<button type="button" onClick={() => setDynamicRuleOverrides(values=>({...values,[issue.rule.id]:false}))}>Annuler l’exception</button>:<button type="button" className="rule-accept" onClick={() => setDynamicRuleOverrides(values=>({...values,[issue.rule.id]:true}))}>Garder {formatInches(issue.target)} po quand même</button>}
+</div>{issue.accepted&&<em>Exception acceptée — elle sera inscrite dans la commande.</em>}
+</div>
+</div>)}{activeDynamicProduct.colors.length > 0 && <label>Couleur<select value={itemColor} onChange={e => setItemColor(e.target.value)}>{activeDynamicProduct.colors.map(color => <option key={color}>{color}</option>)}</select>
 </label>}{itemColor === 'Autre' && <label>Couleur personnalisée<input value={customColor} onChange={e => setCustomColor(e.target.value)} required/>
 </label>}{activeDynamicProduct.units.length > 1 && <label>Unité<select value={itemUnit} onChange={e => setItemUnit(e.target.value)}>{activeDynamicProduct.units.map(unit => <option key={unit}>{unit}</option>)}</select>
 </label>}</div>
@@ -1533,7 +1589,7 @@ export default function Home() {
 </div>
 <label>Note<textarea placeholder="Couleur, dimensions, angle, détails importants…"/>
 </label>
-      <button type="button" className="add-to-order" onClick={() => { const isProfile = orderCategory === 'Pliage' && (selectedPreset === 'Capage porte de garage' || selectedPreset === 'Beam'); const soffit = orderCategory === 'Matériaux' && ['J soffite', 'Boîte de soffite'].includes(selectedPreset); const dynamicDetail = activeDynamicProduct ? activeDynamicProduct.fields.filter(field => field.filledBy === 'terrain').map(field => `${field.name}: ${field.type === 'Oui/Non' ? (dynamicValues[field.id] ? 'Oui' : 'Non') : (dynamicValues[field.id] ?? field.defaultValue)}`).join(' · ') : ''; const detail = dynamicDetail ? `${dynamicDetail} · Couleur: ${itemColor === 'Autre' ? customColor : itemColor}${activeDynamicProduct && activeDynamicProduct.units.length > 1 ? ` · Unité: ${itemUnit}` : ''}` : selectedPreset === 'Colonne' ? `Quantité ${columnQty} · Noir/blanc à confirmer` : selectedPreset === 'Beam' ? `${length1} × ${lengthQty1}${beamDoubleFold ? ' · A–E plié double' : ''}` : isProfile ? `${length1} × ${lengthQty1}${length2 ? ` + ${length2} × ${lengthQty2}` : ''}` : soffit ? `Quantité 2 · ${itemColor === 'Autre' ? customColor : itemColor} · ${itemUnit}` : 'Quantité 2'; setOrderCart((items) => [...items, { id: Date.now(), category: orderCategory, item: selectedPreset, detail, photos: [...orderPhotos] }]); setOrderPhotos([]); setDynamicValues({}); setToastText(`${selectedPreset} ajouté à la commande`); setToast(true); window.setTimeout(() => setToast(false), 1800); }}>
+      <button type="button" className="add-to-order" onClick={() => { if(unresolvedDynamicRules.length){ const issue=unresolvedDynamicRules[0]; setToastText(`${issue.rule.label}: minimum ${formatInches(issue.min)} po. Corrige ou accepte l’exception.`); setToast(true); window.setTimeout(() => setToast(false), 3200); return; } const isProfile = orderCategory === 'Pliage' && (selectedPreset === 'Capage porte de garage' || selectedPreset === 'Beam'); const soffit = orderCategory === 'Matériaux' && ['J soffite', 'Boîte de soffite'].includes(selectedPreset); const dynamicDetail = activeDynamicProduct ? activeDynamicProduct.fields.filter(field => field.filledBy === 'terrain').map(field => `${field.name}: ${field.type === 'Oui/Non' ? (dynamicValues[field.id] ? 'Oui' : 'Non') : (dynamicValues[field.id] ?? field.defaultValue)}`).join(' · ') : ''; const detailBase = dynamicDetail ? `${dynamicDetail} · Couleur: ${itemColor === 'Autre' ? customColor : itemColor}${activeDynamicProduct && activeDynamicProduct.units.length > 1 ? ` · Unité: ${itemUnit}` : ''}` : selectedPreset === 'Colonne' ? `Quantité ${columnQty} · Noir/blanc à confirmer` : selectedPreset === 'Beam' ? `${length1} × ${lengthQty1}${beamDoubleFold ? ' · A–E plié double' : ''}` : isProfile ? `${length1} × ${lengthQty1}${length2 ? ` + ${length2} × ${lengthQty2}` : ''}` : soffit ? `Quantité 2 · ${itemColor === 'Autre' ? customColor : itemColor} · ${itemUnit}` : 'Quantité 2'; const detail=dynamicRuleAudit?`${detailBase} · ${dynamicRuleAudit}`:detailBase; setOrderCart((items) => [...items, { id: Date.now(), category: orderCategory, item: selectedPreset, detail, photos: [...orderPhotos] }]); setOrderPhotos([]); setDynamicValues({}); setDynamicRuleOverrides({}); setToastText(`${selectedPreset} ajouté à la commande`); setToast(true); window.setTimeout(() => setToast(false), 1800); }}>
 <ShoppingCart /> Ajouter à la commande</button>
       {orderCart.length > 0 && <div className="order-cart-preview">
 <div className="cart-preview-head">
